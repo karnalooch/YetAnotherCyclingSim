@@ -17,7 +17,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from scripts.ci.retain_unreal_assets import digest, retain
+from scripts.ci.retain_unreal_assets import retain
 
 WARM = "_unreal-ci-warm"
 POINTER = "_yacs-unreal-ci/active.json"
@@ -231,6 +231,8 @@ def has_untrusted_source_checkout(root: Path) -> bool:
         print(
             "UNREAL WORKSPACE: source identity unavailable; preserve active cache: "
             + type(error).__name__
+            + ": "
+            + str(error)
         )
         return True
     return False
@@ -382,73 +384,124 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
         )
 
 
-def retain_local_lfs_objects(root: Path, archive: Path) -> None:
-    """Archive private LFS object bytes; never move a shared linked Git store."""
-    if not (root / ".git").is_dir():
-        return
-    objects = root / ".git/lfs/objects"
-    entries = []
-    for source in sorted(objects.rglob("*")) if objects.exists() else []:
-        if not source.is_file():
-            continue
-        relative = source.relative_to(objects)
-        destination = archive / "git-lfs-objects" / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        sha = digest(source)
-        size = source.stat().st_size
-        source.rename(destination)
-        if destination.stat().st_size != size or digest(destination) != sha:
-            raise RuntimeError("LFS object retention failed; preserve worktree")
-        entries.append({"path": relative.as_posix(), "sha256": sha, "size_bytes": size})
-        (archive / "git-lfs-objects.json").write_text(
-            json.dumps(entries, indent=2) + "\n", encoding="utf-8"
+def derived_output_inventory(output: Path) -> list[tuple[str, int, int, int]]:
+    """Inventory disposable output without following links or special files."""
+    inventory = []
+    for path in [output, *output.rglob("*")]:
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or (
+            getattr(info, "st_file_attributes", 0)
+            & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+        ):
+            raise ValueError(f"Refuse derived output through link/junction: {path}")
+        kind = stat.S_IFMT(info.st_mode)
+        if kind not in (stat.S_IFREG, stat.S_IFDIR):
+            raise ValueError(f"Derived output contains a special file: {path}")
+        inventory.append(
+            (
+                path.relative_to(output).as_posix(),
+                kind,
+                info.st_size if kind == stat.S_IFREG else 0,
+                info.st_mtime_ns,
+            )
         )
+    return sorted(inventory)
 
 
 def cleanup(workspace: Path, active: str, run: str) -> None:
-    # Re-read before deletion. Publication is serialized by workflow concurrency.
-    if active != select(workspace, fallback=active):
+    """Retire only inactive Intermediate/DDC, preserving every checkout in place.
+
+    The caller already holds the serialized CI host's IDLE admission. This is
+    not the administrative workspace cleanup or a stale-session retention sweep.
+    """
+    pointer = pointer_path(workspace)
+    if not pointer.exists():
+        print("UNREAL WORKSPACE: no active cache pointer; preserve derived outputs")
+        return
+    expected_pointer = pointer.read_bytes()
+    selected = json.loads(expected_pointer)
+    if (
+        not isinstance(selected, dict)
+        or selected.get("schema_version") != 1
+        or selected.get("worktree") != active
+    ):
         raise ValueError("Active cache changed before cleanup")
-    for root in workspace.glob("_unreal-build-*"):
+    active_root = safe_path(workspace, active)
+    if not (active_root / ".git").exists():
+        raise ValueError("Active cache is missing; preserve derived outputs")
+
+    def assert_active_unchanged() -> None:
+        # Do not call select(): recovery of an absent pointer can write it.
+        if (
+            pointer_path(workspace).read_bytes() != expected_pointer
+            or not (active_root / ".git").exists()
+        ):
+            raise ValueError("Active cache changed before derived output deletion")
+
+    plan = []
+    for root in sorted(workspace.glob("_unreal-build-*")):
         root = safe_path(workspace, root.name)
         if root.name == active:
             continue
         if not (root / ".git").exists():
-            quarantine_root = workspace / "_yacs-unreal-ci" / "quarantine"
-            if (
-                quarantine_root.is_symlink()
-                or getattr(quarantine_root, "is_junction", lambda: False)()
-            ):
-                raise ValueError("Unreal quarantine directory is a link/junction")
-            quarantine_root.mkdir(parents=True, exist_ok=True)
-            target = quarantine_root / f"{run}-{root.name}-cleanup"
-            if target.exists():
-                raise ValueError(
-                    f"Unreal cleanup quarantine destination already exists: {target}"
-                )
-            try:
-                os.replace(root, target)
-            except PermissionError as error:
-                print(
-                    "UNREAL WORKSPACE: preserve locked incomplete old build "
-                    f"{root.name}; quarantine deferred: {error}"
-                )
-                continue
-            print(
-                f"UNREAL WORKSPACE: quarantined incomplete old build {root.name} -> "
-                f"{target.relative_to(workspace)}"
-            )
+            print(f"UNREAL WORKSPACE: preserve incomplete old build in place: {root}")
             continue
-        archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
-        retain(root, archive)
-        retain_local_lfs_objects(root, archive)
-        try:
-            shutil.rmtree(root)
-        except PermissionError as error:
+        # Match the existing administrative helper's generated-directory scope.
+        # Binaries, Saved/evidence, assets, sources and Git/LFS stay in place.
+        for name in ("Intermediate", "DerivedDataCache"):
+            output = root / name
+            if not output.exists():
+                continue
+            if not output.is_dir():
+                raise ValueError(f"Expected a derived output directory: {output}")
+            inventory = derived_output_inventory(output)
+            files = sum(row[1] == stat.S_IFREG for row in inventory)
+            size = sum(row[2] for row in inventory)
+            plan.append((root.name, output, inventory, files, size))
+
+    free_before = shutil.disk_usage(workspace).free
+    print(
+        f"UNREAL WORKSPACE: derived cleanup run={run} active={active} "
+        f"plan_count={len(plan)} plan_files={sum(row[3] for row in plan)} "
+        f"plan_bytes={sum(row[4] for row in plan)} free_before_bytes={free_before}"
+    )
+    for _, output, _, files, size in plan:
+        print(
+            f"UNREAL WORKSPACE: derived cleanup candidate={output} "
+            f"files={files} logical_bytes={size}"
+        )
+    removed_count = removed_files = removed_bytes = 0
+    complete = False
+    try:
+        for name, output, inventory, files, size in plan:
+            root = safe_path(workspace, name)
+            if not (root / ".git").exists():
+                raise ValueError(f"Retired checkout changed before cleanup: {root}")
+            if derived_output_inventory(output) != inventory:
+                raise ValueError(f"Derived output changed before cleanup: {output}")
+            assert_active_unchanged()
+            shutil.rmtree(output)
+            if output.exists():
+                raise RuntimeError(
+                    f"Derived output still exists after cleanup: {output}"
+                )
+            removed_count += 1
+            removed_files += files
+            removed_bytes += size
             print(
-                "UNREAL WORKSPACE: preserve locked retired build "
-                f"{root.name}; deletion deferred: {error}"
+                f"UNREAL WORKSPACE: removed derived output={output} "
+                f"files={files} logical_bytes={size}"
             )
+        complete = True
+    finally:
+        # Counts cover fully removed directories only; an exception may leave a
+        # partially removed generated directory and must fail the CI step.
+        print(
+            f"UNREAL WORKSPACE: derived cleanup complete={complete} "
+            f"removed_count={removed_count} removed_files={removed_files} "
+            f"removed_bytes={removed_bytes} free_before_bytes={free_before} "
+            f"free_after_bytes={shutil.disk_usage(workspace).free}"
+        )
 
 
 def main() -> None:
@@ -490,7 +543,11 @@ def main() -> None:
             root = safe_path(workspace, active)
             if root.exists():
                 raise ValueError("Fresh Unreal build destination already exists")
-            reason = "locked binary" if preserve_locked_cache else "stale source bytes"
+            reason = (
+                "locked binary"
+                if preserve_locked_cache
+                else "unverified source checkout"
+            )
             print(f"UNREAL WORKSPACE: {reason}; retained active, fresh={active}")
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the

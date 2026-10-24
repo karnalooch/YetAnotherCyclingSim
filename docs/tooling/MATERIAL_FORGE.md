@@ -1,5 +1,7 @@
 # YACS Material Forge
 
+**2026-10-16 boundary update:** [Houdini/SideFX](sidefx/README.md) is the primary world-authoring executor. Material Forge remains retained supporting surface tooling; its historical PCG-first placement ownership is superseded. No material/world expansion is part of the current terrain-only candidate.
+
 **Status:** exact-SHA render proof in progress  
 **Issue:** #387  
 **Scope:** offline procedural PBR authoring, material-local masks, deterministic validation and bounded UE import
@@ -15,12 +17,12 @@ It is deliberately not another world generator.
 | Subsystem | Owns |
 |---|---|
 | BOB | road/terrain geometry, cut/fill and earthworks |
-| PCG/PCGEx | world semantics, classification, placement and authoritative spatial masks |
+| World/domain authorities + Houdini | admitted source semantics and boundaries; Houdini executes procedural classification/placement; PCG/PCGEx are consumers where selected |
 | Material Forge | surface appearance, procedural PBR and material-local detail masks |
 
 The non-negotiable rule is:
 
-> **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
+> **World/domain authorities own source meaning and location; Houdini executes the selected authoring recipe. Material Forge supplies supporting surface appearance.**
 
 ## Runtime/tool boundary
 
@@ -65,6 +67,40 @@ broad variation at 25 cm; it rejects a flat field and cloud-dominated mottling.
 The earlier variants retain their existing recipes. See the
 [road material evidence](../evidence/ROAD_SURFACE_MATERIALS_364.md) for exact
 source/native revisions and the still-pending final M3 visual audit.
+
+## Lesson05 scree candidate
+
+The owner-selected `mediterranean_soil/limestone_scree_v1` adds one artistic
+limestone-fragment surface for the Pegasus Lesson05 input. It keeps the 4 m/2K
+five-map contract and reuses the existing periodic polygon-grain helpers.
+Its material-local masks are R=coarse fragment coverage, G=fine fragment coverage,
+B=mineral variation; Houdini owns spatial placement. The [preparation receipt](sidefx/LESSON05_MATERIAL_PREPARATION.md)
+records two identical native runs, preservation of all 16 historical graph bytes
+and pending original-HDA height/colour calibration. It is not an admitted terrain
+material or a completed Lesson05 consumer.
+
+Author only this candidate by adding `--family mediterranean_soil --variant
+limestone_scree_v1` to the existing `author` command. Both selectors are required
+together; omission retains full-catalog generation. Run validation and comparison
+over the selected run manifests before downstream use.
+
+## Lesson07 Grass2 candidate
+
+The owner-approved `mediterranean_soil/limestone_grass2_v1` replaces the brown
+block-like Grass2 appearance with muted olive ground and grey limestone
+fragments. It reuses the existing periodic fragment helpers at smaller scale,
+with shared coverage for albedo, material-local relief and PBR response. It
+keeps the 4 m/2K five-map contract and all historical graph bytes unchanged.
+This is a surface recipe, not vegetation placement or terrain generation.
+
+Use both selectors with the existing `author` command. The bounded
+`scripts/assets/prepare_lesson07_grass2.py` adapter validates the native outputs
+without modifying them, preserves Colour/Normal bytes and packs Pegasus
+AO/Roughness/Height/AO. It preserves the original EXR and does not interpret
+metallic as displacement. The [Lesson07 report](sidefx/LESSON07_MATERIAL_SETUP.md)
+records the two-run native source proof and successful saved in-place Unreal
+import/readback. Rendered appearance, fresh reopen and owner visual acceptance
+remain pending.
 
 ## Output contract
 

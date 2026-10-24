@@ -1,0 +1,14 @@
+{
+  "id": "dependency-validation-hidden-index-flags",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Git diff/status can conceal changed dependency files marked assume-unchanged or skip-worktree, allowing a pinned checkout validator to report false success.",
+  "invariant": "Read-only pinned dependency validation must reject hidden index flags, preserve source and Git metadata, and admit only exact upstream or one reviewed patch before mutation.",
+  "evidence": [
+    "PR #474",
+    "scripts/worldgen/test_pcgex_bootstrap.py: eight offline actual-Git regression tests, including both hidden flags and repeated validation"
+  ],
+  "do_not_copy": ["PCGEx commit, patch hashes, Unreal version and YACS machine paths"],
+  "failure_behavior": "Fail before changing the dependency when identity, index visibility, tracked/staged/untracked state or reviewed patch differs.",
+  "status": "candidate"
+}

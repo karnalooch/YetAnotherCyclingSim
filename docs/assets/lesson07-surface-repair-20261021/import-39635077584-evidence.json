@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_BEFORE_CAPTURE_SUCCEEDED_FILE_CONTEXT_MISSING",
+  "source_commit": "db494ab48efca53f82848bf52299dddc06af45c9",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635077584",
+  "run_attempt": 1,
+  "job_id": 119343410900,
+  "artifact": {
+    "id": 12360154380,
+    "bytes": 68924,
+    "sha256": "e4652848ebaba8cee9df5ebe8496fb14777497e2ec772ef073ce3b995d4eaa88"
+  },
+  "reports": [
+    {
+      "path": "import-39635077584-bridge.json",
+      "artifact_entry": "bridge.json",
+      "bytes": 8093,
+      "sha256": "6df98fd703ffdbcdbc84b7082368c257fe70019b290fcb56255b3f568c2c0c67"
+    },
+    {
+      "path": "import-39635077584-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "73f844b1d01cf78e0dee82624238fce24bbeb60dd3b7c5797a9c68f3aa179fe1"
+    },
+    {
+      "path": "import-39635077584-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3875,
+      "sha256": "698ebd7db13887a84096416ea01a39b855b9b79a5626770ffdddcc1f216511ae"
+    },
+    {
+      "path": "import-39635077584-surface-before.jpg",
+      "artifact_entry": "surface-before.jpg",
+      "bytes": 63185,
+      "sha256": "1979ccf76ad44783f31fc8c93ec395c3461dbf2d391e4b69b2553cb326126d1f"
+    }
+  ],
+  "unchanged_package_manifest_sha256": "e8e0ae6cbd752b6b564a67b830aa16a5c4dbb01db3af9792963e8c6121bc88a6",
+  "native_tool_call_attempts": 2,
+  "before_capture_received": true,
+  "before_camera_restored": true,
+  "world_name": "L_SaCalobra_Lesson07",
+  "is_pie_running": false,
+  "identity_stable_across_probe": true,
+  "last_identity_utc": "2026-10-21T16:31:02.2333873Z",
+  "pid": 34848,
+  "process_start_filetime_utc": "134370724521531735",
+  "importer_body_sha256": "6c824070afe0ecc178dfa96d5f5fdef44d8b83168250a3917bc7c4c6da85d78e",
+  "error": "NameError: name '__file__' is not defined",
+  "policy_denial_observed": false,
+  "native_tool_completed_raw": null,
+  "live_import_receipt_present": false,
+  "after_capture_received": false,
+  "saved_assets_verified": false,
+  "interpretation": "The corrected source compiled and entered main. The traceback points to its first path-context expression immediately after import unreal, before manifest/project/world checks, backups, import calls or saves. The generic bridge completion field remains null; there is no fresh disk-byte or import-save proof. Same owner process/listener was verified afterwards. Supply only an exact deterministic file-context assignment before the unchanged full source, keep the original path and asset guards, and review that new staged source through the same explicit execute_python(file) gate in a new run. Do not retry the failing bytes or use nested execution.",
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "protected_ci": {
+    "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635091670",
+    "conclusion": "failure",
+    "failed_native_job": 119344970538,
+    "reason": "Release-YacsUnrealWorkspaceLocks refused LOCAL_BUSY while the canonical owner Editor was active; the Editor and its logs were preserved. Native build/proof was not reached. This is not a code-test success or a reason to close the owner session or weaken admission."
+  }
+}

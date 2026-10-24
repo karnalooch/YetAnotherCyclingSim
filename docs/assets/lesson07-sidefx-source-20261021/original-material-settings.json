@@ -1,0 +1,951 @@
+{
+  "source_file": "Unreal/Content/PegasusDemo/Materials/Landscape/MI_Landscape_Instance.uasset",
+  "source_sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7",
+  "source_size_bytes": 38181,
+  "parent": "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.M_Pegasus_Landscape_Master",
+  "scalar_parameters": [
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Detail Brightness",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{9099961F-4AF9-0044-E301-658A64ADF407}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Detail Tiling",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.25,
+      "ExpressionGUID": "{5897E66C-4E0E-393D-578B-87823F202812}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Displacement",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{52D07BEF-4EE1-AF05-8DEA-4AAD182DE806}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Displacement Offset",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.5019999742507935,
+      "ExpressionGUID": "{FFE9EF07-4230-09D3-F51B-A78E6EE6E0EA}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Displacement_Micro",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": "+0",
+      "ExpressionGUID": "{043EEBCD-45E8-26CE-C29A-919ADB7FF8CC}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global AO Power",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{558998B0-4896-C838-48CC-70AEDE4EC828}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global Brightness",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.5,
+      "ExpressionGUID": "{66EC90C2-4AF0-2BAD-7864-C89BEBEE4FE9}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global Colour Strength",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.5,
+      "ExpressionGUID": "{F9DB5509-40C8-4611-89C7-32B5940806AD}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global Normal Flatten",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": "+0",
+      "ExpressionGUID": "{BC33238D-4506-0D92-6FCE-2599C032B63E}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global Saturation",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.5,
+      "ExpressionGUID": "{4B5775F7-4E42-933E-B7BD-7A96E6D0E086}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Global Specular Scale",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{422D04CC-4A3F-0673-0B85-3AB80A45C709}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Macro Texture Displacement",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 5.0,
+      "ExpressionGUID": "{8FE7A4A4-4189-4EB8-8A0D-189173C12772}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Macro Texture Distance",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 10000.0,
+      "ExpressionGUID": "{DCAAB46A-4393-60B2-8164-AA8AF0D61587}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Macro Tiling",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.05000000074505806,
+      "ExpressionGUID": "{04710697-4D52-A5C1-4D78-49B68D4A491A}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Num IDmap Layers",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 5.0,
+      "ExpressionGUID": "{512261CA-47B7-C326-D3A4-65AD1C5AE9FC}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Specular Falloff Exponent",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.5,
+      "ExpressionGUID": "{12D47DA7-4423-7403-3335-3798164A10D4}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Terrain Resolution",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 2016.0,
+      "ExpressionGUID": "{F11D4389-4666-5DAD-BBFF-35A9AE567810}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "UV Distort",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 4.0,
+      "ExpressionGUID": "{CCDDD410-48EF-F915-D066-B2B8D00893C9}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "UV Rotate",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -90.0,
+      "ExpressionGUID": "{C6ECD5AA-47C7-CA38-C4CB-1FA9E50814D6}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Noise_Scale",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": 0.0005000000237487257,
+      "ExpressionGUID": "{5CCE3051-45EA-2C3E-951B-12BF1BE507ED}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Bit",
+        "Association": "BlendParameter",
+        "Index": 3
+      },
+      "ParameterValue": 4.0,
+      "ExpressionGUID": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Bit",
+        "Association": "BlendParameter",
+        "Index": 2
+      },
+      "ParameterValue": 3.0,
+      "ExpressionGUID": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Bit",
+        "Association": "BlendParameter",
+        "Index": 1
+      },
+      "ParameterValue": 2.0,
+      "ExpressionGUID": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Bit",
+        "Association": "BlendParameter",
+        "Index": 0
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Material_Selection",
+        "Association": "LayerParameter",
+        "Index": 4
+      },
+      "ParameterValue": 4.0,
+      "ExpressionGUID": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Material_Selection",
+        "Association": "LayerParameter",
+        "Index": 2
+      },
+      "ParameterValue": 2.0,
+      "ExpressionGUID": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Material_Selection",
+        "Association": "LayerParameter",
+        "Index": 1
+      },
+      "ParameterValue": 1.0,
+      "ExpressionGUID": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "Material_Selection",
+        "Association": "LayerParameter",
+        "Index": 3
+      },
+      "ParameterValue": 3.0,
+      "ExpressionGUID": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    {
+      "AtlasData": {
+        "bIsUsedAsAtlasPosition": false,
+        "Curve": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        },
+        "Atlas": {
+          "AssetPath": {
+            "$type": "UAssetAPI.PropertyTypes.Objects.FTopLevelAssetPath, UAssetAPI",
+            "PackageName": "None",
+            "AssetName": "None"
+          },
+          "SubPathString": null
+        }
+      },
+      "ParameterInfo": {
+        "Name": "RefractionDepthBias",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": "+0",
+      "ExpressionGUID": "{00000000-0000-0000-0000-000000000000}"
+    }
+  ],
+  "vector_parameters": [
+    {
+      "ParameterInfo": {
+        "Name": "Offset",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": {
+        "R": 1047.0,
+        "G": 1080.0,
+        "B": "+0",
+        "A": "+0"
+      },
+      "ExpressionGUID": "{3436346D-4C0C-9A66-2DE0-CEAA47B5E5CB}"
+    }
+  ],
+  "texture_parameters": [
+    {
+      "ParameterInfo": {
+        "Name": "Colour Atlas",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -95,
+      "ExpressionGUID": "{5357E2FE-4F88-F459-8B05-8FB49EF27792}",
+      "resolved_object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Colour.TA_Colour"
+    },
+    {
+      "ParameterInfo": {
+        "Name": "Masks Atlas",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -96,
+      "ExpressionGUID": "{5CA04BB3-4139-33C3-750C-DBB1ADBE10E7}",
+      "resolved_object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Masks.TA_Masks"
+    },
+    {
+      "ParameterInfo": {
+        "Name": "Normal Atlas",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -97,
+      "ExpressionGUID": "{82DD6E53-46F1-75A6-2CAE-DCBF8AFF2512}",
+      "resolved_object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Normal.TA_Normal"
+    },
+    {
+      "ParameterInfo": {
+        "Name": "Terrain Colour",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -88,
+      "ExpressionGUID": "{FE8B4565-4055-E93E-346B-ED90C8828670}",
+      "resolved_object_path": "/Engine/EditorLandscapeResources/WhiteSquareTexture.WhiteSquareTexture"
+    },
+    {
+      "ParameterInfo": {
+        "Name": "Terrain IDmap",
+        "Association": "GlobalParameter",
+        "Index": -1
+      },
+      "ParameterValue": -93,
+      "ExpressionGUID": "{58BBD5C8-4541-23B3-F85B-5ABCEC7BBAE1}",
+      "resolved_object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_Null.T_Null"
+    }
+  ],
+  "static_parameters_runtime": {
+    "StaticSwitchParameters": [
+      {
+        "Value": false,
+        "ParameterInfo": {
+          "Name": "Allow Grass",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "bOverride": true,
+        "ExpressionGUID": "{89ED7543-4C8D-6BEA-1674-1895D73D5C9B}"
+      },
+      {
+        "Value": true,
+        "ParameterInfo": {
+          "Name": "Use IDmap",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "bOverride": true,
+        "ExpressionGUID": "{FF3FEE18-437F-D478-063C-79BAE53AFF1A}"
+      },
+      {
+        "Value": true,
+        "ParameterInfo": {
+          "Name": "Use Terrain Colour",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "bOverride": true,
+        "ExpressionGUID": "{F6BF4B0D-45AF-FBAE-6A6B-FF99B4ADF698}"
+      }
+    ],
+    "MaterialLayers": {
+      "Layers": [
+        -37,
+        -38,
+        -38,
+        -38,
+        -38
+      ],
+      "Blends": [
+        -39,
+        -39,
+        -39,
+        -39
+      ],
+      "Layers_resolved": [
+        "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.ML_PE_Landscape_Base",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer"
+      ],
+      "Blends_resolved": [
+        "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+        "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape"
+      ]
+    },
+    "bHasMaterialLayers": true
+  }
+}

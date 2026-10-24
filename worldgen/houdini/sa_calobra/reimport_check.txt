@@ -1,0 +1,12 @@
+=== Load Landscape Parms ===
+  output_name = Landscape
+  mode = 0
+  input7 = 0
+  dir = $PEGASUSPROJECT/SourceContent
+  environment = 2
+
+=== Cache Landscape Parms ===
+  file = $PEGASUSPROJECT/SourceContent/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc
+  file2 = $PEGASUSPROJECT/SourceContent/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layers.bgeo.sc
+  execute = None
+  execute2 = None

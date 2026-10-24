@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "METADATA_DISCOVERY_COMPLETE_GRAPH_DESCRIPTION_ONLY_BLUEPRINT_SCOPE",
+  "source_commit": "61d3a245124284283fb2600cb1b1379e410e492c",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39644676507",
+  "attempt": 1,
+  "job_id": 119377167051,
+  "artifact": {
+    "id": 12367111688,
+    "bytes": 27938,
+    "sha256": "05b65b4583a8c10f1667d8340fa41a8a098eeb3ae2b6cdd4da0fe78e155abb97"
+  },
+  "reports": [
+    {
+      "path": "discovery-39644676507-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3810,
+      "sha256": "1c2a6d23044ee69c1183b052cbb82bf6d73e6d3ac08615066b1b17bbc256f82f"
+    },
+    {
+      "path": "discovery-39644676507-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "9ce475aee9f188acbe97136fc504e8f1a8216d7f71c35cc279a09ca5a2f69227"
+    }
+  ],
+  "compressed_bridge": {
+    "artifact_entry": "bridge.json",
+    "original": "discovery-39644676507-bridge.json",
+    "gzip": "discovery-39644676507-bridge.json.gz",
+    "original_bytes": 93828,
+    "original_sha256": "ba241efe38f92d64eea52713cbe93a34d842117ea85b7cdfa29943f7b45b9fb9",
+    "gzip_bytes": 26155,
+    "gzip_sha256": "8fd6897d6d8f7195a543aa2851e3db2290e8bf9f212128c65a978629bf818e28"
+  },
+  "native_tool_calls": 0,
+  "tool_list_complete": true,
+  "tool_count": 84,
+  "identity_stable": true,
+  "last_identity_verified_utc": "2026-10-21T17:35:12.1765566Z",
+  "editor_started_or_stopped": false,
+  "edit_graph_contract": {
+    "status": "EXCLUDED",
+    "reason": "CONTRACT_SIZE",
+    "description_only_status": "RETAINED_DESCRIPTION_ONLY",
+    "description_truncated": false,
+    "schema_retained": false,
+    "advertised_scope": "Blueprint graphs; no material-function graph capability established"
+  },
+  "workflow_result": {
+    "conclusion": "failure",
+    "failed_later_step": "Recover the bounded error from the retained observer attempt",
+    "reason": "FAILURE_LOG_OWNER",
+    "interpretation": "The unchanged historical error reader refused current PID34848 in place of pinned PID17896. Metadata discovery itself completed with zero native calls; no denied observer was retried."
+  },
+  "performance_pass": false
+}

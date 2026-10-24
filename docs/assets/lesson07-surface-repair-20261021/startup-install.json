@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "source_sha": "de903a85e67540f451ea86743ea981fb7eb79f18",
+  "run_token": "39625318792-1",
+  "status": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+  "phase": "TASK",
+  "error_type": null,
+  "reason_code": null,
+  "task": "YACS Lesson07 Remote Editor",
+  "task_registered": false,
+  "task_start_requested": true,
+  "handoff_step": null,
+  "error_inner_type": null,
+  "error_hresult": null,
+  "error_native_code": null,
+  "task_migrated": true,
+  "task_migration": {
+    "kind": "CLOSED_602",
+    "prior_source_sha": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+    "prior_installation_sha256": "8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5",
+    "prior_session_sha256": "8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb",
+    "prior_release_retained": true,
+    "prior_state_retained": true,
+    "owner_sid_matches": true,
+    "prior_task_result": 0,
+    "prior_ue_clean_exit_verified": false
+  },
+  "owner_sid_matches": true,
+  "editor_stop_requested": false,
+  "project_config_write_requested": false,
+  "package_save_requested": false,
+  "native_world_verified": false,
+  "post_job_survival_verified": false,
+  "session_report": "D:\\yacs\\lesson07-remote\\state\\de903a85e67540f451ea86743ea981fb7eb79f18\\session.json",
+  "preflight": {
+    "schema_version": 1,
+    "source_sha": "de903a85e67540f451ea86743ea981fb7eb79f18",
+    "status": "PREFLIGHT_PASS",
+    "phase": "MODULES",
+    "checked_at_utc": "2026-10-21T15:31:47.0661573Z",
+    "subject": null,
+    "error_type": null,
+    "reason_code": null,
+    "handoff_step": null,
+    "error_inner_type": null,
+    "error_hresult": null,
+    "error_native_code": null,
+    "project_file": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "map_package": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "editor": null,
+    "host_status": "IDLE",
+    "checkpoint_bytes_verified": true,
+    "module_build_ids_verified": true,
+    "native_world_verified": false,
+    "native_module_load_verified": false,
+    "owner_sid_matches": false,
+    "autosave_session_override": false,
+    "editor_stop_requested": false,
+    "package_save_requested": false,
+    "project_config_write_requested": false,
+    "performance_pass": false,
+    "file_proofs": [
+      {
+        "path": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+        "size_bytes": 1262,
+        "sha256": "f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+        "size_bytes": 1838638056,
+        "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\MI_Landscape_Instance_YACS.uasset",
+        "size_bytes": 40154,
+        "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\M_Landscape_YACS.uasset",
+        "size_bytes": 208956,
+        "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\TA_Colour_Unified.uasset",
+        "size_bytes": 24178947,
+        "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\TA_Normal_Unified.uasset",
+        "size_bytes": 40441798,
+        "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1"
+      },
+      {
+        "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\TA_Masks_Unified.uasset",
+        "size_bytes": 12124066,
+        "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8"
+      },
+      {
+        "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "size_bytes": 512952,
+        "sha256": "6f9c95c131f37cbdc384ade02fcf6ed828baa366b25234d0d85e212244cac9aa"
+      },
+      {
+        "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Marketplace\\Wingman\\Wingman.uplugin",
+        "size_bytes": 4580,
+        "sha256": "54f34b9d3be93d951c3d1acd3ad37e04b391fd9b398f199c499d1f5dbd6b3b7e"
+      }
+    ],
+    "module_proofs": [
+      {
+        "module": "YetAnotherCyclingSim",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\project\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSim.dll",
+          "size_bytes": 1612288,
+          "sha256": "44916179ef6fb8355917165b08d8d6aafe7f34e1d463819c76ea5ed5332f04d3"
+        }
+      },
+      {
+        "module": "YetAnotherCyclingSimEditor",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\project\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSimEditor.dll",
+          "size_bytes": 961536,
+          "sha256": "25425f67e8cc69858fa90dfb02023e430970289b55a38df484ed2ccb13d23048"
+        }
+      },
+      {
+        "module": "RoadForge",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\project\\Plugins\\RoadForge\\Binaries\\Win64\\UnrealEditor-RoadForge.dll",
+          "size_bytes": 105984,
+          "sha256": "cd66e5b6b3c7000eb9ed80a10711c9049b52a0a6b7d7f93af638526064190179"
+        }
+      },
+      {
+        "module": "Wingman",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Marketplace\\Wingman\\Binaries\\Win64\\UnrealEditor-Wingman.dll",
+          "size_bytes": 13343744,
+          "sha256": "29f3b2d7d381041ae1710208feb93863e4b152b8e5e40432a5cc571d60e047f3"
+        }
+      },
+      {
+        "module": "PythonScriptPlugin",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Experimental\\PythonScriptPlugin\\Binaries\\Win64\\UnrealEditor-PythonScriptPlugin.dll",
+          "size_bytes": 2563000,
+          "sha256": "05c292687469f297023cb17a8f9f3356afe183c9c4c05f383083ccaaccd6346c"
+        }
+      },
+      {
+        "module": "PythonScriptPluginPreload",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Experimental\\PythonScriptPlugin\\Binaries\\Win64\\UnrealEditor-PythonScriptPluginPreload.dll",
+          "size_bytes": 67000,
+          "sha256": "a597a71c1cf3c68c848b8ac52efb48a48ed4cf0bf0cd909c980c55ca052fd26d"
+        }
+      },
+      {
+        "module": "EditorScriptingUtilities",
+        "build_id": "55116800",
+        "file": {
+          "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Editor\\EditorScriptingUtilities\\Binaries\\Win64\\UnrealEditor-EditorScriptingUtilities.dll",
+          "size_bytes": 541624,
+          "sha256": "f63ddbf01eac8048f2097f75f10d55ed80d33987403a43b4db889715989ada4f"
+        }
+      }
+    ],
+    "free_d_bytes": 77928058880,
+    "project_observation": {
+      "engine_association": "{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}",
+      "descriptor_sha256": "f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66",
+      "admission_basis": "OBSERVED_GUID_AND_DESCRIPTOR_SHA256",
+      "module_count": 2,
+      "modules": [
+        {
+          "name": "YetAnotherCyclingSim",
+          "type": "Runtime"
+        },
+        {
+          "name": "YetAnotherCyclingSimEditor",
+          "type": "Editor"
+        }
+      ],
+      "modules_truncated": false,
+      "required_runtime_matches": 1,
+      "required_editor_matches": 1,
+      "required_runtime_type_matches": 1,
+      "required_editor_type_matches": 1
+    },
+    "engine_build_id": "55116800"
+  },
+  "editor": {
+    "editor_pid": 24984,
+    "editor_start_filetime_utc": "134370703459789397",
+    "editor_started_utc": "2026-10-21T15:32:25.9789397Z",
+    "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "interactive_session_id": 2,
+    "canonical_project_matches": true
+  },
+  "completed_at_utc": "2026-10-21T15:32:27.2469254Z"
+}

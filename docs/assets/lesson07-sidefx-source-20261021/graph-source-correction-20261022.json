@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "status": "VERIFIED_GRAPH_FRAGMENTS_CORRECTED_DEPENDENT_COOK_BLOCKED",
+  "repository_context": {
+    "issue": 365,
+    "milestone": "M3",
+    "draft_pr": 474,
+    "branch": "codex/365-world-graph",
+    "source_commit_before_change": "7b43d13355de747a85ec5b4e314e15c5c4c69f41"
+  },
+  "original_recipe_sha256": "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37",
+  "updated_recipe_sha256": "9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf",
+  "files": [
+    {
+      "path": "scripts/houdini/lesson06_unified_pipeline.py",
+      "bytes": 37392,
+      "sha256": "9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf"
+    },
+    {
+      "path": "scripts/houdini/prepare_lesson07_colour_canary.py",
+      "bytes": 18111,
+      "sha256": "38bae20c3dfc41e6a6dcf95e28ad11aae1a006dcf0636214627bf91f3da4781e"
+    },
+    {
+      "path": "scripts/houdini/test_prepare_lesson07_colour_canary.py",
+      "bytes": 9950,
+      "sha256": "1bb9f4429d7452e0bca33a3c386fc67c87f1e9b9e58924740a0b4d4b57818087"
+    },
+    {
+      "path": "scripts/houdini/test_lesson06_material_admission.py",
+      "bytes": 3288,
+      "sha256": "a47820098ab3af30e5402d54bcd17a2ca460ae25d123d3465e094e38936a1262"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/assets/lesson07-sidefx-source-20261021/houdini-author-graph-followup-20261022.json",
+      "bytes": 58380,
+      "sha256": "529a1fb7027c8bf65ada75fb91c3d446120986d25f3c4240a78d99029f4a6d89"
+    },
+    {
+      "path": "docs/assets/lesson07-sidefx-source-20261021/houdini-original-hda-file-branches-20261022.json",
+      "bytes": 10590,
+      "sha256": "fb5a7445e6522a5d59d133fd74fce5cabd527d4b8ff91984f3b76f8e236b8f55"
+    },
+    {
+      "path": "docs/assets/lesson07-sidefx-source-20261021/material-resources-39761109220-evidence.json",
+      "bytes": 8933,
+      "sha256": "c7871ab2d0607f89219a76ece82937492bdea1da022670fb08d4a62a901976b3"
+    }
+  ],
+  "source_corrections": [
+    "stage4b: grass -> gradient -> unmasked brightness RGB(2,2,2), strength1 -> sand; saved output is MAT_SAND.",
+    "Grass gradient: strength0.95, Linear point1(position0, RGB0.34/0.55/0.12705), point2(position0.996694, RGB1/0.822741/0.538). Combining separate last-visible reads is an explicit temporal inference.",
+    "stage4d: cliff -> masked cliff tint -> scree material -> masked scree tint, with separate mask inputs.",
+    "Cliff tint RGB0.597/0.597/0.597, strength1; scree tint RGB0.874/0.822347/0.701822, strength1."
+  ],
+  "execution_boundary": {
+    "direct_blocked_functions": [
+      "stage3_scree",
+      "stage4a_grass",
+      "stage4b_sand",
+      "stage4c_cliff",
+      "stage4d_scree",
+      "stage4_materials_and_tints",
+      "stage5_idmap"
+    ],
+    "cli_pre_dispatch_block": [
+      "all",
+      "materials",
+      "4a",
+      "4b",
+      "4c",
+      "scree",
+      "4d",
+      "idmap"
+    ],
+    "default_all_blocked": true,
+    "force_bypass": false,
+    "cache_presence_bypass": false,
+    "all_force_stops_before_base_and_masks": true,
+    "historical_substitute_canary_blocked_at": [
+      "main",
+      "cook_canary"
+    ],
+    "historical_diagnostic_functions_and_strict_pins_retained": true
+  },
+  "validation": {
+    "cpu_command": "python -m unittest scripts.houdini.test_prepare_lesson07_colour_canary scripts.houdini.test_lesson06_material_admission -v",
+    "cpu_tests": 14,
+    "cpu_result": "PASS",
+    "pipeline_entrypoint_calls_tested": 32,
+    "independent_code_and_source_review": "ACCEPT_WITH_NATIVE_AND_FULL_RECIPE_LIMITS",
+    "base_and_masks_ast_equal_to_before": true,
+    "pipeline_test_limit": "Native modules are replaced with stubs for import; this proves entrypoint rejection before operations, not absence of the production module-level hou import.",
+    "canary_test_limit": "The cook guard runs before the delayed native import and output operations."
+  },
+  "still_unresolved": [
+    "Original map bytes/identity and unshown source image settings for five Houdini families, separate from five Unreal array families.",
+    "Rocky predecessor implementation and exact upper height-ramp knot.",
+    "Author default.pic evaluation/CWD and numeric roughness output.",
+    "Complete final mask/ramp tuples, including exposure right endpoint and curvature first endpoint; remaining verified exposure/curvature fragments are retained but not implemented in this patch.",
+    "Explicit geographic adaptations, separate candidate output provenance and bounded native proof before admitting any material cook."
+  ],
+  "host_deployment_at_this_source_review": false,
+  "native_canary_run": false,
+  "material_cook_run": false,
+  "cache_mutated": false,
+  "hip_saved": false,
+  "unreal_mutated": false,
+  "lesson07_technical_pass": false,
+  "one_to_one_material_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "canonical_host_before_identification": {
+    "observed_run_id": 39761109220,
+    "path": "D:/yacs/project/scripts/houdini/lesson06_unified_pipeline.py",
+    "bytes": 34868,
+    "sha256": "6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e",
+    "reconstructed_from_published_commit": "fbe2eb785f5089b3092f7a9fdce5b3dc5e785908",
+    "reconstruction": "Remove only the three Lesson04 source-comment lines immediately before MAT_GRASS use_mask=1.",
+    "reconstructed_bytes_and_sha_match_native_observation": true,
+    "limit": "A future synchronization must recheck the current host file and refuse a changed identity; this comparison does not itself install or execute the recipe."
+  }
+}

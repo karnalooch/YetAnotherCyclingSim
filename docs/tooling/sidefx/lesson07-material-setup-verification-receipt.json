@@ -1,0 +1,4389 @@
+{
+  "status": "LESSON07_ORIGINAL_MATERIAL_REPRODUCTION_IN_PROGRESS",
+  "timestamp": "2026-10-20T03:20:00+02:00",
+  "lesson": "PEG-02-07",
+  "lesson_title": "7 | Material Setup",
+  "course": "Project Pegasus Landscape Workflow",
+  "source_video": "https://player.vimeo.com/video/888569514",
+  "source_vtt_sha256": "2f0c5e8292219b145ab59ecb173f706bcced71bec15622cb0e926c500a32fa80",
+  "base_commit": "2e1c209995b100fe01af08c39542605cffee9305",
+  "branch": "codex/365-world-graph",
+  "pull_request": "#474",
+  "houdini_version": "22.0.466",
+  "unreal_version": "5.8.2-56702186+++UE5+Release-5.8",
+  "acceptance_criteria": {
+    "LESSON07_TECHNICAL_PASS": false,
+    "visual_review": "PENDING_FINAL_M3_AUDIT",
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3",
+    "native_recheck_required": true,
+    "reason": "Five matching surface textures and three arrays saved in native run39636694686 with unchanged Landscape/other slots. Render review shows excessively dark Cliffs and remaining steep-face streaks. Global Normal Flatten1 remains; physical scale, normal reconstruction, fresh reopen, whole-area proof and protected delivery remain open."
+  },
+  "domain": {
+    "grid_dimensions": [
+      16000,
+      16000,
+      1
+    ],
+    "total_samples": 256000000,
+    "gridspacing_m": 0.5,
+    "bounds_x_m": [
+      -4000,
+      4000
+    ],
+    "bounds_z_m": [
+      -4000,
+      4000
+    ],
+    "origin_sample_m": [
+      -3999.75,
+      0,
+      3999.75
+    ]
+  },
+  "ue_geometry_source_and_actual_geometry": {
+    "source_cache": {
+      "path": "D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc",
+      "sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "size_bytes": 4808520505,
+      "dimensions": [
+        16000,
+        16000,
+        1
+      ],
+      "spacing_m": 0.5
+    },
+    "transport_envelope": {
+      "source_domain": "8000x8000 m, 16000x16000 cells at 0.5m spacing",
+      "transport_envelope": "8128x8128 m, 4 tiles of 8129x8129 vertices (16257x16257 total envelope)",
+      "padding_handling": "Each tile has 64m padding (128 quads) beyond the 4000m sub-domain to satisfy Unreal 127-quad section sizing. The outer 64m padding boundary contains Alpha=0 / NoData, which is handled cleanly as border geometry and never classified as legal Grass (ID=0).",
+      "quantization_unit_cm": 2.2964674
+    },
+    "transfer_tiles": {
+      "tile_count": 4,
+      "tile_resolution": [
+        8129,
+        8129
+      ],
+      "tile_span_m": [
+        4064,
+        4064
+      ],
+      "crop_centers_m": {
+        "SaCalobra_Unified_0_0": [
+          -2032.25,
+          -2032.25
+        ],
+        "SaCalobra_Unified_1_0": [
+          2031.75,
+          -2032.25
+        ],
+        "SaCalobra_Unified_0_1": [
+          -2032.25,
+          2031.75
+        ],
+        "SaCalobra_Unified_1_1": [
+          2031.75,
+          2031.75
+        ]
+      },
+      "max_seam_elevation_error_m": 0
+    },
+    "ue_landscape_actual_readback": {
+      "level_package": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+      "umap_file": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+      "umap_size_bytes": 1842190204,
+      "umap_sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7",
+      "landscape_actor_count": 4,
+      "components_per_actor": 1024,
+      "total_components": 4096,
+      "component_grid": "32x32 per actor",
+      "section_size_quads": 127,
+      "subsections_per_component": "2x2",
+      "component_size_quads": 254,
+      "tile_quads": 8128,
+      "tile_vertices": 8129,
+      "grid_spacing_cm": 50,
+      "assigned_material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+      "actors": [
+        {
+          "name": "SaCalobra_Unified_0_0",
+          "location_cm": [
+            -406425,
+            -25.012,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            185.7248
+          ],
+          "bounds_origin_cm": [
+            -203225,
+            -203225,
+            23678.5
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            23865.6
+          ],
+          "components": 1024
+        },
+        {
+          "name": "SaCalobra_Unified_0_1",
+          "location_cm": [
+            -406425,
+            406375,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            561.3899
+          ],
+          "bounds_origin_cm": [
+            -203225,
+            203175,
+            71820.6
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            71890.8
+          ],
+          "components": 1024
+        },
+        {
+          "name": "SaCalobra_Unified_1_0",
+          "location_cm": [
+            -24.988,
+            -25.012,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            333.9102
+          ],
+          "bounds_origin_cm": [
+            203175,
+            -203225,
+            42570.9
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            42907.5
+          ],
+          "components": 1024
+        },
+        {
+          "name": "SaCalobra_Unified_1_1",
+          "location_cm": [
+            -24.988,
+            406375,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            533.043
+          ],
+          "bounds_origin_cm": [
+            203175,
+            203175,
+            71796.3
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            64658.5
+          ],
+          "components": 1024
+        }
+      ],
+      "height_quantization_16bit": {
+        "height_range_m": [
+          -5,
+          1500
+        ],
+        "height_range_cm": 150500,
+        "quantization_levels": 65535,
+        "step_size_cm": 2.2964674,
+        "step_size_m": 0.022964674,
+        "max_quantization_error_m": 0.011482337
+      },
+      "sampled_heights_readback": [
+        {
+          "name": "Puig Major Summit",
+          "x_ue_cm": -128375,
+          "y_ue_cm": 349525,
+          "x_h_m": -1283.75,
+          "z_h_m": 3495.25,
+          "source_h_m": 1437.16,
+          "hit_z_ue_m": 1437.114,
+          "hit_actor": "SaCalobra_Unified_0_1",
+          "delta_m": -0.0458,
+          "delta_cm": -4.58,
+          "quantization_steps": -1.996
+        },
+        {
+          "name": "Sa Calobra Cove Beach",
+          "x_ue_cm": 47000,
+          "y_ue_cm": -106000,
+          "x_h_m": 470,
+          "z_h_m": -1060,
+          "source_h_m": 10.34,
+          "hit_z_ue_m": 10.291,
+          "hit_actor": "SaCalobra_Unified_1_0",
+          "delta_m": -0.0493,
+          "delta_cm": -4.93,
+          "quantization_steps": -2.145
+        },
+        {
+          "name": "Scree Cluster 1 Centroid",
+          "x_ue_cm": -250278,
+          "y_ue_cm": 184595,
+          "x_h_m": -2502.78,
+          "z_h_m": 1845.95,
+          "source_h_m": 460.95,
+          "hit_z_ue_m": 460.917,
+          "hit_actor": "SaCalobra_Unified_0_1",
+          "delta_m": -0.0329,
+          "delta_cm": -3.29,
+          "quantization_steps": -1.434
+        },
+        {
+          "name": "Inland Center (0, 0)",
+          "x_ue_cm": 0,
+          "y_ue_cm": 0,
+          "x_h_m": 0,
+          "z_h_m": 0,
+          "source_h_m": 473.51,
+          "hit_z_ue_m": 473.117,
+          "hit_actor": "SaCalobra_Unified_1_1",
+          "delta_m": -0.3926,
+          "delta_cm": -39.26,
+          "quantization_steps": -17.095
+        }
+      ]
+    },
+    "historical_measurements_require_native_recheck": true,
+    "quantization_correction": {
+      "shared_2_2964674_cm_step_is_valid": false,
+      "basis": "Scale.Z / 128 cm per stored height unit, using historical observed actor scales; fresh native readback pending.",
+      "actor_step_cm": {
+        "SaCalobra_Unified_0_0": 1.450975,
+        "SaCalobra_Unified_0_1": 4.38585859375,
+        "SaCalobra_Unified_1_0": 2.6086734375,
+        "SaCalobra_Unified_1_1": 4.1643984375
+      },
+      "is_seam_acceptance": false
+    }
+  },
+  "idmap_and_color_registration": {
+    "coordinate_math_derivation": {
+      "sample_spacing_m": 0.5,
+      "ue_units_per_sample_cm": 50,
+      "domain_span_cm": 800000,
+      "domain_resolution_samples": 16000,
+      "terrain_scale": 50,
+      "terrain_resolution": 16000,
+      "uv_rotate": 0,
+      "uv_offset": [
+        -8000,
+        -8000,
+        0,
+        0
+      ],
+      "num_idmap_layers": 5
+    },
+    "landmark_alignment_verification": {
+      "southwest_corner": {
+        "ue_coords_cm": [
+          -400000,
+          -400000
+        ],
+        "texture_pixel": [
+          0,
+          0
+        ],
+        "uv_coord": [
+          0,
+          0
+        ]
+      },
+      "northeast_corner": {
+        "ue_coords_cm": [
+          400000,
+          400000
+        ],
+        "texture_pixel": [
+          15999,
+          15999
+        ],
+        "uv_coord": [
+          0.9999375,
+          0.9999375
+        ]
+      },
+      "puig_major_summit": {
+        "ue_coords_cm": [
+          -128375,
+          349525
+        ],
+        "texture_pixel": [
+          5432,
+          14990
+        ],
+        "expected_class": "Grass 2 (High Alpine)",
+        "readback_id": 64
+      },
+      "sa_calobra_cove": {
+        "ue_coords_cm": [
+          47000,
+          -106000
+        ],
+        "texture_pixel": [
+          8940,
+          5880
+        ],
+        "expected_class": "Cliffs",
+        "readback_id": 191
+      },
+      "scree_cluster1": {
+        "ue_coords_cm": [
+          -250278,
+          184595
+        ],
+        "texture_pixel": [
+          2994,
+          11692
+        ],
+        "expected_class": "Scree",
+        "readback_id": 255
+      }
+    },
+    "legal_id_codes": [
+      0,
+      64,
+      128,
+      191,
+      255
+    ],
+    "class_order": [
+      {
+        "id": 0,
+        "name": "Grass",
+        "atlas_slice": 0
+      },
+      {
+        "id": 64,
+        "name": "Grass2",
+        "atlas_slice": 1
+      },
+      {
+        "id": 128,
+        "name": "Sand",
+        "atlas_slice": 2
+      },
+      {
+        "id": 191,
+        "name": "Cliffs",
+        "atlas_slice": 3
+      },
+      {
+        "id": 255,
+        "name": "Scree",
+        "atlas_slice": 4
+      }
+    ]
+  },
+  "material_configuration": {
+    "master_material": "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master",
+    "material_instance": {
+      "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+      "uasset_size_bytes": 40261,
+      "uasset_sha256": "2e2256df25fee01d9975c67570e8f7839836a707374ee7440c624ac5a64c428c",
+      "readback_scalar_parameters": {
+        "Num IDmap Layers": 5,
+        "Terrain Resolution": 16000,
+        "Terrain Scale": 50,
+        "UV Rotate": 0,
+        "Global Colour Strength": 0.5,
+        "Global Specular Scale": 1,
+        "Detail Brightness": 1.5
+      },
+      "readback_vector_parameters": {
+        "Offset": [
+          -8000,
+          -8000,
+          0,
+          0
+        ]
+      },
+      "readback_texture_parameters": {
+        "Terrain IDmap": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
+        "Terrain Colour": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color",
+        "Colour Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+        "Normal Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+        "Masks Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified"
+      }
+    },
+    "texture_2d_arrays": {
+      "TA_Colour_Unified": {
+        "uasset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+        "uasset_size_bytes": 27552324,
+        "uasset_sha256": "682d7c3a0bd80f58d7cfe0f924b08a537d3f28dd4301f9810770b0d34b571e33",
+        "slices": 5,
+        "resolution": [
+          2048,
+          2048
+        ],
+        "srgb": true,
+        "compression": "TC_Default",
+        "addressing": "Wrap"
+      },
+      "TA_Normal_Unified": {
+        "uasset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+        "uasset_size_bytes": 45545946,
+        "uasset_sha256": "15e531bfa888fe7c8b87a8d9b8a94a860029c3944b48a109ec179c00af28d76b",
+        "slices": 5,
+        "resolution": [
+          2048,
+          2048
+        ],
+        "srgb": false,
+        "compression": "TC_Normalmap",
+        "addressing": "Wrap"
+      },
+      "TA_Masks_Unified": {
+        "uasset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+        "uasset_size_bytes": 12087571,
+        "uasset_sha256": "0de2cd408ae436d5b8d96e5e5ea666eb3a9e0dc0c936b3a8d21beb8e0914476b",
+        "slices": 5,
+        "resolution": [
+          2048,
+          2048
+        ],
+        "srgb": false,
+        "compression": "TC_Masks",
+        "packing_contract": "R=AO, G=Roughness, B=Displacement",
+        "addressing": "Wrap",
+        "scree_remediation": {
+          "source": "Lesson 05 Material Forge Mediterranean Limestone Scree",
+          "source_path": "worldgen/material_forge/results/20261018-095147-385078/run-a/mediterranean_soil/limestone_scree_v1/export",
+          "slice_4_asset": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks.T_Scree_Masks",
+          "ao_channel": "R (mean 1.00)",
+          "roughness_channel": "G (mean 0.88, range 0.85-0.90)",
+          "displacement_channel": "B (mean 0.73)"
+        }
+      }
+    }
+  },
+  "historical_houdini_preview_verification": {
+    "checkpoint_hip": {
+      "path": "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "size_bytes": 570182,
+      "sha256": "2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1"
+    },
+    "native_lookat_alignment": {
+      "method": "Native Houdini null targets + lookatpath parameter",
+      "alignment_check": "Camera local -Z unit vector dot aim unit vector",
+      "cameras": {
+        "cam_panorama": {
+          "dot": 1,
+          "pos": [
+            -4500,
+            4200,
+            -5000
+          ],
+          "target": [
+            0,
+            400,
+            0
+          ]
+        },
+        "cam_puig_major": {
+          "dot": 1,
+          "pos": [
+            -2800,
+            2200,
+            1800
+          ],
+          "target": [
+            -1283.75,
+            1437.16,
+            3495.25
+          ]
+        },
+        "cam_sa_calobra_cove": {
+          "dot": 1,
+          "pos": [
+            -200,
+            450,
+            -1800
+          ],
+          "target": [
+            470,
+            10.34,
+            -1060
+          ]
+        },
+        "cam_scree_site": {
+          "dot": 1,
+          "pos": [
+            -2550,
+            520,
+            1780
+          ],
+          "target": [
+            -2502.78,
+            460.95,
+            1845.95
+          ]
+        },
+        "cam_transition": {
+          "dot": 1,
+          "pos": [
+            -2420,
+            490,
+            1800
+          ],
+          "target": [
+            -2460,
+            470,
+            1830
+          ]
+        }
+      }
+    },
+    "scree_isolation_verification": {
+      "decoder_node": "/obj/SA_CALOBRA_UNIFIED/ID_TO_LAYER",
+      "id_layer_parm": "255",
+      "full_resolution_samples": 781,
+      "categorical_sampling": "Point filter applied during proxy downsampling to preserve discrete ID values without continuous linear interpolation"
+    },
+    "interactive_preview_resample": {
+      "node": "/obj/SA_CALOBRA_UNIFIED/PREVIEW_RESAMPLE",
+      "mode": "By scale (0.125) with point filtering for discrete class labels",
+      "interactive_resolution": [
+        2000,
+        2000
+      ],
+      "preserved_layers": 14,
+      "export_nodes_connection": "Directly connected to FINAL_CACHE at full 16000x16000 (0.5m) native resolution"
+    },
+    "rendered_3d_viewport_modes": [
+      {
+        "file": "3d_preview_global_color.png",
+        "size_bytes": 949800,
+        "sha256": "2a80d3b3104506f41792ba00337378085eb09c8c8ce34beb4cbbcb41d429ba50",
+        "mean_pixel": 91.83,
+        "non_black_pct": 58.46,
+        "description": "Global macro color preview on 3D terrain (volvis stripped to enable native RGB volumes)"
+      },
+      {
+        "file": "3d_preview_neutral_shading.png",
+        "size_bytes": 1044646,
+        "sha256": "880012514859d1efd70ed063ca93aba86e108131b626698f9e1102ff862e6239",
+        "mean_pixel": 90.15,
+        "non_black_pct": 58.64,
+        "description": "Neutral clay geometry shading preview (height only, neutral uniform material)"
+      },
+      {
+        "file": "3d_preview_idmap_palette.png",
+        "size_bytes": 1853941,
+        "sha256": "122e5ed8078fc8efc822c1e6d0b10b744678ff3376715e748eba4988edd9ca6a",
+        "mean_pixel": 52.24,
+        "non_black_pct": 50.13,
+        "description": "5-class Pegasus IDMap palette preview (discrete constant ramp on cdvolume='id')"
+      },
+      {
+        "file": "3d_preview_scree_isolation.png",
+        "size_bytes": 1017936,
+        "sha256": "8dc5909538499641b683c354537cc6b98fcd3727cb37c9351d1d7a3907431ab1",
+        "mean_pixel": 70.03,
+        "non_black_pct": 56.65,
+        "description": "Scree class isolation mask preview (decoded layer 255 with vivid red highlight ramp)"
+      }
+    ],
+    "rendered_3d_landmark_views": [
+      {
+        "file": "3d_cam_panorama.png",
+        "size_bytes": 949800,
+        "sha256": "2a80d3b3104506f41792ba00337378085eb09c8c8ce34beb4cbbcb41d429ba50",
+        "mean_pixel": 91.83,
+        "non_black_pct": 58.46,
+        "description": "Full domain 3D panorama from /obj/cam_panorama"
+      },
+      {
+        "file": "3d_cam_puig_major.png",
+        "size_bytes": 382413,
+        "sha256": "6b5baea368b21a1514308b2eafe764345bcff40a3a3e14af8a95802f18ed5347",
+        "mean_pixel": 72.29,
+        "non_black_pct": 44.2,
+        "description": "Puig Major summit peak closeup from /obj/cam_puig_major"
+      },
+      {
+        "file": "3d_cam_sa_calobra_cove.png",
+        "size_bytes": 340135,
+        "sha256": "76d9eae1be6a2fd59942ccf6330242ef99435bb474a3a762789a01e278002c9e",
+        "mean_pixel": 51.81,
+        "non_black_pct": 40.71,
+        "description": "Sa Calobra cove beach closeup from /obj/cam_sa_calobra_cove"
+      },
+      {
+        "file": "3d_cam_scree_site.png",
+        "size_bytes": 183609,
+        "sha256": "7ede8aec922403e49a146d40f5f774bd72fe271556e972420ed89e819cb2f778",
+        "mean_pixel": 143.14,
+        "non_black_pct": 100,
+        "description": "Closeup view of Scree slope surface from /obj/cam_scree_site"
+      },
+      {
+        "file": "3d_cam_scree_site_isolation.png",
+        "size_bytes": 193216,
+        "sha256": "40a87e60b9ac3d420334adc3cbf180e269c5606d44b4fbbd567ea1ff9d0e85ea",
+        "mean_pixel": 142.13,
+        "non_black_pct": 100,
+        "description": "Closeup view of Scree slope with red class isolation mask from /obj/cam_scree_site"
+      },
+      {
+        "file": "3d_cam_transition.png",
+        "size_bytes": 82926,
+        "sha256": "623e698401ef7c9966abac9335145b187f786eb6a5f7efcec2c7fb0f2b422a65",
+        "mean_pixel": 165.42,
+        "non_black_pct": 100,
+        "description": "Scree/Cliffs boundary transition closeup from /obj/cam_transition"
+      }
+    ],
+    "status": "SUPERSEDED_PREVIEW_CLAIMS_NOT_ACCEPTANCE",
+    "source_commit": "926505d9",
+    "reason": "The old global preview was achromatic and the claimed Scree closeup had no red mask. Historical frame hashes no longer identify the updated evidence files."
+  },
+  "unreal_camera_inspection": {
+    "camera_alignment_formula": "UE_pos = [src_pos.x * 100, src_pos.z * 100, src_pos.y * 100]",
+    "material_and_neutral_evidence_shots": [
+      {
+        "file": "ue_panorama_material.png",
+        "size_bytes": 2650872,
+        "sha256": "c74bd5b84bef1f22a51e55dc3755758361ca6492486e3bd3c64b5913be3ad236",
+        "mean_pixel": 134.1,
+        "non_black_pct": 100,
+        "visual_assessment": "Complete 8x8 km landscape panorama shaded with MI_Landscape_Instance_YACS showing realistic lighting, atmospheric depth, and harmonious macro color"
+      },
+      {
+        "file": "ue_panorama_neutral.png",
+        "size_bytes": 1901267,
+        "sha256": "2cfea8063cfc0904b76bb9037a46be72ea75fb45edf6ea37c4df3491ddb278f2",
+        "mean_pixel": 173.59,
+        "non_black_pct": 100,
+        "visual_assessment": "Identical panorama shot on neutral clay M_TerrainReview confirming pure geometric relief without shader masking or missing tiles"
+      },
+      {
+        "file": "ue_closeup_scree.png",
+        "size_bytes": 3217612,
+        "sha256": "a64f9ea56193f0cedd44771f0b04d4cf2f136eca996cfecadf14660d631d6ee5",
+        "mean_pixel": 95.66,
+        "non_black_pct": 75.4,
+        "visual_assessment": "Direct slope closeup framed onto Scree Cluster 1 gravel surface; verified Mediterranean limestone texture response with no black voids"
+      },
+      {
+        "file": "ue_closeup_scree_neutral.png",
+        "size_bytes": 2155082,
+        "sha256": "b187162d78ba1a31a7ce9a8a4d6629e8df212595548569f45e02819a99260efd",
+        "mean_pixel": 100.17,
+        "non_black_pct": 100,
+        "visual_assessment": "Identical camera on Scree Cluster 1 with neutral clay shading confirming terrain surface continuity and ridge geometry"
+      },
+      {
+        "file": "ue_closeup_puig_major.png",
+        "size_bytes": 2577999,
+        "sha256": "c812c2f5e02b9610f3fa39a4ec225fe0e3b8febe2e4746a2ad96da3b79d0e8fc",
+        "mean_pixel": 166.02,
+        "non_black_pct": 100,
+        "visual_assessment": "Summit crags cleanly framed showing pale limestone cliff normal map relief and high-alpine grass blend"
+      },
+      {
+        "file": "ue_closeup_sa_calobra_cove.png",
+        "size_bytes": 2449739,
+        "sha256": "f12a07b1c7cf8b9ee5c401b2832a2ad79089dfa37bc171b7251c7c715dcee5c8",
+        "mean_pixel": 96.3,
+        "non_black_pct": 94.8,
+        "visual_assessment": "Cove bay beach and limestone cliff walls correctly framed showing turquoise water edge and coastal rock"
+      },
+      {
+        "file": "ue_closeup_transition.png",
+        "size_bytes": 2852572,
+        "sha256": "da25ec9c99fab6c7312e9f7ad16bd927fe72f99c084c211afb38b6f87d095044",
+        "mean_pixel": 84.86,
+        "non_black_pct": 75.8,
+        "visual_assessment": "Two-class boundary transition zone demonstrating crisp classification without blending artifacts"
+      },
+      {
+        "file": "ue_tile_seam_check.png",
+        "size_bytes": 3668402,
+        "sha256": "213260e4fa956aed5c56bc4bf34c051034780054509e10ef32dff582dc916558",
+        "mean_pixel": 171.47,
+        "non_black_pct": 98.7,
+        "visual_assessment": "Domain center tile seam boundary looking along X=0 and Y=0 axes; zero visible elevation step or texture misalignment"
+      }
+    ],
+    "status": "HISTORICAL_IMAGES_NOT_FRESH_NATIVE_ACCEPTANCE",
+    "claims_requiring_recheck": [
+      "Scree class/location alignment",
+      "Cove/beach framing",
+      "True seams at -0.25 m, not axes at 0 m",
+      "Geometry, visibility and collision after update"
+    ]
+  },
+  "updated_at": "2026-10-20T14:17:43.254050+00:00",
+  "houdini_preview_verification": {
+    "status": "NATIVE_PREVIEW_SIGNALS_VERIFIED_VISUAL_REVIEW_PENDING",
+    "original_reviewed_hip_sha256": "2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1",
+    "repair": {
+      "status": "PREVIEW_GRAPH_REPAIRED_RENDER_REVIEW_PENDING",
+      "houdini_version": "22.0.466",
+      "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "hip_before_sha256": "75a9a2e9e996a27ca3c2b2d536ed0172fa295165993356e19e63b667d084bc15",
+      "hip_after_sha256": "340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775",
+      "backup": "D:\\yacs\\work\\lesson07-unified-20261019\\checkpoints\\SaCalobra_Pegasus_Lesson07_Unified_v001-75a9a2e9e996a27ca3c2b2d536ed0172fa295165993356e19e63b667d084bc15.hiplc",
+      "source_cache": "D:\\yacs\\work\\lesson06-unified-20261019\\final_unified_idmap.bgeo.sc",
+      "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "source_l06_hip_sha256": "7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb",
+      "source_unchanged": true,
+      "idmap_sha256": "cb794170135e3b918e3d809275f9c68ba8595653453d8c8dafe1297bcf6e1bc3",
+      "scree_png_xy": [
+        2981,
+        4311
+      ],
+      "scree_native_voxel": [
+        2981,
+        11688,
+        0
+      ],
+      "scree_houdini_xyz_m": [
+        -2509.25,
+        44.647972106933594,
+        -1844.250244140625
+      ],
+      "scree_source_id": 1.0,
+      "scree_crop_size_m": 128,
+      "scree_selection_radius_m": 32,
+      "scree_selection_neighbours": 22,
+      "scree_crop_resolution": [
+        257,
+        257,
+        1
+      ],
+      "scree_crop_class_pixels": 34,
+      "scree_decoder_mismatches": 0,
+      "scree_crop_max_height_m": 255.7100067138672,
+      "global_tint_field": "r g b",
+      "global_tint_ramp": "none",
+      "cooked_preview_fields": {
+        "PREVIEW_GLOBAL_COLOR": "r g b",
+        "PREVIEW_IDMAP": "id",
+        "PREVIEW_CLASS_ISOLATION": "mask",
+        "SCREE_FULLRES_PREVIEW": "mask",
+        "SCREE_SITE_GLOBAL_COLOR": "r g b"
+      },
+      "render_caches": {
+        "PREVIEW_GLOBAL_COLOR": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_GLOBAL_COLOR.bgeo.sc",
+          "sha256": "90394f2c0689f1287fca2614833b82278bd61d42b5f8f014bcb15e391a830658"
+        },
+        "PREVIEW_IDMAP": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_IDMAP.bgeo.sc",
+          "sha256": "526051b7399e2f2a6ac3a8ab9bace2bd00157cd731aed74fbc8ef63598371884"
+        },
+        "PREVIEW_CLASS_ISOLATION": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_CLASS_ISOLATION.bgeo.sc",
+          "sha256": "c2ca79cdd7b7b92dce6727ae602f5ed1615c1c5a42b9a988512eea418e7cf73a"
+        },
+        "SCREE_FULLRES_PREVIEW": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\SCREE_FULLRES_PREVIEW.bgeo.sc",
+          "sha256": "5578cec56f5d215c7fa2e563ddc119a4412c927f251ba5ccae8b9b2d545a0f2b"
+        },
+        "SCREE_SITE_GLOBAL_COLOR": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\SCREE_SITE_GLOBAL_COLOR.bgeo.sc",
+          "sha256": "058a52fdf717bc8ff5eb770101594c54f3f12e12a928efd67720205da50f59ac"
+        },
+        "PREVIEW_NEUTRAL_SHADING": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_NEUTRAL_SHADING.bgeo.sc",
+          "sha256": "1e374a9778402ec91cdd844cdd3327c80101ad914ef84b92264d3a131c851e56"
+        }
+      },
+      "invalidated": [
+        "L07 preview renders",
+        "historical Scree camera/texel evidence"
+      ],
+      "terrain_exports_regenerated": false,
+      "unreal_assets_changed": false
+    },
+    "render": {
+      "status": "RENDERS_WRITTEN_VISUAL_REVIEW_PENDING",
+      "duration_seconds": 70.24628782272339,
+      "hip_path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "hip_sha256": "340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775",
+      "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "scree_houdini_xyz_m": [
+        -2509.25,
+        44.647972106933594,
+        -1844.250244140625
+      ],
+      "signal_checks": {
+        "global_color_has_chroma": true,
+        "neutral_is_achromatic": true,
+        "scree_closeup_has_red_mask": true
+      },
+      "signal_checks_are_visual_acceptance": false,
+      "evidence_dir": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified",
+      "preview_mode_renders": [
+        {
+          "name": "3d_preview_global_color.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_global_color.png",
+          "size_bytes": 2196197,
+          "sha256": "9fefd2eb63083d987985d40e71ac9a8122e5b0bf9c8e32d76c03a33bc4d93d53",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 26.40917807998971,
+          "std": 34.980761428292624,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 46.31489519032922,
+          "chromatic_pct": 21.303337191358025,
+          "red_mask_pixels": 0,
+          "note": "Global color preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_neutral_shading.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_neutral_shading.png",
+          "size_bytes": 1044596,
+          "sha256": "5a99e88e1d098976c689fc4eea914d90fe2a9414d805827e95cc989963cb96ff",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 70.36318849665638,
+          "std": 62.34488159430263,
+          "min": 0,
+          "max": 255,
+          "non_black_pct": 58.61948623971194,
+          "chromatic_pct": 0.0006751543209876544,
+          "red_mask_pixels": 0,
+          "note": "Neutral shading clay preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_idmap_palette.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_idmap_palette.png",
+          "size_bytes": 2070461,
+          "sha256": "e704785c744dbf463221765c6346e24431180b840ecfb826347dc36794588df3",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 31.412414801954732,
+          "std": 32.81987305269033,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 58.367750128600825,
+          "chromatic_pct": 54.248312114197525,
+          "red_mask_pixels": 0,
+          "note": "5-class IDMap palette preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_scree_isolation.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_scree_isolation.png",
+          "size_bytes": 859192,
+          "sha256": "f68bc61a3b44b8ec77965af092f947597da08fd2be68873f77fd555ad86ad117",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 51.83619791666667,
+          "std": 44.97904287188891,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 58.42325745884773,
+          "chromatic_pct": 0.005738811728395062,
+          "red_mask_pixels": 18,
+          "note": "Scree class isolation mask preview on 3D terrain"
+        }
+      ],
+      "camera_renders": [
+        {
+          "name": "3d_cam_panorama.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_panorama.png",
+          "size_bytes": 2196197,
+          "sha256": "9fefd2eb63083d987985d40e71ac9a8122e5b0bf9c8e32d76c03a33bc4d93d53",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 26.40917807998971,
+          "std": 34.980761428292624,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 46.31489519032922,
+          "chromatic_pct": 21.303337191358025,
+          "red_mask_pixels": 0,
+          "note": "Panorama view of full 8x8 km domain"
+        },
+        {
+          "name": "3d_cam_puig_major.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_puig_major.png",
+          "size_bytes": 1104070,
+          "sha256": "087aaf6c39137bdc22218f39024b6b3dee878c56c469e12e39a56c8d433ca42a",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 34.550862911522636,
+          "std": 43.362011433801314,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 43.55799897119342,
+          "chromatic_pct": 10.13527199074074,
+          "red_mask_pixels": 0,
+          "note": "Closeup view of Puig Major peak and ridgeline"
+        },
+        {
+          "name": "3d_cam_sa_calobra_cove.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_sa_calobra_cove.png",
+          "size_bytes": 563202,
+          "sha256": "1851be0f134a6a4023f0de4a58221a00812c9cc85de1f73413c1a2e92b19fb55",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 18.070804558899177,
+          "std": 25.20374902311458,
+          "min": 0,
+          "max": 91,
+          "non_black_pct": 35.91454475308642,
+          "chromatic_pct": 0.0,
+          "red_mask_pixels": 0,
+          "note": "Framed closeup view of Sa Calobra cove and beach"
+        },
+        {
+          "name": "3d_cam_scree_site.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_scree_site.png",
+          "size_bytes": 1582378,
+          "sha256": "9d257a2459049d80a115fad648e0343521d8cbdff565e7b7b49261cad3974f29",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 45.1246177340535,
+          "std": 30.483643960722002,
+          "min": 0,
+          "max": 117,
+          "non_black_pct": 80.25601208847736,
+          "chromatic_pct": 9.279465663580247,
+          "red_mask_pixels": 0,
+          "note": "Native 0.5 m crop at a verified Scree texel"
+        },
+        {
+          "name": "3d_cam_scree_site_isolation.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_scree_site_isolation.png",
+          "size_bytes": 833866,
+          "sha256": "cca6362858027dd900332cfa39b12d81971753b74e52118392b1e73c4410f509",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 54.3443124678498,
+          "std": 34.5178412355942,
+          "min": 0,
+          "max": 129,
+          "non_black_pct": 80.90263310185185,
+          "chromatic_pct": 0.03390239197530864,
+          "red_mask_pixels": 170,
+          "note": "Same native crop/camera with original Pegasus Scree decoder in red"
+        },
+        {
+          "name": "3d_cam_transition.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_transition.png",
+          "size_bytes": 682434,
+          "sha256": "ba848291ca768bfc390e4d75fc75868ca4f96ec68e65161020f98e967bd81e66",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 47.676700585133744,
+          "std": 27.50621857696415,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 95.25469393004116,
+          "chromatic_pct": 64.22313850308642,
+          "red_mask_pixels": 0,
+          "note": "Closeup view of Scree/Cliffs boundary zone"
+        }
+      ]
+    },
+    "scope": "Only L07 display nodes, diagnostic crop, camera and evidence frames. No source recook, terrain export, base/manual layer rewrite or UE asset change.",
+    "source_mapping": {
+      "lesson": "PEG-02-07",
+      "id_encoding_time": "05:03-05:28; 08:01-08:06",
+      "colour_export_time": "06:24-07:26; 10:36-11:54",
+      "adaptation": "Native Houdini HeightField Visualize with custom tint and no RGB ramp; original PE_Heightfield_id_to_layer for class 255; native HeightField Crop at source resolution and an overhead diagnostic camera.",
+      "official_docs": [
+        "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_visualize.html",
+        "https://www.sidefx.com/docs/houdini/nodes/sop/volumevisualization.html",
+        "https://www.sidefx.com/docs/houdini/hom/hou/OpNode.html"
+      ]
+    },
+    "visual_observation": "The witness is sparse and lies among very steep source walls. Presence of 170 red pixels validates the display signal, not terrain or material quality. The overview uses 4 m sampling; the 128 m witness crop retains 0.5 m samples.",
+    "base_comparison": {
+      "scope": "Nine diagnostic samples at witness X/Z offsets -5, 0, +5 m; not whole-area validation",
+      "source_base_cache": "D:/yacs/work/lesson06-unified-20261019/stage1_base.bgeo.sc",
+      "stage1_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+      "base_height_range_m": [
+        39.240108489990234,
+        152.1381072998047
+      ],
+      "final_minus_base_range_m": [
+        -0.015735626220703125,
+        0.132965087890625
+      ],
+      "conclusion": "Large local height differences predate this preview repair and are already present in Stage 1. No geometry smoothing or concealment was applied."
+    }
+  },
+  "local_remote_identity_audit": {
+    "observed_head": "c6cd4c0982cf0ee5fa1575cc0cd496d8d17b708b",
+    "same_pr": 474,
+    "same_branch": "codex/365-world-graph",
+    "map_package": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "map_sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7",
+    "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+    "native_transfer_run": 39390349735,
+    "native_transfer_manifest_sha256": "66847b4a614e748a0012dcefabbbc6f2be9b0326f0a863714e690cb71c068a8f6",
+    "remote_repair_chat_matches_pr_and_head": true,
+    "active_second_l07_writer_observed": false,
+    "future_cloud_schedule_state": "NOT_VERIFIED",
+    "old_live_host_is_current_l07": false,
+    "old_live_host_status": "STALE_OR_DEAD_NOT_LIVE",
+    "other_ci_jobs_are_l07_proof": false,
+    "consumer_readback_at_observed_head": "NOT_RUN: disk-reserve failure in 39413841851; later 39420689675 skipped after upstream CI failure.",
+    "writer_rule": "One writer on affected paths; recheck remote head and asset/source identity before writes. Isolated proof copies preserve exact bytes.",
+    "complete_asset_byte_audit": {
+      "head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+      "files": 59,
+      "size_bytes": 2451237244,
+      "matches_committed_git_lfs": true,
+      "mismatches": []
+    }
+  },
+  "latest_native_consumer_attempt": {
+    "source_head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+    "status": "INCOMPLETE",
+    "started_at_utc": "2026-10-20T14:13:37.4200239Z",
+    "ended_at_utc": "2026-10-20T14:15:07.4185078Z",
+    "level": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "source_map_before": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_after": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_unchanged": true,
+    "candidate_map_before": {
+      "path": "D:\\yacs\\work\\lesson07-readback-39436127684-1\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "candidate_map_after": {
+      "path": "D:\\yacs\\work\\lesson07-readback-39436127684-1\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "candidate_map_unchanged": true,
+    "protected_inputs_unchanged": true,
+    "candidate_root": "D:\\yacs\\work\\lesson07-readback-39436127684-1",
+    "owned_editor_pid": 8420,
+    "owned_editor_exit_code": -1073741571,
+    "planned_copy_bytes": 2453803817,
+    "structural_readback_complete": false,
+    "geometry_accepted": false,
+    "error": "Cannot find path 'D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\l07-39436127684-1\\Saved\\RuntimeProof\\Lesson07Readback\\39436127684-1\\l07-native-geometry.json' because it does not exist.",
+    "ci_run_id": 39436179335,
+    "readback_run_id": 39436127684,
+    "staged_assets": 59,
+    "host_receipt_sha256": "7f2921b958b88d54d04c0fdb5cc5d073402782a20babda3d2cd2ccdafe7264db",
+    "artifact_id": 12273361465,
+    "artifact_sha256": "af3c187885ee03f923905f05ba172b3a52fe495a1f268d199059ae1a00c16a83",
+    "first_fatal_log": "Null assigned to TNotNull (NotNull.cpp:12), at Editor initialization before the native L07 report. Root cause unresolved.",
+    "additional_observation": "Common project module constructors reference unstaged Stage3F/Stage3G assets. This is not evidence that another world was opened; causality for the crash is unproven."
+  },
+  "previous_native_consumer_attempt": {
+    "source_head": "9ddebf5a8a7387313a8751e1fb0c960785af4b2a",
+    "status": "INCOMPLETE",
+    "started_at_utc": "2026-10-20T14:00:56.7822204Z",
+    "ended_at_utc": "2026-10-20T14:01:18.9228580Z",
+    "level": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "source_map_before": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_after": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_unchanged": true,
+    "candidate_root": null,
+    "owned_editor_pid": null,
+    "structural_readback_complete": false,
+    "geometry_accepted": false,
+    "error": "Cannot process argument because the value of argument \"size_bytes\" is not valid. Change the value of the \"size_bytes\" argument and run the operation again.",
+    "ci_run_id": 39434128373,
+    "readback_run_id": 39434119045,
+    "normal_automation_passed": 28,
+    "normal_automation_failed": 0,
+    "normal_automation_skipped": 0,
+    "normal_automation_warnings": 2,
+    "fix": "Resolve ordered-dictionary size_bytes keys with the native Measure-Object calculated-property form. Reserve and copying bounds unchanged. Fresh native retry required."
+  },
+  "native_startup_fix_20261020": {
+    "status": "STARTUP_FIXED_L07_INSPECTED_ACCEPTANCE_BLOCKED",
+    "diagnostic_base_head": "52fb27e597608a290e72dec6cbd6d96dd6b77dc8",
+    "reader_and_staging_source_head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+    "producer": "local owned diagnostic; not protected CI",
+    "candidate_root": "D:\\yacs\\work\\lesson07-readback-39436127684-1",
+    "change": "Removed only -NoShaderCompile from the previous launch arguments; new log and authenticated evidence output paths. No restaging, cook, import or save.",
+    "engine_exit_code": 0,
+    "root_cause": "UE 5.8.2 editor session analytics dereferenced null GShaderCompilerStats after -NoShaderCompile disabled its initialization.",
+    "native_status": "STRUCTURE_READBACK_INCOMPLETE",
+    "reasons": [
+      "SaCalobra_Unified_0_0: unexpected Landscape scale",
+      "SaCalobra_Unified_0_1: unexpected Landscape scale",
+      "SaCalobra_Unified_1_0: unexpected Landscape scale",
+      "SaCalobra_Unified_1_1: unexpected Landscape scale",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_02",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/cottongrass_01",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_03",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_02",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_01",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Calluna_Vulgaris_01_Medium_Clump",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_01"
+    ],
+    "actor_count": 4,
+    "component_count": 4096,
+    "all_59_source_and_candidate_assets_unchanged": true,
+    "observed_xy_scale": [
+      49.99999701976776,
+      49.99999701976776
+    ],
+    "scale_check_note": "Strict equality to 50 fails for observed 49.99999701976776. Preserved the assertion and raw result; no geometry or acceptance tolerance changed.",
+    "observed_layers": {
+      "SaCalobra_Unified_0_0": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_0_1": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_1_0": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_1_1": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      }
+    },
+    "evidence": {
+      "diagnostic-launch.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\diagnostic-launch.json",
+        "sha256": "a319b9a26f68a7d4be5bdee8e276509d8345c1e4edb228fa407b069660c149f3"
+      },
+      "diagnostic-exit.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\diagnostic-exit.json",
+        "sha256": "ca1d5bfddc09cb424d2135d33a09e99a4c13df2ca1ba7e51f7d16bcfab0101a9"
+      },
+      "l07-native-geometry.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\l07-native-geometry.json",
+        "sha256": "569b61188b89b0d621a552404d95e65b6947287a54489f764f8c7cf731e1d467"
+      },
+      "owned-editor.log": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\owned-editor.log",
+        "sha256": "1739070d0668120a7986a9ae2be90452d61a3f7345f6a2883cf258910cf0ed1d"
+      },
+      "conservation.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\conservation.json",
+        "sha256": "c3a7cc16b03439714d2259f6b04dcfae5744844ce91d135a1e9dfee82b26111e"
+      }
+    },
+    "geometry_accepted": false,
+    "material_render_verified": false,
+    "owner_visual_pass": false
+  },
+  "local_consumer_remediation_20261020": {
+    "status": "LOCALLY_REPAIRED_NATIVE_SAMPLES_VERIFIED_VISUAL_ACCEPTANCE_PENDING",
+    "base_head": "5d4475af5fe04eade56ce87b2d62f257cd7095ef",
+    "dirty_working_tree": true,
+    "protected_ci": false,
+    "candidate_project": "D:/yacs/work/lesson07-readback-39436127684-1/YetAnotherCyclingSim.uproject",
+    "source_terrain_rebuilt": false,
+    "canonical_assets_promoted": true,
+    "native_build_and_automation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07NativeAPIBridge-20261020-retry1\\summary.json",
+      "sha256": "74e4a6a0db53e3ce384e9a1521b8e64110ca7a3613bb33251ac2aa4f6fb1ec52",
+      "size_bytes": 780
+    },
+    "material_apply": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-apply1\\apply.json",
+      "sha256": "6d7e626487045514e98c8272c20028ba858cc3a9e0066ea73e614e24f7c3cf2f",
+      "size_bytes": 154995
+    },
+    "material_fresh_audit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-finalaudit\\audit.json",
+      "sha256": "c0d16f351984b058fa9f437e967638cae0b31fdcb28103e6ab31e24c149956e7",
+      "size_bytes": 121442
+    },
+    "map_grass_cache_refresh": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-refresh1\\refresh.json",
+      "sha256": "206070b17ede64ec0bad9473bc1a9c4ddce9221f117f862ef501b3d20ee22812",
+      "size_bytes": 14357966
+    },
+    "original_map_sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7",
+    "grass_refreshed_map_sha256": "6e41be524255492e5b025f96ee218294275f41aa0fa34bca166fdeb11a1a8ad5",
+    "grass_references_before": 16384,
+    "grass_references_after": 0,
+    "whole_heightmaps_unchanged_during_grass_refresh": true,
+    "measured_boundary_vertices": 65032,
+    "source_seam_max_difference_cm": 0,
+    "source_manual_detail_contract": "Authoring workflow separation; three UE edit layers are not a requirement. Preserve base/final/difference branches and do not add the detail delta twice.",
+    "main_visibility_material_graph_verified": true,
+    "visibility_weights_repaired": true,
+    "seams_repaired": true,
+    "render_verified": true,
+    "owner_visual_pass": false,
+    "fresh_reopen_after_grass_refresh": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RefreshedReadback-20261020-1\\l07-native-geometry.json",
+      "sha256": "87deb5c7e82394aa5f755fff14c3c4e02c3974c91d266af9e42a8f51c322a17d",
+      "size_bytes": 6771071
+    },
+    "mask_only_canary": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07VisibilityCanary-20261020-4\\update.json",
+      "sha256": "7abde0af779448f42420d21eed59ea4e5e5c0172a5852e307adce4cc21cd2ece",
+      "size_bytes": 18399674
+    },
+    "mask_only_canary_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07VisibilityCanary-20261020-4\\exit.json",
+      "sha256": "78da804b223d63492f528bf70eb9eb67f5b382324cbe00a3dd9bed5ba751a630",
+      "size_bytes": 96
+    },
+    "mask_only_all_composite_and_edit_layer_mips_unchanged": true,
+    "consumer_update": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\update.json",
+      "sha256": "12d7fc8a50710321440bfca0161b1c8645f66e3ffa45ecd6c5dd8713b1b36cea",
+      "size_bytes": 18404631
+    },
+    "consumer_update_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\exit.json",
+      "sha256": "0e9b006a7a352e592d378bcd4272d77bf8cd5d95403eb034798f67a00e9c5873",
+      "size_bytes": 96
+    },
+    "updated_map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "updated_map_size_bytes": 1838638056,
+    "common_actor_scale_z": 561.389892578125,
+    "same_four_actors_and_layer_guids_preserved": true,
+    "only_map_changed_during_consumer_update": true,
+    "post_update_fresh_geometry_read_pending": false,
+    "shutdown_repair": {
+      "observed_canary3_exit": "0xC0000005 after log close",
+      "cause_module": "UNDETERMINED",
+      "change": "Explicit official StopSession and invalid-session verification before editor teardown",
+      "canary4_exit_code": 0,
+      "full_update_exit_code": 0
+    },
+    "actual_loaded_hapi": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\loaded-hapi.json",
+      "sha256": "f7142191123eab02d4072f41877eff471a406d0cacf61f4ed5d3691607e7436f",
+      "observation": {
+        "sha256": "DCDE31C13B2213D4FF8007EAEAA13F12472565DC19AED3E653F94EAF53A60CD0",
+        "path": "D:\\yacs\\tools\\houdini-22.0.466\\bin\\libHAPIL.dll",
+        "version": "22, 0, 0, 466"
+      }
+    },
+    "final_native_readback": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-2\\l07-native-geometry.json",
+      "sha256": "95c25aeacf363fe64ac2f10abeeccf93518ad591d3c3dd6889c2cf7e4accf9e7",
+      "size_bytes": 6786664
+    },
+    "final_source_comparison": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-2\\source-comparison.json",
+      "sha256": "fefd259825f3594ec9a045ae4eb21059fa42855f24558c803229d751b128844a",
+      "size_bytes": 100301013
+    },
+    "runtime_collision": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RuntimeCollision-20261020-1\\runtime.json",
+      "sha256": "808aa754a9a0a306adb343188d1a487ca3d5622c0352ba73109d171f3a08aeb4",
+      "size_bytes": 19962
+    },
+    "runtime_collision_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RuntimeCollision-20261020-1\\exit.json",
+      "sha256": "2a02ef7f12f4de7244181adcafc70412d277bf5f1066f4cac9f9da2763e242ed",
+      "size_bytes": 96
+    },
+    "canonical_promotion": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\promotion.json",
+      "sha256": "98dbcd45de59bd2c8fdf58a4ab837e6e673a97faad9b68846086ab625ba0bdd4",
+      "size_bytes": 1536
+    },
+    "retained_capture_review": {
+      "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\consumer_repair_20261020\\capture-review.json",
+      "sha256": "819d277fd500e8c42e1d87f7c8a7c23e6ae760294cb075946c1f7c78688bb0e4",
+      "size_bytes": 2927
+    },
+    "final_measurements": {
+      "boundary_vertex_count": 65032,
+      "all_boundary_uint16_match_installed_conversion": true,
+      "source_boundary_height_disagreement_cm": 0,
+      "native_boundary_max_height_disagreement_cm": 0.013910478999605402,
+      "native_boundary_max_xy_gap_cm": 0.03643035907043668,
+      "source_vertex_height_residual_cm_min_max": [
+        -8.2472879357083,
+        -2.191766262054472
+      ],
+      "model_clipping_count": 0,
+      "raw_visibility_boundary_counts": {
+        "not_allocated_unknown": 61980,
+        "zero": 2024,
+        "hole_255": 1028
+      },
+      "allocated_visibility_mismatch_count": 0,
+      "runtime_source_hole_samples_no_hit": 3,
+      "runtime_source_valid_samples_hit": 12,
+      "runtime_sample_count": 15,
+      "source_triangle_interpolation_proved": false,
+      "whole_landscape_collision_proved": false,
+      "runtime_hit_vs_rendered_triangle_max_abs_difference_cm": 0.4246065
+    },
+    "limits": [
+      "Source/consumer vertex quantization is verified on sampled boundaries, not a zero-error claim against real-valued source heights.",
+      "Unallocated visibility weights remain UNKNOWN; sampled runtime collision is independently verified.",
+      "The current editor Visibility query hits holes while the authenticated PIE world correctly does not.",
+      "Source triangle interpolation and whole-area collision are not inferred from the fifteen runtime hit/miss samples.",
+      "Owner visual acceptance and exact-commit protected CI remain separate gates; performance remains DEFERRED_AFTER_M3."
+    ],
+    "before_repair_native_seam_report": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Seams-20261020-1\\l07-native-geometry.json",
+      "sha256": "767b1f77938f27ccf5076bbc7ff7002dcefa865a66e82305ddec10bc1a0e43a2",
+      "size_bytes": 6774056
+    },
+    "before_repair_source_comparison": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Seams-20261020-1\\source-comparison.json",
+      "sha256": "8c0e9326b6a9137394a67617437881bd3f8ce0e4ee9af8f4154e55a4073c4f32",
+      "size_bytes": 100237535
+    },
+    "before_repair_ue_seam_max_difference_cm": 5.8002564907073975,
+    "before_repair_all_measured_uint16_match_installed_per_actor_conversion": true,
+    "current_pin_admission_readback": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-3\\l07-native-geometry.json",
+      "sha256": "098e8d9e0fb13051521cf3419366056f665b3a4ede3fce6aed7ac000a3907d7f",
+      "size_bytes": 6786271
+    },
+    "current_pin_admission_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-3\\exit.json",
+      "sha256": "e4d4bdf0775fd1af7e8f56d564735c6e53cd7587df9c51462dc18b11d0a28c49",
+      "size_bytes": 96
+    },
+    "current_pin_admission_note": "Fresh read3 authenticates current map and both material pins. Full repair lineage remains authenticated separately by immutable read2 and its frozen reader/comparator sources.",
+    "python_tests": {
+      "run": 109,
+      "skipped": 2,
+      "failures": 0,
+      "errors": 0,
+      "receipt": {
+        "path": "C:\\Users\\akarn\\.codex\\visualizations\\2026\\10\\20\\01a15966-5124-7150-971d-d210470f86c6\\lesson07-python-tests.log",
+        "sha256": "1d65276858574466913d0b45862eca474fc3511f060643455379d573c9c42b5d",
+        "size_bytes": 2177
+      }
+    },
+    "validation": {
+      "ruff": "PASS",
+      "diff_check": "PASS",
+      "docs_index": {
+        "i18n": "PASS",
+        "structure": "PASS",
+        "links": "PASS",
+        "freshness": "PASS"
+      },
+      "evidence_storage": {
+        "status": "FAIL_EXISTING_OUT_OF_SCOPE_FILE",
+        "error": "raw evidence JSON exceeds 1 MiB without an exact reviewed exception",
+        "path": "docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json"
+      }
+    },
+    "backup_relocation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\backup-relocation.json",
+      "sha256": "e52685759a47335e6b8c86d297882b08977b68f10afb0bf9345cebe581b018dc",
+      "size_bytes": 1914
+    },
+    "protected_source_conservation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\source-conservation.json",
+      "sha256": "ba56084a11bacee60bbfb2b264484f2a0be086adfb9a80a83f49798d584aa417",
+      "size_bytes": 1069
+    },
+    "before_publication_remote_parity": {
+      "remote_branch": "codex/365-world-graph",
+      "verified_remote_head": "5d4475af5fe04eade56ce87b2d62f257cd7095ef",
+      "local_repair_pushed": false,
+      "scope": "Same original source/assets; repaired map and materials remain local and remote has not received this repair."
+    },
+    "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
+  },
+  "updated_at_utc": "2026-10-21T19:33:52.279967+00:00",
+  "grass2_replacement_20261020": {
+    "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "issue": 365,
+    "milestone": "M3",
+    "local_proof": "Saved/RuntimeProof/Lesson07Grass2-20261020-1/native-verification.json",
+    "local_proof_sha256": "4a3856228f9c283f73a8e5f3a6aedd06fc2a05bc3fd1ad581c0fb5ebdf73d3fd",
+    "same_editor_pid": 10872,
+    "changed_assets": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.uasset"
+    ],
+    "array_dimensions_each": "2048x2048*5",
+    "slot": 1,
+    "other_slots_unchanged": true,
+    "terrain_rebuilt": false,
+    "map_unchanged": true,
+    "existing_dirty_packages_preserved": true,
+    "render_verified": false,
+    "fresh_reopen_verified": false,
+    "owner_visual_accepted": false
+  },
+  "black_global_colour_repair_20261020": {
+    "status": "GLOBAL_BRIGHTNESS_REPAIRED_SAVED_NATIVE_AB_VERIFIED",
+    "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+    "parameter": "Global Brightness",
+    "original_observed_value": 0.5,
+    "final_value": 0.0,
+    "other_live_parameters_preserved": true,
+    "landscapes_unchanged": true,
+    "saved_asset": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+    "backup_sha256": "0581cd80055ec2632c3f56de19f80513c904ed5a5d7a5a7a8187ed17b218a3dc",
+    "saved_asset_sha256": "c702af46f8f5a7af2d71052991680c9a164b65f7d67dd08fa93b9f649c807c87",
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "computer_use": false,
+    "editor_closed": false,
+    "fresh_reopen_verified": false,
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "issue": 365,
+    "milestone": "M3",
+    "changed_files": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset"
+    ],
+    "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "root_cause": "Black valid-class pixels in global Terrain Colour become zero HSV Value through existing Pegasus Global Brightness=0.5 modulation",
+    "upstream_black_colour_generation_stage": "NOT_ISOLATED",
+    "native_ab": {
+      "before": "fixed-camera-before.jpg",
+      "after": "fixed-camera-after.jpg",
+      "camera": "fixed-camera.json",
+      "compiled_assets_remaining": 0,
+      "shader_jobs_remaining": 0,
+      "near_black_fraction_reported_before": 0.005,
+      "near_black_fraction_reported_after": 0.0,
+      "not_full_world_acceptance": true
+    },
+    "initial_trial_note": "Setter mutated successfully but returned false; initial assertion rejected its return. Immediate native readback verified value0; subsequent trials assert actual readback rather than setter return.",
+    "discarded_capture": "192953 fallback shader; not A/B proof"
+  },
+  "appearance_checkpoint_20261020": {
+    "status": "APPEARANCE_CHECKPOINT_SAVED_NATIVE_AB_VERIFIED",
+    "receipt": "docs/assets/lesson07-appearance-20261020/receipt.json",
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "saved_assets": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset"
+    ],
+    "owner_visual_accepted": false,
+    "fresh_reopen_verified": false,
+    "delivery_tracking": "Existing Draft PR #474 head; protected delivery proof remains separate"
+  },
+  "closeup_squares_correction_20261020": {
+    "status": "REJECTED_BY_OWNER_MARBLED_APPEARANCE_SUPERSEDED_BY_RECOVERY",
+    "receipt": "docs/assets/lesson07-squares-20261020/receipt.json",
+    "supersedes_scale_only_tiling_claim_at": "7e3b0001d1d325553f0fbf09c7aee71b33a57935",
+    "native_compile_errors": [],
+    "terrain_rebuilt": false,
+    "map_saved": false,
+    "fresh_reopen_verified": false,
+    "owner_visual_accepted": false
+  },
+  "variation_recovery_20261020": {
+    "status": "REJECTED_VARIATION_ROLLED_BACK_ON_DISK_NATIVE_RECOVERY_UNVERIFIED",
+    "receipt": "docs/assets/lesson07-squares-20261020/recovery-receipt.json",
+    "tiling_fixed": false,
+    "native_reopen_verified": false,
+    "owner_visual_accepted": false,
+    "crash_observed": true,
+    "editor_restarted": false
+  },
+  "running_recovery_checkpoint_20261020": {
+    "status": "OWNER_ACCEPTED_RUNNING_CHECKPOINT_INSTANCE_SAVED",
+    "receipt": "docs/assets/lesson07-recovery-20261020/receipt.json",
+    "owner_running_checkpoint_accepted": true,
+    "whole_area_owner_visual_accepted": false,
+    "parameter": {
+      "Global Normal Flatten": 1.0
+    },
+    "tiling_fixed": false,
+    "fresh_reopen_before_latest_scalar_save": true,
+    "fresh_reopen_after_latest_scalar_save": false
+  },
+  "technical_deep_dive_20261020": {
+    "status": "STATIC_AUDIT_COMPLETE_READBACK_PIN_CORRECTED_NATIVE_DIAGNOSIS_BLOCKED",
+    "observed_at_utc": "2026-10-20T21:48:03Z",
+    "source_checkpoint": "dd2322f1e1ad784ee45878d40e80fcf69f953b30",
+    "receipt": "docs/assets/lesson07-recovery-20261020/technical-audit.json",
+    "material_assets_changed": [],
+    "tiling_fixed": false,
+    "normal_decoding_fixed": false,
+    "crash_root_cause_symbolized": false,
+    "current_native_session_verified": false,
+    "native_validation": "NOT_RUN",
+    "independent_lfs_objects": 9,
+    "independent_lfs_bytes": 77071503,
+    "performance_pass": false
+  },
+  "remote_connection_continuation_20261021": {
+    "status": "EDITOR_RETAINED_MACRO_PARTIAL_FIX_SAVED_SOURCE_IMPORT_PENDING",
+    "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
+    "owner_authorized_missing_connection_infrastructure": true,
+    "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
+    "native_tool_called": true,
+    "channel_comparison_performed": false,
+    "asset_changes": [],
+    "editor_lifecycle_changes": [
+      {
+        "action": "CREATE_MISSING_CANONICAL_EDITOR",
+        "pid": 17896,
+        "started_utc": "2026-10-20T23:20:00.0674689Z",
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3"
+      }
+    ],
+    "performance_pass": false,
+    "note": "The same owner Editor PID 17896 and start filetime 134370120000674689 remain verified through 2026-10-21T01:43:06Z. A dedicated explore call returned the complete 29-asset Lesson07 registry, including all 11 required targets. The client rejected its actual JSON representation before any material-parameter read. Parser correction is pending execution; no native material edits have occurred. Python F49 remains respected.",
+    "inventory": {
+      "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
+      "run_id": 39507345660,
+      "job_id": 118919480626,
+      "conclusion": "success",
+      "observed_utc": "2026-10-20T22:20:28.5700392Z",
+      "editors": [],
+      "process_names": [
+        "UnrealEditor.exe",
+        "UnrealEditor-Cmd.exe"
+      ],
+      "discovery_status": "NOT_FOUND",
+      "diagnostic_failures": [],
+      "wingman_version": "0.20.5",
+      "wingman_descriptor_sha256": "54f34b9d3be93d951c3d1acd3ad37e04b391fd9b398f199c499d1f5dbd6b3b7e",
+      "artifact_id": 12303367952,
+      "artifact_sha256": "6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e",
+      "independent_host_guard": {
+        "run_id": 39507354578,
+        "job_id": 118919509166,
+        "observed_utc": "2026-10-20T22:21:47.9796499Z",
+        "status": "IDLE"
+      },
+      "http_requests_made": 0,
+      "editor_commands_executed": 0
+    },
+    "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
+    "connection_execution": "EDITOR_RETAINED_REGISTRY_READ_VERIFIED_MATERIAL_PARAMETERS_PENDING",
+    "first_connection_attempt": {
+      "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
+      "protected_ci_run_id": 39508823330,
+      "protected_ci_conclusion": "success",
+      "connection_run_id": 39508814955,
+      "connection_job_id": 118927017770,
+      "connection_job_conclusion": "failure",
+      "checked_at_utc": "2026-10-20T22:39:49.5565226Z",
+      "phase": "PROJECT",
+      "reason_code": "PROJECT_MODULES_OR_ENGINE",
+      "host_status": "IDLE",
+      "task_registered": false,
+      "task_start_requested": false,
+      "editor_stop_requested": false,
+      "checkpoint_bytes_verified": false,
+      "module_build_ids_verified": false,
+      "native_world_verified": false,
+      "artifact_id": 12305610506,
+      "artifact_sha256": "d3cab464fe202a4e588f0a6f96c997f4d3d21156620858efe8a61cac74e9f79a"
+    },
+    "host_project_descriptor_followup": {
+      "status": "ENGINE_ASSOCIATION_GUID_OBSERVED",
+      "source_commit": "2609d45d881e8a9fce6a2022ac24d3268a3a22a7",
+      "run_id": 39510504128,
+      "job_id": 118930037564,
+      "conclusion": "success",
+      "engine_association": "{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}",
+      "descriptor_sha256": "f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66",
+      "required_module_names_and_types_match": true,
+      "runtime_property_count": 1,
+      "runtime_key_count": 1,
+      "editor_property_count": 1,
+      "editor_key_count": 1,
+      "observed_utc": "2026-10-20T22:46:36.3229338Z",
+      "editors": [],
+      "discovery_status": "NOT_FOUND",
+      "artifact_id": 12305906278,
+      "artifact_sha256": "625242854e2f5add1814173ba724975f9a6804314aa8b4d8e8fd39be2dab920c",
+      "canonical_project_written": false,
+      "dictionary_bug_reproduced": false
+    },
+    "startup_retry_execution": "BLOCKED_HANDOFF",
+    "post_job_survival": "VERIFIED_SAME_PID_AND_NATIVE_START_AFTER_STARTUP_JOB_CLEANUP",
+    "second_connection_attempt": {
+      "source_commit": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+      "protected_ci_run_id": 39510984665,
+      "protected_ci_conclusion": "success",
+      "connection_run_id": 39510976391,
+      "connection_job_id": 118934957954,
+      "connection_job_conclusion": "failure",
+      "checked_at_utc": "2026-10-20T23:01:15.3694751Z",
+      "status": "BLOCKED_HANDOFF",
+      "phase": "HANDOFF",
+      "error_type": "MethodInvocationException",
+      "reason_code": "SYSTEM_EXCEPTION",
+      "host_status": "IDLE",
+      "task_registered": true,
+      "task_start_requested": true,
+      "owner_sid_matches": true,
+      "checkpoint_bytes_verified": true,
+      "module_build_ids_verified": true,
+      "engine_build_id": "55116800",
+      "editor": null,
+      "autosave_session_override": false,
+      "editor_stop_requested": false,
+      "package_save_requested": false,
+      "project_config_write_requested": false,
+      "native_world_verified": false,
+      "powershell_data_fixtures_passed": 24,
+      "python_tests_passed": 30,
+      "artifact_id": 12305158956,
+      "artifact_sha256": "36778c15dd1dde65d9395be22b0c4e45691d6db32bad241555eaadc59a33313c",
+      "session_json_downloaded_and_digest_verified": true,
+      "session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+      "session_size_bytes": 6251
+    },
+    "handoff_date_reproduction": {
+      "runtime": "PowerShell 7.6.6",
+      "production_expression_extracted_from_source": true,
+      "json_timestamp_observed_type": "DateTime",
+      "json_timestamp_kind": "Utc",
+      "pl_PL_error_type": "MethodInvocationException",
+      "en_GB_error_type": "MethodInvocationException",
+      "inner_error_type": "FormatException",
+      "en_US_Europe_Warsaw_utc_shift_seconds": -7200,
+      "native_exact_failure_line_known": false,
+      "native_culture_known": false,
+      "native_causality": "REPRODUCED_DEFECT_CONSISTENT_WITH_RECORDED_FAILURE"
+    },
+    "utc_handoff_retry_execution": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+    "utc_handoff_repair": {
+      "deadline_semantics": "PRESERVE_TYPED_UTC_OR_EXACT_INVARIANT_UTC_TEXT",
+      "start_permission_duration_minutes": 4,
+      "maximum_accepted_remaining_minutes": 5,
+      "failed_task_migration_source": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+      "failed_task_migration_session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+      "migration_scope": "ONLY_VERIFIED_INACTIVE_FAILED_TASK_ACTION",
+      "old_release_and_state_retained": true,
+      "task_stop_or_unregister_requested": false,
+      "native_migration_verified": true,
+      "native_startup_verified": true
+    },
+    "passive_observer_preparation": {
+      "status": "PREPARED_NATIVE_EXECUTION_PENDING",
+      "intent": "[l07-observe-editor]",
+      "admission": "EXACT_SOURCE_FOCUSED_CPU_AND_EXISTING_OWNER_EDITOR",
+      "startup_intent_separate": true,
+      "installer_entered_in_observation_mode": false,
+      "shared_native_concurrency_preserved": true,
+      "collector_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+      "client_sha256": "09d5085878fbcb38af9eb8b66647b96497985304e3fef8be52860aa8f4310d28",
+      "client_tests_passed": 37,
+      "collector_tests_passed": 20,
+      "independent_review": "NO_CONCRETE_BLOCKER_FOR_FIRST_BOUNDED_OBSERVER_ATTEMPT",
+      "actual_installed_tool_contract": "OBSERVED_CODE_FILE_MODE_INPUT_NO_ADVERTISED_OUTPUT_SCHEMA",
+      "native_tool_calls": 0,
+      "native_execution": "NOT_RUN",
+      "output_status_if_verified": "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE",
+      "viewport_metadata_is_proven_capture_target": false,
+      "asset_load_or_save_requested": false,
+      "camera_or_viewmode_change_requested": false,
+      "visual_acceptance": false,
+      "performance_pass": false,
+      "discovery_only_intent": "[l07-discover-editor]",
+      "probe_sha256": "7b2ee9876d6bd741d70fe9b1ac2bc4045d70d4ea963beb1549c70b02f1c269e9",
+      "existing_editor_probe_mocked_flow_cases_passed": 17,
+      "existing_editor_probe_independent_receipt_cases_passed": 8,
+      "observation_transport_native_compatibility": "INSTALLED_INPUT_SCHEMA_VERIFIED_FIXED_INLINE_SOURCE_READY_OUTPUT_WRAPPER_UNVERIFIED",
+      "next_execution_mode": "EXISTING_EDITOR_FIXED_PASSIVE_OBSERVATION",
+      "selected_installed_contracts": [
+        "execute_python",
+        "take_viewport_screenshot"
+      ],
+      "selected_contract_bytes_limit": 32768,
+      "fixed_source_transport": {
+        "kind": "ORDINARY_PYTHON_SOURCE_BYTES_IN_CODE_ARGUMENT",
+        "native_source_file_read_or_write": false,
+        "fixed_request_size_bytes": 32349,
+        "fixed_observation_request_limit_bytes": 65536,
+        "discovery_request_limit_bytes": 16384,
+        "actual_collector_with_forbidden_file_apis_test_passed": true,
+        "execute_python_arguments": [
+          "code",
+          "mode"
+        ],
+        "execute_python_mode": "file",
+        "execute_python_file_argument_supplied": false
+      },
+      "client_test_sha256": "9cd0be5207053168000737084b61fa33ab62a8d5d22c113fa9f196c0d884a9a1",
+      "execute_python_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+      "unsupported_response_policy": "FAIL_WITH_FIXED_SHAPE_DIAGNOSTIC_ATTEMPTED_ONE_COMPLETION_UNKNOWN_NO_RETRY"
+    },
+    "third_connection_attempt": {
+      "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+      "protected_ci_run_id": 39513361856,
+      "protected_ci_conclusion": "success",
+      "native_ci_proof": "COMPATIBLE_CACHED_PROOF_NOT_NEW_MATERIAL_EXECUTION",
+      "connection_run_id": 39513355021,
+      "connection_job_id": 118942077869,
+      "connection_job_conclusion": "failure",
+      "startup_status": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+      "task_registered": false,
+      "task_migrated": true,
+      "task_start_requested": true,
+      "task_migration": {
+        "prior_source_sha": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+        "prior_session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+        "prior_release_retained": true,
+        "prior_state_retained": true,
+        "owner_sid_matches": true,
+        "prior_task_result": 1
+      },
+      "editor": {
+        "editor_pid": 17896,
+        "editor_start_filetime_utc": "134370120000674689",
+        "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+        "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "interactive_session_id": 1,
+        "canonical_project_matches": true
+      },
+      "owner_sid_matches": true,
+      "checkpoint_bytes_verified": true,
+      "module_build_ids_verified": true,
+      "engine_build_id": "55116800",
+      "autosave_session_override": true,
+      "identity": {
+        "schema_version": 1,
+        "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+        "observed_utc": "2026-10-20T23:23:47.6792494Z",
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+        "pid": 17896,
+        "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+        "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+        "canonical_project_argument_matches": true,
+        "listener": {
+          "address": "127.0.0.1",
+          "port": 19315,
+          "pid": 17896
+        }
+      },
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+        "status": "BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED",
+        "observed_utc": "2026-10-20T23:23:48.6441973Z",
+        "error_type": "RuntimeException",
+        "identity_stable_across_probe": true,
+        "client_exit_code": 1,
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false,
+        "reason": "AUTHENTICATED_BRIDGE_PROBE_FAILED"
+      },
+      "bridge": {
+        "error_code": "DISCOVERY_SCHEMA",
+        "native_material_readback": "NOT_RUN",
+        "native_tool_calls": 0,
+        "performance_pass": false,
+        "schema_version": 1,
+        "status": "DISCOVERY_FAILED"
+      },
+      "http_requests_made": 0,
+      "native_tool_calls": 0,
+      "native_world_verified": false,
+      "job_cleanup_utc": "2026-10-20T23:24:03.9664401Z",
+      "powershell_data_fixtures_passed": 72,
+      "python_tests_passed": 30,
+      "artifact_id": 12307810528,
+      "artifact_sha256": "0b9eeb047937c21dc6412af44da76003756158a9f28f4d20882cc7cd034e9cf7",
+      "session_sha256": "2527f25a860198bf6548c3a031885eb9fc6bf3cfc821101ea12f146fd3f94e50",
+      "artifact_downloaded_and_digest_verified": true,
+      "package_save_requested": false,
+      "project_config_write_requested": false,
+      "editor_stop_requested": false
+    },
+    "first_existing_session_discovery_attempt": {
+      "source_commit": "6ffaa33e6bcdc1c7090e8ac5795a416156bc49d2",
+      "run_id": 39515519790,
+      "cpu_job_id": 118946621710,
+      "conclusion": "failure",
+      "status": "CPU_TRACKED_WORKTREE_GATE_FAILED_BEFORE_NATIVE",
+      "checkout_warning": "ONE_TRACKED_FILE_SHOULD_BE_LFS_POINTER_BUT_WAS_NOT",
+      "unrelated_file": "worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg",
+      "windows_job_conclusion": "skipped",
+      "http_requests_made": 0,
+      "native_tool_calls": 0,
+      "editor_lifecycle_action": false,
+      "repair": "SPARSE_CODE_ONLY_CHECKOUT_WITH_CLEAN_STATUS_AND_EXACT_BLOB_BYTES_FOR_SIX_FILES",
+      "unrelated_asset_modified": false
+    },
+    "second_existing_session_discovery_attempt": {
+      "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+      "run_id": 39515925462,
+      "cpu_job_id": 118947932497,
+      "cpu_conclusion": "success",
+      "connection_job_id": 118948001389,
+      "connection_probe_step_conclusion": "success",
+      "installer_step_conclusion": "skipped",
+      "observed_utc": "2026-10-20T23:37:42.3866008Z",
+      "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+      "client_sha256": "c7c265d67d24584ce7bcd8499653d2b9e8657d55c87a591c455a869b307e07d7",
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+        "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+        "observed_utc": "2026-10-20T23:37:42.3866008Z",
+        "error_type": null,
+        "identity_stable_across_probe": true,
+        "client_exit_code": 0,
+        "observation_requested": false,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": true,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:37:38.4196792Z",
+          "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:37:42.3727476Z",
+          "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": false,
+        "native_tool_completed": false,
+        "native_tool_call_attempts": 0,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false
+      },
+      "identity": {
+        "schema_version": 1,
+        "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+        "observed_utc": "2026-10-20T23:37:38.4196792Z",
+        "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+        "pid": 17896,
+        "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+        "process_start_filetime_utc": "134370120000674689",
+        "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+        "canonical_project_argument_matches": true,
+        "listener": {
+          "address": "127.0.0.1",
+          "port": 19315,
+          "pid": 17896
+        }
+      },
+      "signed_in": true,
+      "tool_list_complete": true,
+      "tool_count": 84,
+      "http_requests": 4,
+      "native_tool_calls": 0,
+      "protocol_version": "2025-03-26",
+      "execute_python_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+      "execute_python_parameters": [
+        "code",
+        "file",
+        "mode"
+      ],
+      "execute_python_mode_enum": [
+        "file",
+        "eval"
+      ],
+      "execute_python_output_schema_advertised": false,
+      "take_viewport_screenshot_input_schema_sha256": "4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc",
+      "screenshot_output_schema_advertised": false,
+      "artifact_id": 12308127249,
+      "artifact_sha256": "cceef00cec19278f5939c832f00fc8ca9dbf0b3983e7ad5b275f80bd7db5ee69",
+      "artifact_downloaded_and_digest_verified": true,
+      "bridge_sha256": "b0fe7bd6ebf790e488ac0a8936c6e7a48f7e200efad4dc6d989b21539e1c3105",
+      "probe_sha256": "5a3954e5e3d439c1eb05595a338fdf7c65362ca8ead2935d6ab635e71c1678c1",
+      "connection_job_conclusion": "success",
+      "workflow_conclusion": "success"
+    },
+    "post_job_survival_proof": {
+      "startup_run_id": 39513355021,
+      "startup_job_id": 118942077869,
+      "startup_job_cleanup_utc": "2026-10-20T23:24:03.9664401Z",
+      "recheck_run_id": 39515925462,
+      "recheck_job_id": 118948001389,
+      "recheck_observed_utc": "2026-10-20T23:37:42.3866008Z",
+      "same_pid": 17896,
+      "same_native_start_filetime_utc": "134370120000674689",
+      "owner_before_and_after": "ATTACH_EXISTING",
+      "owner_sid_matches": true,
+      "signed_in": true,
+      "owned_listener_stable": true,
+      "installer_invoked": false,
+      "editor_started_or_stopped_by_recheck": false
+    },
+    "first_native_observation_attempt": {
+      "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+      "run_id": 39516981450,
+      "cpu_job_id": 118951389330,
+      "cpu_conclusion": "success",
+      "connection_job_id": 118951433360,
+      "connection_job_conclusion": "failure",
+      "artifact_id": 12309090044,
+      "artifact_sha256": "e80d5512a8ecfc7029ade9bc5525205ff66ef1fda442b139aa5f8320cb16d4a9",
+      "artifact_downloaded_and_digest_verified": true,
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+        "status": "LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED",
+        "observed_utc": "2026-10-20T23:48:15.6320430Z",
+        "error_type": "RuntimeException",
+        "identity_stable_across_probe": true,
+        "client_exit_code": 1,
+        "observation_requested": true,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": false,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:48:11.5957519Z",
+          "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:48:15.6216380Z",
+          "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": null,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": true,
+        "native_tool_completed": null,
+        "native_tool_call_attempts": 1,
+        "native_material_readback": "UNVERIFIED",
+        "channel_comparison_performed": false,
+        "performance_pass": false,
+        "reason": "AUTHENTICATED_BRIDGE_PROBE_FAILED"
+      },
+      "bridge": {
+        "error_code": "OBSERVER_TOOL_ERROR",
+        "native_material_readback": "UNVERIFIED",
+        "native_tool_attempted": true,
+        "native_tool_calls": 1,
+        "native_tool_completed": null,
+        "native_tool_response_received": true,
+        "native_tool_result_shape": {
+          "content_blocks": [
+            {
+              "content_type": "text",
+              "count": 2,
+              "text": {
+                "characters": 574,
+                "has_uobject_pin_footer": false,
+                "tag_occurrences": 0,
+                "type": "string"
+              },
+              "text_json_parsed": false,
+              "type": "object"
+            }
+          ],
+          "content_blocks_truncated": false,
+          "count": 2,
+          "fields": {
+            "content": {
+              "count": 1,
+              "type": "array"
+            },
+            "isError": {
+              "type": "boolean"
+            }
+          },
+          "type": "object",
+          "unknown_field_count": 0
+        },
+        "native_tool_started_utc": "2026-10-20T23:48:13.521280+00:00",
+        "observer_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+        "observer_source_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+        "observer_source_verified_before_call": true,
+        "performance_pass": false,
+        "schema_version": 1,
+        "status": "OBSERVATION_FAILED",
+        "visual_acceptance": false
+      },
+      "bridge_sha256": "f5e178dfe9149e1878c9038f25123a3f3920e185fbd1ad18ccce0bf1b244b08f",
+      "probe_sha256": "9ebb3b0c5032398f865ec308e7615b84ff49d4fbf789c7d510d8b98f7f006362",
+      "native_error_message_retained": false,
+      "native_error_reason": "UNKNOWN",
+      "automatic_retry": false
+    },
+    "historical_native_error_recovery": {
+      "mode": "EXISTING_EDITOR_DISCOVERY_THEN_FIXED_READ_ONLY_LOG_EXCERPT",
+      "native_tool_calls": 0,
+      "execution": "EXECUTED_LOG_UNAVAILABLE",
+      "source_path": "D:\\yacs\\lesson07-remote\\editor.log",
+      "max_read_bytes": 4194304,
+      "max_output_bytes": 32768,
+      "powershell_cases_passed": 20,
+      "reader_sha256": "1bb30d3033115b47d9e6f60ac637744121bb5bb61336fd337af7fdee13bdf594",
+      "test_sha256": "1214fba31d51ff90424a050628c995e86f1a0e4aa1a28dd5e8a9a99f7969dd79",
+      "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+      "run_id": 39518788016,
+      "cpu_job_id": 118957284963,
+      "connection_job_id": 118957347902,
+      "artifact_id": 12311120566,
+      "artifact_sha256": "bbabd2ac154c221726443783518dd47591abc698619cca195c9adfd4a6770d3d",
+      "artifact_downloaded_and_digest_verified": true,
+      "report": {
+        "schema_version": 1,
+        "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+        "observed_utc": "2026-10-21T00:04:57.2209194+00:00",
+        "status": "LOG_UNAVAILABLE",
+        "failed_observer_source": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+        "failed_observer_utc": "2026-10-20T23:48:13.521280Z",
+        "source_path": "D:\\yacs\\lesson07-remote\\editor.log",
+        "process_id": 17896,
+        "process_start_filetime_utc": "134370120000674689",
+        "read_limit_bytes": 4194304,
+        "output_limit_bytes": 32768,
+        "native_tool_calls": 0,
+        "records": [],
+        "matching_lines": 0,
+        "truncated": false
+      },
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+        "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+        "observed_utc": "2026-10-21T00:04:56.6532834Z",
+        "error_type": null,
+        "identity_stable_across_probe": true,
+        "client_exit_code": 0,
+        "observation_requested": false,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": true,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-21T00:04:53.0285373Z",
+          "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-21T00:04:56.6477659Z",
+          "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": false,
+        "native_tool_completed": false,
+        "native_tool_call_attempts": 0,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false
+      },
+      "error_message_recovered": false,
+      "file_sha256": {
+        "bridge.json": "1e6f7c1b2c71b7139bf04f5a988def3418866b72b36317a8c5f27ba6dd694834",
+        "identity.json": "148849ab3f28afa8c0ce31957320f3c8bcbcb41c7a446130634f42c52698fb33",
+        "probe.json": "fb805c0d80fdaed6304bd54865c86d1afaecebd3bbaa16b6af4752b6ad39cc3b",
+        "observer-failure-log.json": "d982affe194d18a2e243834c8bc7f8efd4af6eb6138a72162cf4bbedab684fbb"
+      },
+      "connection_job_conclusion": "success",
+      "workflow_conclusion": "success"
+    },
+    "native_tool_attempted": true,
+    "native_tool_completed": true,
+    "second_native_observation_attempt": {
+      "source_commit": "c8370182042723d3f69610e6fcec1d4c074c96c0",
+      "run_id": 39519585751,
+      "cpu_job_id": 118959869977,
+      "cpu_conclusion": "success",
+      "windows_job_id": 118959933031,
+      "windows_conclusion": "failure",
+      "focused_python_tests_passed": 66,
+      "native_tool_started_utc": "2026-10-21T00:12:21.892433+00:00",
+      "native_tool_attempted": true,
+      "native_tool_calls": 1,
+      "native_tool_response_received": true,
+      "native_tool_completed": null,
+      "native_material_readback": "UNVERIFIED",
+      "native_tool_error": {
+        "content_blocks_truncated": false,
+        "retained_text_blocks": 1,
+        "sanitized_text": "\ud83d\uded1 Safety gate blocked this call. Tool 'execute_python' attempted to write to a PROTECTED file (project descriptor (.uproject)). These files are off-limits to AI-driven edits because they affect plugin packaging, build configuration, or engine-wide settings - a wrong edit can break the entire project. If you only need to READ this file (not write it), use code_search read_file instead (read-only, not gated) - F49. If you genuinely need to MODIFY this file, ask the user to do it manually. This gate runs at the tool layer and cannot be bypassed by retrying or rephrasing.",
+        "text_truncated": false
+      },
+      "probe_status": "LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED",
+      "identity_stable_across_probe": true,
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "artifact_id": 12310806923,
+      "artifact_zip_sha256": "ec866dcecb788e5a08b57d77c5cbc9390bd53208cd852804a6eb85c54c024e5d",
+      "artifact_digest_verified": true,
+      "native_asset_mutation_performed": false,
+      "interpretation": "Actual current error retained: protected .uproject safety gate F49. Observer implementation only reads project identity; do not remove or disguise the guard, retry execute_python or bypass the tool boundary."
+    },
+    "dedicated_capture_preparation": {
+      "status": "EXECUTED_SEE_DEDICATED_CAPTURE_EXECUTION",
+      "intent": "[l07-capture-editor]",
+      "native_tool": "take_viewport_screenshot",
+      "arguments": {
+        "return_image": false
+      },
+      "input_schema_sha256": "4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc",
+      "python_fallback": false,
+      "retry": false,
+      "existing_owner_required": true,
+      "editor_started_or_stopped": false,
+      "native_material_readback": "NOT_RUN",
+      "visual_acceptance": false,
+      "performance_pass": false,
+      "contracts_retained_without_call": [
+        "read_bp",
+        "explore",
+        "code_search",
+        "edit_texture",
+        "edit_material_instance",
+        "edit_asset",
+        "edit_material",
+        "edit_material_function"
+      ],
+      "file_verification": "Exact returned canonical JPEG path; current native attempt timestamps; same owner process; bounded stable bytes; decoded JPEG dimensions and SHA256; new-only evidence copy.",
+      "focused_python_tests_passed": 75,
+      "client_tests_passed": 49,
+      "observer_tests_passed": 20,
+      "source_assembler_tests_passed": 6,
+      "client_sha256": "b889a4cacce3e96d31136be2c0ea8f9eb9465eb5e9389bd8d5c318e0cb4ad690",
+      "client_tests_sha256": "9a933d163b3ced02f51431d5b245baee8059203eb4e85558467327e42bb616ac",
+      "probe_sha256": "9b456075207183071b9126389d97bd9183f9358a990ae7b0b89b9c08b0328cff",
+      "intent_exclusivity_cases_passed": 16,
+      "powershell_capture_response_type_negatives_passed": 6,
+      "powershell_parse": "PASS",
+      "docs_index": {
+        "i18n": "PASS",
+        "structure": "PASS",
+        "links": "PASS",
+        "freshness": "PASS"
+      },
+      "viewport_reader_tests_passed": 84,
+      "viewport_reader_sha256": "f0ba95813e181734907a10d1b155f5730e8e521eaa2d05015f67f96e45d54ce6",
+      "viewport_reader_tests_sha256": "40a88164f07e2b08c95c33368e86f153681df383fbea216018acc7ef1d67f8ef"
+    },
+    "dedicated_capture_execution": {
+      "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+      "run_id": 39520946859,
+      "cpu_job_id": 118964358268,
+      "windows_job_id": 118964429475,
+      "cpu_conclusion": "success",
+      "windows_conclusion": "success",
+      "artifact_id": 12310519231,
+      "artifact_zip_sha256": "cef2665c10d8f232616fb21ed38a637e41aa5468b8d8edd4f477c385a337d01e",
+      "artifact_digest_verified": true,
+      "viewport_manifest": {
+        "schema_version": 1,
+        "status": "VIEWPORT_CAPTURE_RETAINED",
+        "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+        "run_token": "39520946859-1",
+        "observed_utc": "2026-10-21T00:26:11.5541040+00:00",
+        "source_path": "D:\\yacs\\project\\Saved\\LocoHelperAI\\ViewportShots\\Viewport_LevelEditor_20261021_002608.jpg",
+        "copied_path": "D:\\yacs\\lesson07-remote\\reports\\39520946859-1\\current-viewport.jpg",
+        "sha256": "e012047b5c6954b45f8b6e3c54cf814a2baea8a87f25a356615be492a58f933e",
+        "source_sha256": "e012047b5c6954b45f8b6e3c54cf814a2baea8a87f25a356615be492a58f933e",
+        "byte_count": 45551,
+        "format": "JPEG",
+        "width": 956,
+        "height": 431,
+        "source_last_write_utc": "2026-10-21T00:26:08.7619623+00:00",
+        "native_tool_started_utc": "2026-10-21T00:26:08.1846800+00:00",
+        "native_tool_response_received_utc": "2026-10-21T00:26:08.7786260+00:00",
+        "process_id": 17896,
+        "process_start_filetime_utc": "134370120000674689",
+        "interactive_session_id": 1,
+        "identity_sha256": "e0086a44fdec74b1ed130a55d5fc283181d35f514d9f7c69f92c870deee1bf87",
+        "probe_sha256": "3818742c533f2c269c5742068618eeaab972061ff50bd223a8aab422f349b4be",
+        "bridge_sha256": "1cb25ac00b8c1d40178c2c625705bff432d20f5e6659c1fbeb3efda9ac36f7eb",
+        "capture_response_sha256": "660c148ab767a2df87ce21de4c3dc5c9ed5d45dae72216239ec0abce513c153c",
+        "capture_native_tool_calls": 1,
+        "additional_native_tool_calls": 0,
+        "native_material_readback": "NOT_RUN",
+        "visual_accepted": false,
+        "performance_pass": false
+      },
+      "native_tool_result": {
+        "response_sha256": "660c148ab767a2df87ce21de4c3dc5c9ed5d45dae72216239ec0abce513c153c",
+        "text": "Viewport screenshot saved: D:/yacs/project/Saved/LocoHelperAI/ViewportShots/Viewport_LevelEditor_20261021_002608.jpg (956x431, 45551 bytes). Image payload NOT inlined (return_image:false). viewport_type=LevelEditor | world_name=L_SaCalobra_Lesson07 | is_pie_running=0 | retry_count=1 | black_frame_detected=0 | avg_brightness=118.85 | near_black_fraction=0.000 | byte_identical_to_previous=0 | capture_source=\"FLevelEditorViewportClient (largest perspective Level Editor viewport)\"",
+        "text_block_count": 1,
+        "text_truncated": false
+      },
+      "retained_evidence_directory": "docs/assets/lesson07-remote-20261021",
+      "image_observation": "Regular diamond/grid repetition across broad yellow-green/olive areas. This is before native material repair, not acceptance.",
+      "native_asset_mutation_performed": false,
+      "native_material_readback": "NOT_RUN",
+      "visual_accepted": false,
+      "performance_pass": false,
+      "protected_ci": {
+        "run_id": 39520954465,
+        "conclusion": "failure",
+        "native_job_id": 118965747653,
+        "native_status": "LOCAL_BUSY",
+        "owner_editor_and_logs_preserved": true,
+        "native_build_and_automation_performed": false,
+        "performance_pass": false
+      }
+    },
+    "dedicated_material_inspection_preparation": {
+      "status": "SIX_DEDICATED_READS_RECEIVED_REVIEWED",
+      "intent": "[l07-inspect-editor]",
+      "maximum_native_calls": 6,
+      "automatic_retry": false,
+      "python_fallback": false,
+      "operations": [
+        "explore fixed Lesson07 root",
+        "edit_material_instance name-only after exact registry existence proof",
+        "edit_texture nine fixed targets including global colour and IDMap, read mode",
+        "edit_material read section=properties, save=false, limit=1000, offset=0",
+        "edit_asset save_assets dry_run=true on eleven fixed targets",
+        "code_search bounded installed Texture2DArray.cpp function search"
+      ],
+      "registry_prerequisite": "Exactly one observed #json-explore payload with typed complete metadata and exact directory/name/class/class_path from the same row for all eleven expected packages; header counts must agree. Unknown, duplicated or incomplete evidence stops the batch.",
+      "native_material_readback": "INSTANCE_AND_TEXTURE_SETTINGS_VERIFIED_MASTER_PROPERTIES_PARTIAL_SEMANTICS",
+      "visual_accepted": false,
+      "performance_pass": false,
+      "limit": "Current contracts do not establish local image import, Texture2DArray source-list reassembly, or every TextureCoordinate/nested-function property. Missing readback remains unknown.",
+      "validation": {
+        "client_tests_passed": 57,
+        "workflow_marker_combinations_passed": 32,
+        "powershell_switch_combinations_passed": 16,
+        "receipt_negative_cases_rejected": 18,
+        "powershell_workflow_blocks_parsed": 8,
+        "native_calls_during_validation": 0,
+        "review_scope": "Dedicated read-only client, workflow intent exclusivity, owner preservation and receipt validation; not native material acceptance",
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "0a684a71d038abd18bf9123c8a6cf6246859e5f2c1d4863ce5006e63181c5dbe",
+          "scripts/ue/test_lesson07_wingman_client.py": "29c2d857b6875ec6f0aca76c096222bea9fad14c48e03e23382e8c8ed929cfca",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "d3b9b34fd9b7c670004780508450d58e5fe150cc6bade6bee593c024814427ff",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "59511aac8167341b15d106c1149694c738fd44756c403d30034f9732b7c4292a"
+        },
+        "scoped_ruff_rules": "E9,F63,F7,F82",
+        "docs_index_passed": [
+          "i18n",
+          "structure",
+          "links",
+          "freshness"
+        ],
+        "sparse_checkout_review_limitation": "Static review confirmed lazyMissing worktree support, but did not establish git-lfs compatibility with missing promisor Git objects. Actual Windows attempt failed before native access; sparse checkout removed.",
+        "previous_client_root_focused_python_tests_passed": 82,
+        "previous_client_sha256": "500553e7e61f39c2630feb5705bab55870ce954b26e4474faaa00908a7cf2e68",
+        "previous_client_scoped_ruff_passed": true,
+        "previous_client_ruff_format_check_passed": true,
+        "current_ruff_status": "UNAVAILABLE_NOT_INSTALLED; compile/AST and focused client tests passed",
+        "actual_native_fixture_byte_identity_verified": true,
+        "actual_native_fixture_parser_passed": true,
+        "fixture_sha256": "a595806f3bb85800b99b9ed9a61cd8582a802a9679fc490f13fe523388acd8b1",
+        "current_properties_section_tests_passed": 57,
+        "current_client_ast_changed_definitions": [
+          "inspection_plan"
+        ]
+      },
+      "first_attempt": {
+        "source_commit": "72919f499181a919b1708df7480be8bf99e4bf01",
+        "run_id": 39528106136,
+        "cpu_job_id": 118987410807,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118987500113,
+        "windows_conclusion": "failure",
+        "failed_step": "Validate code and boundaries before any task creation",
+        "error": "Could not scan for Git LFS tree: missing object: f5af5e0b69fef2de2518995f3b14361b09c6a3f8",
+        "native_probe_step": "skipped",
+        "native_tool_calls": 0,
+        "repair": "Restore previously successful full code-only checkout; no sparse-checkout or partial-object assumption; retain lfs:false, GIT_LFS_SKIP_SMUDGE and the unchanged LFS validator."
+      },
+      "incorrect_checkout_correction": {
+        "source_commit": "867c679129a4b39fbe51a766e5fba6ed075665d8",
+        "run_id": 39528500641,
+        "cpu_job_id": 118988671987,
+        "cpu_conclusion": "failure",
+        "error": "Tracked source changed after checkout",
+        "cause": "Correction matched existing CPU sparse checkout instead of new Windows sparse checkout.",
+        "native_tool_calls": 0,
+        "correction": "Restore exact bb29 CPU checkout and exact bb29 Windows checkout; both checkout steps compared structurally with that successful source."
+      },
+      "native_registry_attempt": {
+        "source_commit": "bcf855c618d6f78d2335675361454075e9fb3c20",
+        "run_id": 39528676794,
+        "cpu_job_id": 118989242996,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118989319218,
+        "windows_conclusion": "failure",
+        "artifact_id": 12314281696,
+        "artifact_zip_sha256": "49e6fe108cdcd1bf4e222fa1440afbe93470c36d64b0116028c116a8954e954f",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 1,
+        "native_tool": "explore",
+        "native_response_received": true,
+        "native_response_sha256": "b921530f444db2c322e4f980b124ed317e56f81754fc8f25e20f911942d0f168",
+        "actual_registry": {
+          "shown": 29,
+          "total": 29,
+          "truncated": false,
+          "required_targets_present_after_manual_review": 11
+        },
+        "client_error": "INSPECTION_REGISTRY_INCOMPLETE",
+        "cause": "Parser mistakenly matched the word truncated in the actual JSON truncated:false field, and expected complete package paths instead of observed same-row directory path plus name.",
+        "correction": "Parse the observed footer schema and typed truncated flag, with header/count/scope consistency and exact same-row name/path/class/class_path target verification. Keep all six fixed calls, schema pins and stop-on-error unchanged.",
+        "retained_evidence_directory": "docs/assets/lesson07-inspection-20261021",
+        "files_sha256": {
+          "identity.json": "ca9e8632bc6fd797c1cae6ea5b3dc2bfddd44d39f1c5729a572f2fee55b21657",
+          "probe.json": "9abb167b000d2fec83ddbfb16f97d12ff1670483207a3eedc117d9c88751b800",
+          "bridge.json": "d0aa049f19e6148935bbb877e831beb97d97d6a233b2357e6502a3cccb5241f8"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "identity_stable_across_probe": true,
+        "material_parameter_reads_performed": false,
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false,
+        "exact_response_fixture": "scripts/ue/fixtures/lesson07_explore_assets_native_20261021.txt"
+      },
+      "additional_native_calls_for_contract_discovery": 0,
+      "native_partial_master_attempt": {
+        "source_commit": "cd2d1b35a233972c11a48b0d3d28c91b84722b64",
+        "run_id": 39529650683,
+        "cpu_job_id": 118992360674,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118992419791,
+        "windows_conclusion": "failure",
+        "artifact_id": 12315086799,
+        "artifact_zip_sha256": "633aa949f56d4138e5869c08b7823172b30d643f5cbe4f5e74a04c9cce29b6af",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 2,
+        "inspection_registry_verified": true,
+        "client_error": "INSPECTION_RESULT_SIZE",
+        "master_text_truncated": true,
+        "master_prefix_characters": 60752,
+        "response_limit_bytes": 65536,
+        "retained_evidence_directory": "docs/assets/lesson07-inspection-20261021",
+        "files_sha256": {
+          "master-bridge.json": "b0d743c1e390c2dfe8e5153457c1c53456743441def66000ad52e5e3f4eb8592",
+          "master-identity.json": "0bbc78400208082970e96561eed9f4d61d650c87009f882a423d850cdada30e1",
+          "master-probe.json": "2d847e12e6bb08cfcb4abefdd71077a0fb7ef1f6adb2d45f2132a3323b3d9f0e"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "identity_stable_across_probe": true,
+        "observed_utc": "2026-10-21T01:53:28.9825329Z",
+        "instance_parameter_reads_performed": false,
+        "texture_setting_reads_performed": false,
+        "actual_master_observation": "IDMap TextureSample_12 and _29 through _32 explicitly use TMVM_MipLevel with ConstMipValue=0. Master defaults are not live instance settings.",
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false
+      },
+      "additional_discovery_contracts_retained": [
+        "edit_data_asset",
+        "download_asset",
+        "vault_asset"
+      ],
+      "source_import_capability": "UNPROVEN: edit_data_asset targets DataAsset/PrimaryDataAsset; download_asset requires execute_python import; vault_asset installs existing packs. No permitted texture-array source reconstruction established.",
+      "successful_native_read": {
+        "source_commit": "0c7871670bcc42f837b17f8108b39fe1182a01a0",
+        "run_id": 39530647438,
+        "cpu_job_id": 118995491322,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118995562227,
+        "windows_conclusion": "success",
+        "artifact_id": 12315283215,
+        "artifact_zip_sha256": "be2897c73708db0860aa7c5f241b89dc437166d56209a20f56773dd73cc8ff4b",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 6,
+        "responses_complete_without_client_truncation": true,
+        "response_characters": [
+          7992,
+          8925,
+          8373,
+          22013,
+          1090,
+          346
+        ],
+        "files_sha256": {
+          "properties-bridge.json": "c9237575af0757520511296f55be8616f344a54200320e599660a30c667cbc6c",
+          "properties-identity.json": "585484446e4c1736779d693d5b1f812e08130b88e93076e13accc7abd0072395",
+          "properties-probe.json": "096db62d60dfa4475210cf104c55586eb9c48cd9a443ac343e6e5a7ae3c92aba"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "observed_utc": "2026-10-21T02:05:08.9841859Z",
+        "identity_stable_across_probe": true,
+        "all_11_target_packages_dirty": false,
+        "save_dry_run_wrote_packages": false,
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false,
+        "engine_source_search_matches": 0,
+        "engine_source_search_limit": "No matches does not establish absence of an API.",
+        "material_instance": {
+          "scalars": [
+            {
+              "name": "Detail Tiling",
+              "value": 0.25,
+              "overridden": true
+            },
+            {
+              "name": "Noise_Scale",
+              "value": 0.0005000000237487257,
+              "overridden": true
+            },
+            {
+              "name": "Terrain Resolution",
+              "value": 16000,
+              "overridden": true
+            },
+            {
+              "name": "UV Distort",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Material_Selection",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global_Colour_Weight",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Macro_Selection",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Hue",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Brightness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Material_Selection",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 2,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 3,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 2,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 3,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Num IDmap Layers",
+              "value": 5,
+              "overridden": true
+            },
+            {
+              "name": "Global Specular Scale",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global Normal Flatten",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Macro Texture Distance",
+              "value": 10000,
+              "overridden": true
+            },
+            {
+              "name": "Macro Tiling",
+              "value": 0.25,
+              "overridden": true
+            },
+            {
+              "name": "Displacement",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Displacement_Micro",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "UV Rotate",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Displacement Offset",
+              "value": 0.5019999742507935,
+              "overridden": true
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Detail Brightness",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Specular Falloff Exponent",
+              "value": 0.5,
+              "overridden": true
+            },
+            {
+              "name": "Global Brightness",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global AO Power",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Macro Texture Displacement",
+              "value": 5,
+              "overridden": true
+            },
+            {
+              "name": "Global Saturation",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Distance",
+              "value": 0.05000000074505806,
+              "overridden": false
+            },
+            {
+              "name": "Count",
+              "value": 8,
+              "overridden": false
+            },
+            {
+              "name": "Terrain Scale",
+              "value": 50,
+              "overridden": true
+            }
+          ],
+          "vectors": [
+            {
+              "name": "Offset",
+              "value": "(-8000,-8000,0,0)",
+              "overridden": true
+            }
+          ],
+          "textures": [
+            {
+              "name": "Normal Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Colour Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Terrain Colour",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+              "overridden": true
+            },
+            {
+              "name": "Masks Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Terrain IDmap",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+              "overridden": true
+            }
+          ],
+          "static_switches": [
+            {
+              "name": "Use Terrain Colour",
+              "value": true,
+              "overridden": true
+            },
+            {
+              "name": "Use IDmap",
+              "value": true,
+              "overridden": true
+            },
+            {
+              "name": "Allow Grass",
+              "value": false,
+              "overridden": true
+            }
+          ]
+        },
+        "textures": [
+          {
+            "name": "TA_Colour_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Default",
+            "srgb": true,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Color(0)"
+          },
+          {
+            "name": "TA_Normal_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_HierarchicalLOD",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "TA_Masks_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_Grass_Normal",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Normal",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_BC5",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "T_Grass_Masks",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Masks",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_Cliffs_Normal",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Normal",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_BC5",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "T_Cliffs_Masks",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Masks",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_PE_Terrain_IDMap",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
+            "width": 16000,
+            "height": 16000,
+            "source_width": 16000,
+            "source_height": 16000,
+            "pixel_format": "PF_G8",
+            "compression": "TC_Grayscale",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Nearest",
+            "mip_gen": "TMGS_NoMipmaps",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_LinearGrayscale(7)"
+          },
+          {
+            "name": "T_PE_Terrain_Color",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color",
+            "width": 16000,
+            "height": 16000,
+            "source_width": 16000,
+            "source_height": 16000,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Default",
+            "srgb": true,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_NoMipmaps",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Color(0)"
+          }
+        ],
+        "protected_ci": {
+          "run_id": 39530656175,
+          "conclusion": "failure",
+          "native_job_id": 118996423119,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure step could not enter missing _unreal-ci-warm directory",
+          "performance_pass": false
+        }
+      }
+    },
+    "macro_trial_preparation": {
+      "status": "REMOTE_TRIAL_COMPLETED_BASELINE_RESTORED",
+      "intent": "[l07-trial-macro]",
+      "scope": "Single existing Macro Tiling override .25 -> .05 -> .25 with exact baseline, backup, readback and same-camera A/B/A",
+      "source_video": "https://player.vimeo.com/video/888569514",
+      "directly_reviewed_time": "22:44",
+      "original_values": {
+        "Detail Tiling": 0.25,
+        "Macro Tiling": 0.05,
+        "Macro Texture Distance": 10000
+      },
+      "camera_source": "docs/assets/lesson07-recovery-20261020/receipt.json capture_camera; yaw normalized modulo 360",
+      "physical_repeat_metres": "UNVERIFIED",
+      "trial_is_final_repair": false,
+      "source_import_performed": false,
+      "native_asset_mutation_performed": true,
+      "visual_accepted": false,
+      "performance_pass": false,
+      "limitations": [
+        "Macro UV also feeds Normal and Masks; not a pure BaseColor buffer trial",
+        "Nested material function/displacement implementation remains unread",
+        "Semantic restoration does not prove byte-identical .uasset serialization"
+      ],
+      "restoration_scope": "Complete ordered MI parameter snapshot must match baseline; this is not byte-identical .uasset serialization",
+      "backup_package": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021",
+      "baseline_snapshot_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+      "success_native_calls": 12,
+      "maximum_native_calls": 15,
+      "maximum_duration_seconds": 300,
+      "minimum_remaining_seconds_before_apply": 193,
+      "restore_policy": "At most one restore mutation, only on fresh same-process evidence and an exact known candidate; denied operations are never retried",
+      "validation": {
+        "client_tests_passed": 73,
+        "powershell_viewport_cases_passed": 118,
+        "workflow_marker_combinations_passed": 64,
+        "powershell_switch_combinations_passed": 32,
+        "edited_powershell_files_parsed": 3,
+        "workflow_powershell_blocks_parsed": 9,
+        "powershell_version": "7.6.6",
+        "cross_language_client_receipt_check": "PASS; complete=true and three ordered stages; synthetic host envelope, no native calls",
+        "independent_review": "PASS; pre-apply restoration reserve defect corrected and boundary regression independently verified",
+        "native_calls_during_validation": 0,
+        "windows_os_guard_native_validation": "PASS; 12 fresh same-process checks in run 39532652532",
+        "frozen_observer_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+        "original_capture_and_inspection_paths": "Preserved; original standalone PowerShell proof validation unchanged",
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "f3e69666f321a38bad4ea771d4b73947798286d3bb2e76fc8188d2adcbb829b4",
+          "scripts/ue/test_lesson07_wingman_client.py": "57c001afd6e869792cee0c1b3adfe9a96948b8f8a88f94965dffde25d03dcf74",
+          "scripts/ue/fixtures/lesson07_macro_baseline_native_20261021.json": "279fe73462c4fbbad78727d5abae6593b7932fb9f8a0c6a00cae9533fe6060cb",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "ee3cb752f4ef23af36b8b4222a0bd0baf97bdd4de366a7848713be3416aa8966",
+          "scripts/ue/Read-YacsLesson07Viewport.ps1": "35a5cba0a83944c812abd861b34461c15d518d4be35cf084016311ef4468b7ad",
+          "scripts/ue/Test-YacsLesson07Viewport.ps1": "93c09a38cc2960f357a60219622d5041fc646fd056580a154c3045f8c489cf88",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "22c628ab46c914700bd591c5ce5384176c6e169fcaa65d4447c197e5316a6114"
+        }
+      },
+      "native_execution": {
+        "source_commit": "71914188cbdaeac200074b8a070e2f44ed50e501",
+        "run_id": 39532652532,
+        "cpu_job_id": 119001947751,
+        "cpu_conclusion": "success",
+        "cpu_tests_passed": 99,
+        "windows_job_id": 119002045700,
+        "windows_conclusion": "success",
+        "client_status": "TRIAL_MACRO_RESTORED_REVIEW_PENDING",
+        "probe_status": "LESSON07_TRIAL_MACRO_RESTORED_IMAGES_PENDING",
+        "capture_status": "TRIAL_MACRO_CAPTURES_RETAINED_REVIEW_PENDING",
+        "native_calls": 12,
+        "restored_parameter_snapshot_verified": true,
+        "baseline_backup_and_restored_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+        "candidate_parameter_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+        "only_changed_row": {
+          "kind": "scalars",
+          "index": 46,
+          "name": "Macro Tiling",
+          "from": 0.25,
+          "to": 0.05000000074505806,
+          "overridden": true
+        },
+        "parameter_counts": {
+          "scalars": 61,
+          "vectors": 1,
+          "textures": 5,
+          "static_switches": 3
+        },
+        "both_mutations_saved": true,
+        "same_editor_pid": 17896,
+        "same_editor_start_filetime_utc": "134370120000674689",
+        "same_camera_arguments": true,
+        "source_import_performed": false,
+        "level_saved": false,
+        "editor_started_or_stopped": false,
+        "artifact": {
+          "id": 12316570731,
+          "name": "lesson07-remote-connection-39532652532-1",
+          "bytes": 224085,
+          "sha256": "9d65747a33f01b24ac281d0f7b7d2515ef2da16c6f526faea104541c88983a4c"
+        },
+        "retained_evidence_directory": "docs/assets/lesson07-macro-trial-20261021",
+        "files": {
+          "bridge.json": {
+            "bytes": 155120,
+            "sha256": "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4"
+          },
+          "identity.json": {
+            "bytes": 616,
+            "sha256": "74f62f31b39edea306bb2f2fe2cc7fe04700635b21b7da29ada4562cd1e9d6df"
+          },
+          "probe.json": {
+            "bytes": 3297,
+            "sha256": "deee2c81d0d9cc7107454a46f8d43d022c8771dacf1d50d4db1836af9d77d83b"
+          },
+          "trial-macro-A-baseline.jpg": {
+            "bytes": 63240,
+            "sha256": "6ae6c7f645f1b3c72379f3766e4f42407e0ec6f66f4711922f4649b5965938a0"
+          },
+          "trial-macro-A-baseline.json": {
+            "bytes": 1550,
+            "sha256": "73074b8148cd532523b938ab7c30902607b0e145563c14a481d9a7d61d053711"
+          },
+          "trial-macro-A-restored.jpg": {
+            "bytes": 62634,
+            "sha256": "1f73fe97a6eceab075a86ce8c9bbb004a91c01370a47542979377cd386fa140f"
+          },
+          "trial-macro-A-restored.json": {
+            "bytes": 1550,
+            "sha256": "cf18ca0c4451da4aee08d1caa2c0d0e0ffe0e47e46b1d1d4c50ee46c20f01384"
+          },
+          "trial-macro-B-005.jpg": {
+            "bytes": 63178,
+            "sha256": "2b61fa2258181903ef7486cdbb4c6fdc01c9ee7cdefad872837620b1c5f74be5"
+          },
+          "trial-macro-B-005.json": {
+            "bytes": 1546,
+            "sha256": "3469ceed09ca24f9bab10864f33be3dfcb9f4db7ac64486c24232e0405e96838"
+          },
+          "trial-macro.json": {
+            "bytes": 1011,
+            "sha256": "b0495e62a2744289ed89fc828f1c208f74eaa90e1ccc3cbbf0f12f22c58623a9"
+          }
+        },
+        "visual_review": {
+          "root_and_independent_reviewer_agree": true,
+          "finding": "Dense regular diamond repeat on left valley floor and central foreground becomes substantially less conspicuous at .05 and returns at restored .25",
+          "decision": "Retain only Macro .05 as a partial improvement, pending separate application and readback",
+          "remaining_defects": [
+            "Broad mottling and repeating surface undulations",
+            "Pale vertically stretched cliff surfaces",
+            "Crude grass-to-rock transitions"
+          ],
+          "first_capture_shadow": "Transient upper-left dark patch excluded from improvement claim; B vs restoredA supports same result",
+          "not_proven": [
+            "BaseColor-only cause",
+            "Physical metres per texture repeat",
+            "Whole material fixed",
+            "Native source PNG import"
+          ]
+        },
+        "visual_accepted": false,
+        "performance_pass": false,
+        "protected_ci": {
+          "run_id": 39532660002,
+          "conclusion": "failure",
+          "native_job_id": 119003182596,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure log staging could not enter missing _unreal-ci-warm directory",
+          "performance_pass": false
+        }
+      }
+    },
+    "reviewed_macro_application_preparation": {
+      "status": "REMOTE_APPLIED_SAVED_PARTIAL_IMPROVEMENT_REVIEWED",
+      "scope": "Retain only visually reviewed Macro Tiling .05; all other current MI parameters and source assets unchanged",
+      "reviewed_trial_run": 39532652532,
+      "reviewed_trial_bridge_sha256": "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4",
+      "intent": "[l07-apply-macro]",
+      "expected_candidate_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+      "existing_backup_must_match_baseline": true,
+      "native_application_performed": true,
+      "source_import_performed": false,
+      "whole_material_visual_accepted": false,
+      "performance_pass": false,
+      "success_native_calls": 7,
+      "maximum_native_calls": 10,
+      "positive_native_save_response_required": true,
+      "validation": {
+        "client_tests_passed": 82,
+        "powershell_viewport_cases_passed": 152,
+        "workflow_marker_combinations_passed": 128,
+        "probe_switch_combinations_passed": 64,
+        "reader_switch_combinations_passed": 4,
+        "powershell_files_parsed": 3,
+        "workflow_powershell_blocks_parsed": 10,
+        "cross_language_client_receipt_check": "PASS; production reader accepts complete applied candidate only, never restored trial state",
+        "independent_review": "PASS; positive persisted-save response required before full candidate readback",
+        "native_calls_during_validation": 0,
+        "existing_trial_and_observer_paths_preserved": true,
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "15401aa11fcaedfee76f08d55a8ce6d74e5c514573fb7b10d1b492186ae777dd",
+          "scripts/ue/test_lesson07_wingman_client.py": "020ed8d9aef5ba9722d028d60740e9c35226688b841a56d439234133111acc06",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "8cd041b4afcaad61218da170d389b37053c085c9ec587ecd3140221cd21ec92f",
+          "scripts/ue/Read-YacsLesson07Viewport.ps1": "5aa40bea5adbe8702aafc60834817419e331dedd7d2aff5a45ece39cf9b15b1b",
+          "scripts/ue/Test-YacsLesson07Viewport.ps1": "a564498d7c47891f0d4424b15af10388823d3f4f6f6f3f2c7964cf1b74ade563",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "6555bcf9f820388450d77f915c2986bd06dfd3045bfc920725763741e2db170a"
+        },
+        "windows_process_and_listener_checks_native": "PASS; seven fresh OS owner/listener checks plus final host identity in run39533695950"
+      },
+      "native_execution": {
+        "source_commit": "da91a9c66c6d5a6ee30aa6151e6024861291b4d1",
+        "run_id": 39533695950,
+        "cpu_job_id": 119005279900,
+        "cpu_conclusion": "success",
+        "cpu_tests_passed": 108,
+        "windows_job_id": 119005369317,
+        "windows_conclusion": "success",
+        "client_status": "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING",
+        "probe_status": "LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING",
+        "capture_status": "APPLY_MACRO_VIEWPORT_RETAINED_REVIEW_PENDING",
+        "native_calls": 7,
+        "all_native_results_validated": true,
+        "fresh_host_identity_checks": 7,
+        "positive_native_save_response": "saved=true; failures=0",
+        "saved_response_received_utc": "2026-10-21T02:35:55.632118+00:00",
+        "apply_verified": true,
+        "apply_candidate_verified": true,
+        "apply_restore_attempted": false,
+        "apply_restore_verified": false,
+        "current_macro_tiling": 0.05000000074505806,
+        "current_detail_tiling": 0.25,
+        "baseline_and_backup_snapshot_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+        "applied_candidate_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+        "applied_candidate_equals_reviewed_trial_b": true,
+        "only_changed_row": {
+          "kind": "scalars",
+          "index": 46,
+          "name": "Macro Tiling",
+          "from": 0.25,
+          "to": 0.05000000074505806,
+          "overridden": true
+        },
+        "parameter_counts": {
+          "scalars": 61,
+          "vectors": 1,
+          "textures": 5,
+          "static_switches": 3
+        },
+        "backup_path": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021",
+        "existing_backup_verified": true,
+        "backup_overwritten": false,
+        "same_editor_pid": 17896,
+        "same_editor_start_filetime_utc": "134370120000674689",
+        "interactive_session_id": 1,
+        "final_identity_observed_utc": "2026-10-21T02:35:58.1388335Z",
+        "same_camera_arguments_as_trial": true,
+        "editor_started_or_stopped": false,
+        "source_import_performed": false,
+        "texture_array_rebuild_performed": false,
+        "level_saved": false,
+        "terrain_or_classification_changed": false,
+        "artifact": {
+          "id": 12316287387,
+          "name": "lesson07-remote-connection-39533695950-1",
+          "bytes": 95077,
+          "sha256": "2ca3d2ea2ab199674239fe3301c78bb15ca3e3906efb5f9844660e12ae1d1d4c"
+        },
+        "retained_evidence_directory": "docs/assets/lesson07-macro-applied-20261021",
+        "files": {
+          "apply-macro.jpg": {
+            "bytes": 62529,
+            "sha256": "74ac4f51ad9d49e91241b137eac442a1b50063eb74cbb43979ffa38e87d88e31"
+          },
+          "apply-macro.json": {
+            "bytes": 1992,
+            "sha256": "856f63ae466b82233b6191dfb29ab99e0950a097eea689f0f4c216d78873e49e"
+          },
+          "identity.json": {
+            "bytes": 616,
+            "sha256": "09f9e8f663d151050f0ac7a66c2ce681043b6473ff3dfee526d613441e314961"
+          },
+          "bridge.json": {
+            "bytes": 137609,
+            "sha256": "81b3d9da3f87a825fa0c15628f9c461d443d8cc73a88b2df031f7486af2b6ece"
+          },
+          "probe.json": {
+            "bytes": 3688,
+            "sha256": "7f288afcddbca4c134f0d9d44e01aab9c89f1d966c058f436bf82909cbb26342"
+          }
+        },
+        "capture": {
+          "stage": "B_applied_macro_005",
+          "native_tool_started_utc": "2026-10-21T02:35:55.7329890+00:00",
+          "width": 956,
+          "height": 431,
+          "unchanged_native_jpeg": true,
+          "sha256": "74ac4f51ad9d49e91241b137eac442a1b50063eb74cbb43979ffa38e87d88e31"
+        },
+        "visual_review": {
+          "status": "PARTIAL_IMPROVEMENT_CONFIRMED_WHOLE_MATERIAL_NOT_ACCEPTED",
+          "root_and_independent_reviewer_agree": true,
+          "finding": "Applied view reproduces trial B reduction of the dense diamond pattern across the left valley floor and central foreground; it has not reverted to restored A repetition",
+          "decision": "Retain saved Macro .05 as partial improvement",
+          "remaining_defects": [
+            "Broad mottling, repetition and green smearing",
+            "Vertically stretched and streaked pale cliff surfaces",
+            "Crude grass-to-rock transitions"
+          ],
+          "limits": [
+            "No BaseColor-only causal isolation",
+            "No verified physical metres per repeat",
+            "No native source PNG import or source-array reconstruction",
+            "One retained camera does not establish whole-area acceptance"
+          ],
+          "raw_manifest_review_pending_preserved": true,
+          "subsequent_review_recorded_separately": true
+        },
+        "whole_material_visual_accepted": false,
+        "performance_pass": false,
+        "remaining_application_blocker": {
+          "corrected_grass_and_cliffs_sources": "PREPARED_OFFLINE_NOT_IMPORTED",
+          "verified_dedicated_import_and_texture2darray_rebuild_capability": false,
+          "edit_texture_contract": "does NOT import",
+          "python_observer": "F49_DENIED_FROZEN_NO_RETRY",
+          "source_import_attempted": false,
+          "source_import_denied": false
+        },
+        "protected_ci": {
+          "run_id": 39533702186,
+          "conclusion": "failure",
+          "native_job_id": 119006513287,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure log staging could not enter missing _unreal-ci-warm directory",
+          "focused_application_does_not_replace_protected_ci": true,
+          "performance_pass": false
+        }
+      }
+    }
+  },
+  "whole_material_source_repair_20261021": {
+    "status": "REMOTE_SOURCE_SLICES_ASSEMBLED_NATIVE_APPLICATION_PENDING",
+    "owner_scope": "Whole texture appearance, not only a grid or repetition symptom",
+    "classes": [
+      "Grass",
+      "Cliffs"
+    ],
+    "slots": [
+      0,
+      3
+    ],
+    "source_hashes": {
+      "Grass": {
+        "colour": "719cffbc6f7cfec846cc2ba9610228dce5475cd2677f19f462bec6edc3e30ad9",
+        "normal": "90219e6e47a750758cd55b5456961dccec0fd4a6ceeaa198a81fa9c36198d11b",
+        "packed": "5423503ba94f8e16ced4615cfa05893ec76b3df65cf85be9c8c07201efd5be90"
+      },
+      "Cliffs": {
+        "colour": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+        "normal": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+        "packed": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1"
+      }
+    },
+    "normal_source_paths": {
+      "Grass": "worldgen/materials/scanned_refinement/source/aerial_grass_rock_nor_dx_4k.png",
+      "Cliffs": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_Normal_DX.png"
+    },
+    "packed_roughness_channel": "G",
+    "unchanged": {
+      "colour_source_and_processing": true,
+      "target_size": [
+        2048,
+        2048
+      ],
+      "ao": 255,
+      "displacement": 128,
+      "Grass2_Sand_Scree": true,
+      "terrain": true,
+      "classification": true
+    },
+    "focused_cpu_tests_passed": 6,
+    "script_sha256": "97f46b2e5a2d4cb881da4c062acbb87684279cc201bb3ffefdb2922ae68ab37e",
+    "test_sha256": "7045e96879652f10340d666769f4fcc8f89bdaefe19812b680bf412bf3c740df",
+    "native_asset_mutation_performed": false,
+    "native_array_pixels_verified": false,
+    "visual_accepted": false,
+    "remaining_diagnosis": [
+      "Whole-array colour grade",
+      "Actual detail/macro UV mapping and physical repeat",
+      "Normal sampler/derivative contract before unflattening",
+      "Global-colour contribution",
+      "Same-camera current before/after captures"
+    ],
+    "sidefx_direct_video_review": {
+      "lesson07": "22:09-22:18;23:09-23:49;24:36-25:31",
+      "functions": "10:21-11:41",
+      "method": "Official embedded player frames and English transcript"
+    },
+    "native_attempt_policy": "Passive Python path stopped after observed F49 denial. Dedicated screenshot and supported read-only tools only; no Python retry or guard bypass.",
+    "performance_pass": false,
+    "producer_versions_recorded": true,
+    "native_error_retention": {
+      "status": "NATIVE_ERROR_RETAINED_F49_NO_PYTHON_RETRY",
+      "error_text_limit_characters": 2048,
+      "text_block_limit": 8,
+      "credential_redaction_before_truncation": true,
+      "automatic_retry": false,
+      "client_tests_passed": 40,
+      "observer_tests_passed": 20,
+      "client_sha256": "41269a5fc02527c7fafddafb506705d3eef4f4d2d0bcda1598a18b1bd68a7858",
+      "client_test_sha256": "9fa9c002067dbfdf542259e8143e894f698b85967bf310a982a5bd34dc977a34",
+      "run_id": 39519585751
+    },
+    "remote_assembly": {
+      "source_commit": "c8370182042723d3f69610e6fcec1d4c074c96c0",
+      "run_id": 39519585751,
+      "windows_job_id": 118959933031,
+      "step_conclusion": "success",
+      "directory": "D:\\yacs\\work\\lesson07-source-repair-20261021\\39519585751-1",
+      "artifact_id": 12310806923,
+      "receipt_sha256": "5f05410605aa14c9a67b47e5485399790d0f76f02a8367f379dc4b2cf62ddb63",
+      "receipt": {
+        "status": "OFFLINE_SLICES_ASSEMBLED_UE_IMPORT_PENDING",
+        "producer_versions": {
+          "python": "3.12.10",
+          "pillow": "12.3.0",
+          "numpy": "2.3.5"
+        },
+        "classes": [
+          "Grass",
+          "Cliffs"
+        ],
+        "size": [
+          2048,
+          2048
+        ],
+        "inputs": {
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_Grass_BaseColor.png": {
+            "sha256": "719cffbc6f7cfec846cc2ba9610228dce5475cd2677f19f462bec6edc3e30ad9",
+            "size_bytes": 98214149
+          },
+          "D:\\yacs\\project\\worldgen\\materials\\scanned_refinement\\source\\aerial_grass_rock_nor_dx_4k.png": {
+            "sha256": "90219e6e47a750758cd55b5456961dccec0fd4a6ceeaa198a81fa9c36198d11b",
+            "size_bytes": 102796390
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_Grass_Roughness.png": {
+            "sha256": "5423503ba94f8e16ced4615cfa05893ec76b3df65cf85be9c8c07201efd5be90",
+            "size_bytes": 74669799
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_PaleLimestone_BaseColor.png": {
+            "sha256": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+            "size_bytes": 1273397
+          },
+          "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\scree\\export\\SaCalobra_PaleLimestone_Normal_DX.png": {
+            "sha256": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+            "size_bytes": 7872034
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_PaleLimestone_Roughness.png": {
+            "sha256": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1",
+            "size_bytes": 957684
+          }
+        },
+        "outputs": {
+          "slice_0_grass_colour.png": {
+            "sha256": "0d5c6a14ff4f3c813a535d53bd6e48c2058c8a50ac2a4a4353c3f7f288528590",
+            "size_bytes": 9676178
+          },
+          "slice_0_grass_masks.png": {
+            "sha256": "bc9131bb40a06e00c14544785b873bce6430797c59eb3c7369b34fbaff318d1c",
+            "size_bytes": 3756633
+          },
+          "slice_0_grass_normal.png": {
+            "sha256": "6cfe99fee469d538d07f6770bcd10714bac5f59db904cb665f26f3fddcdfb239",
+            "size_bytes": 10689967
+          },
+          "slice_3_cliffs_colour.png": {
+            "sha256": "63bacc9972b3bc26aef5315d9069c6c290b604576690bbd624f167f3896dda71",
+            "size_bytes": 1225473
+          },
+          "slice_3_cliffs_masks.png": {
+            "sha256": "1aab0bd68d58a0cce9d63e6e1ffac446b7913975b29fab2fbbfa6c21c736584c",
+            "size_bytes": 405971
+          },
+          "slice_3_cliffs_normal.png": {
+            "sha256": "bb7309dc48d312d03b3c3cba67b1a857e05d1778db42d0695404891c8b5f0dae",
+            "size_bytes": 8293176
+          }
+        },
+        "classification_changed": false,
+        "terrain_changed": false,
+        "native_ue_verified": false,
+        "visual_accepted": false
+      },
+      "protected_ci": {
+        "run_id": 39519593200,
+        "conclusion": "failure",
+        "native_job_id": 118961129627,
+        "native_reason": "LOCAL_BUSY",
+        "observed_utc": "2026-10-21T00:14:19.0735289Z",
+        "editor_and_logs_preserved": true,
+        "scope": "Hosted checks passed; native build/Automation not executed because owner Editor is active. Focused probe tests do not substitute protected CI."
+      }
+    },
+    "original_idmap_visible_settings": {
+      "source": "https://player.vimeo.com/video/888569514?app_id=122963",
+      "mip_gen_settings": {
+        "time": "15:31.7",
+        "value": "NoMipmaps",
+        "observed_directly_in_texture_editor": true
+      },
+      "filter": {
+        "time": "17:21.7",
+        "value": "Nearest",
+        "observed_directly_in_texture_editor": true
+      },
+      "current_yacs_native_settings": "MATCHES: TMGS_NoMipmaps, TF_Nearest, TC_Grayscale, sRGB=false, PF_G8, 16000x16000 at 2026-10-21T02:05Z"
+    },
+    "subsequent_implementation": "surface_import_20261021; this earlier source assembly and failed observer history remains unchanged"
+  },
+  "ready_material_selection_20261021": {
+    "status": "SOURCE_SHORTLIST_AND_CC0_SAMPLE_REVIEW_COMPLETE_NATIVE_IMPORT_NOT_RUN",
+    "owner_requirement": "Ready-made licensed assets and complete materials; include dark-grey and lighter limestone",
+    "report": "docs/assets/lesson07-ready-materials-20261021/README.md",
+    "acquisition_manifest": "docs/assets/lesson07-ready-materials-20261021/acquisition.json",
+    "primary_package_candidate": "Mediterranean Karst Biome Vol.01",
+    "license_verified_for_included_samples": "CC0-1.0",
+    "raw_diffuse_samples_acquired": 4,
+    "complete_pbr_set_acquired": false,
+    "fab_asset_specific_entitlement_verified": false,
+    "paid_purchase_performed": false,
+    "native_import_performed": false,
+    "whole_material_visual_accepted": false,
+    "performance_pass": false,
+    "read_only_vault_inspection": {
+      "status": "FIRST_ATTEMPT_BLOCKED_BEFORE_NATIVE_NO_SINGLE_EDITOR",
+      "filters": [
+        "limestone",
+        "cliff",
+        "rock"
+      ],
+      "native_tool": "vault_asset",
+      "action": "list",
+      "schema_sha256": "13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf",
+      "raw_inventory_publicly_published": false,
+      "ownership_or_license_inferred_from_text_match": false,
+      "source_commit": "6bfa739c03eb55d9bcd3c4374d3fedc62a246c79",
+      "run_id": 39577528208,
+      "job_id": 119146799296,
+      "observed_utc": "2026-10-21T09:33:16.8578333Z",
+      "reason": "VAULT_INSPECTION_REQUIRES_EXISTING_EDITOR",
+      "process_count_from_this_error": "NOT_EXACTLY_ONE_ZERO_OR_MULTIPLE",
+      "native_tool_call_attempts": 0,
+      "client_exit_code": null,
+      "editor_started_or_stopped": false,
+      "probe_receipt": "docs/assets/lesson07-ready-materials-20261021/first-vault-probe.json",
+      "probe_sha256": "cf7ff8fd4758aeafefa2b9b5e2829fc09f820f21411867e5fd062bcc15865b80",
+      "artifact_id": 12334394767,
+      "artifact_zip_sha256": "0630c49e02cdeea40dea55183b6c3e73b27cc5f59f331b275ad5b3f40354484e"
+    },
+    "preparation_validation": {
+      "client_and_observer_tests_passed": 109,
+      "vault_test_methods": 7,
+      "workflow_marker_combinations_passed": 256,
+      "independent_review": "PASS_NO_BLOCKING_FINDING",
+      "powershell_runtime": "7.6.6",
+      "powershell_typed_receipt_cases_passed": 11,
+      "powershell_mixed_mode_rejections_passed": 6,
+      "docs_guards": {
+        "links": "PASS",
+        "i18n": "PASS",
+        "structure": "PASS",
+        "freshness": "PASS"
+      },
+      "frozen_observer_unchanged": true
+    },
+    "latest_host_observation": {
+      "diagnostic_run_id": 39579824031,
+      "run_attempt": 1,
+      "job_id": 119154379466,
+      "source_commit": "7314caa31fb7126228be19fc5a6110b3835f8461",
+      "observed_utc": "2026-10-21T09:48:51.1775567Z",
+      "editors": [],
+      "discovery_exists": false,
+      "diagnostic_failures": [],
+      "http_requests_made": 0,
+      "editor_commands_executed": 0,
+      "editor_started_or_stopped": false,
+      "source": "Exact retained prior-bridge-discovery.json artifact bytes"
+    },
+    "protected_source_ci": {
+      "run_id": 39577539895,
+      "source_commit": "6bfa739c03eb55d9bcd3c4374d3fedc62a246c79",
+      "conclusion": "SUCCESS",
+      "completed_utc": "2026-10-21T09:37:11Z",
+      "native_job_id": 119148097228,
+      "native_proof": "COMPATIBLE_PROOF_REUSED",
+      "new_build_automation_capture_handoff": "SKIPPED",
+      "visual_or_import_acceptance": false
+    },
+    "session_continuation": {
+      "status": "CLOSED_602_REOPEN_REVIEWED_CI_PASSED_START_BLOCKED_PRE_JOB_DISK_RESERVE",
+      "standing_owner_authorization": "Create missing session; preserve existing session if present",
+      "prior_installed_source": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+      "old_one_shot_task_restarted": false,
+      "prior_state_reset": false,
+      "saved_macro_005_must_be_preserved": true,
+      "diagnostic_source_commit": "7314caa31fb7126228be19fc5a6110b3835f8461",
+      "diagnostic_run_id": 39579824031,
+      "diagnostic_job_id": 119154379466,
+      "observed_utc": "2026-10-21T09:48:59.2884226Z",
+      "artifact_id": 12335558376,
+      "artifact_bytes": 4368,
+      "artifact_zip_sha256": "6ac9b15cdeb49cbfd814d59c14b77b6666232c2a77eed2205faf44bbbffc2d5d",
+      "retained_evidence": [
+        {
+          "artifact_path": "lesson07-editor-module-diagnostic.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-module-diagnostic.json",
+          "bytes": 1875,
+          "sha256": "9186b41494df82d79b481acdc4d3ac04aec0595d3e1e9b5134cec84b43b4a574"
+        },
+        {
+          "artifact_path": "lesson07-editor-bridge-discovery.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-bridge-discovery.json",
+          "bytes": 1814,
+          "sha256": "97fc8fb06e12019b3a868544326ede5b2898b9a6c24e175d826fa2e31e4fcb7e"
+        },
+        {
+          "artifact_path": "lesson07-prior-session-diagnostic.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-session-diagnostic.json",
+          "bytes": 8748,
+          "sha256": "641e74714a594313d5aa6029a510acae9ae5d5d54a019d16c2ce71453e158032"
+        }
+      ],
+      "prior_installation": {
+        "status": "HASHED",
+        "bytes": 930,
+        "modified_utc": "2026-10-20T23:19:48.9994698Z",
+        "sha256": "8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5",
+        "stable_across_read": true
+      },
+      "prior_terminal_session": {
+        "file": {
+          "status": "HASHED",
+          "bytes": 6732,
+          "modified_utc": "2026-10-21T07:37:58.9627808Z",
+          "sha256": "8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb",
+          "stable_across_read": true
+        },
+        "source_sha_matches_expected": true,
+        "status": "EDITOR_EXITED_NO_AUTORESTART",
+        "phase": "SUPERVISING",
+        "host_status": "IDLE",
+        "checked_at_utc": "2026-10-21T07:37:58.9575712Z",
+        "reason_code": null,
+        "editor": {
+          "pid_matches_original": true,
+          "start_filetime_matches_original": true,
+          "executable_matches_expected": true,
+          "interactive_session_matches_original": true,
+          "canonical_project_matches": true
+        },
+        "flags": {
+          "owner_sid_matches": true,
+          "checkpoint_bytes_verified": true,
+          "module_build_ids_verified": true,
+          "autosave_session_override": true,
+          "editor_stop_requested": false,
+          "package_save_requested": false,
+          "project_config_write_requested": false,
+          "native_world_verified": false,
+          "native_module_load_verified": false,
+          "performance_pass": false
+        }
+      },
+      "prior_task": {
+        "exists": true,
+        "state": "Ready",
+        "last_task_result": 0,
+        "last_run_utc": "2026-10-20T23:19:50.0000000Z",
+        "action_count": 1,
+        "action_executable_matches": true,
+        "action_arguments_match": true,
+        "action_working_directory_matches": true,
+        "principal_limited": true,
+        "principal_interactive": true,
+        "principal_sid_matches_console": true,
+        "principal_sid_matches_installation": true,
+        "settings_match_original": true
+      },
+      "current_checkpoint": [
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+          "original_size_bytes": 1838638056,
+          "original_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+          "file": {
+            "status": "HASHED",
+            "bytes": 1838638056,
+            "modified_utc": "2026-10-20T15:36:24.0335549Z",
+            "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+          "original_size_bytes": 39740,
+          "original_sha256": "8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf",
+          "file": {
+            "status": "HASHED",
+            "bytes": 40154,
+            "modified_utc": "2026-10-21T02:35:55.5125695Z",
+            "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": false
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset",
+          "original_size_bytes": 208956,
+          "original_sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+          "file": {
+            "status": "HASHED",
+            "bytes": 208956,
+            "modified_utc": "2026-10-20T21:13:45.3085829Z",
+            "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+          "original_size_bytes": 24178947,
+          "original_sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+          "file": {
+            "status": "HASHED",
+            "bytes": 24178947,
+            "modified_utc": "2026-10-20T20:19:54.2651656Z",
+            "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+          "original_size_bytes": 40441798,
+          "original_sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+          "file": {
+            "status": "HASHED",
+            "bytes": 40441798,
+            "modified_utc": "2026-10-20T20:19:54.9994090Z",
+            "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+          "original_size_bytes": 12124066,
+          "original_sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+          "file": {
+            "status": "HASHED",
+            "bytes": 12124066,
+            "modified_utc": "2026-10-20T20:19:55.6634155Z",
+            "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        }
+      ],
+      "native_requests_made": 0,
+      "new_session_started": false,
+      "native_material_reopened_readback": "NOT_RUN",
+      "diagnostic_preparation_tests_passed": 29,
+      "diagnostic_independent_review": "PASS",
+      "reopen_preparation": {
+        "powershell_runtime": "7.6.6",
+        "production_validator_cases_passed": 108,
+        "previous_cases_retained": 72,
+        "independent_review": "PASS_NO_BLOCKING_FINDING",
+        "source_sha256": {
+          "scripts/ue/Install-YacsLesson07RemoteEditor.ps1": "1ae41ae62ead55bb24d2119f7b89d926ec3f2dad011d26cade5aeb6f7aa7059a",
+          "scripts/ue/Start-YacsLesson07RemoteEditor.ps1": "8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91",
+          "scripts/ue/Test-YacsLesson07RemotePreflight.ps1": "70f3b2fc68677af7105456d5378d51de9b5a5dbd71a733efb391b27aafcfa8d4"
+        },
+        "failed_457_predicate_unchanged": true,
+        "launcher_only_saved_mi_pin_changed": true,
+        "other_five_checkpoint_pins_unchanged": true,
+        "same_completed_task_and_state_directory_rejection_retained": true,
+        "old_release_and_state_retained": true,
+        "fresh_deadline_minutes": 4,
+        "exact_source_protected_ci_required": true,
+        "native_launch_executed": false
+      },
+      "reopen_execution": {
+        "evidence_kind": "DERIVED_FROM_GITHUB_RUN_JOB_METADATA_AND_DECODED_LOGS_NOT_A_NATIVE_HOST_RECEIPT",
+        "summary_path": "docs/assets/lesson07-ready-materials-20261021/reopen-admission.json",
+        "summary_sha256": "46817614218db73c721f5640526c9ea31bf385bb4f16697a2e8f1f82e92d2ee4",
+        "source_commit": "fae2634d926545dfa7f7f71286e25386d9caf46b",
+        "run_id": 39580724393,
+        "run_attempt": 1,
+        "job_id": 119160447960,
+        "conclusion": "FAILURE",
+        "failed_step": "Set up runner",
+        "available_space_gib_displayed": 4.8,
+        "required_reserve_gib": 5,
+        "checkout_installer_and_native_probe": "SKIPPED",
+        "task_retargeted": false,
+        "new_editor_started": false,
+        "native_tool_calls": 0,
+        "artifact_count": 0,
+        "disk_recovery_after_completion_hook_verified": false,
+        "automatic_retry_performed": false,
+        "global_cleanup_performed": false,
+        "cleanup_status": "STOPPED_BY_OWNER_20261012_NOT_RESUMED"
+      }
+    },
+    "protected_reopen_source_ci": {
+      "run_id": 39580735431,
+      "run_attempt": 1,
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580735431",
+      "conclusion": "SUCCESS",
+      "completed_utc": "2026-10-21T10:02:31Z",
+      "native_job_id": 119159094265,
+      "native_proof": "COMPATIBLE_EXACT_HEAD_PROOF_REUSED",
+      "fresh_unreal_build_and_automation": "SKIPPED",
+      "artifacts": [
+        {
+          "id": 12337045140,
+          "name": "hosted-script-tests-39580735431-1",
+          "bytes": 269437,
+          "github_reported_sha256": "bb7bd98bd5801f0995072b088ee78dd3dd735bc9bffcfb10861cd5b3120e8669",
+          "downloaded_in_this_admission_review": false
+        },
+        {
+          "id": 12336486949,
+          "name": "unreal-ci-39580735431-1",
+          "bytes": 1180,
+          "github_reported_sha256": "ab0f6f4cb72b7f492d59c65ca3c20d8d489ddd48e1cb256cdb3a0ace3edcee34",
+          "downloaded_in_this_admission_review": false
+        },
+        {
+          "id": 12336004488,
+          "name": "world-proof-admission-39580735431-1",
+          "bytes": 354,
+          "github_reported_sha256": "5f69c0278669d356a7409d156691a59a3e01443df87cbd9ef4ede0c3d446ff9e",
+          "downloaded_in_this_admission_review": false
+        }
+      ]
+    },
+    "subsequent_implementation": "surface_import_20261021; Fab entitlement remains unverified, two separate CC0 rock sets subsequently acquired"
+  },
+  "surface_import_20261021": {
+    "status": "IMPORT_SAVED_RENDER_DEFECTS_UNRESOLVED",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "run_id": 39636694686,
+    "native_job_id": 119349185890,
+    "evidence_index": "docs/assets/lesson07-surface-repair-20261021/import-39636694686-evidence.json",
+    "source_sets_acquired": [
+      "dark_rock_02",
+      "rock_boulder_dry"
+    ],
+    "license": "CC0-1.0",
+    "geology_authenticated_as_limestone": false,
+    "imported_textures": 5,
+    "saved_arrays": 3,
+    "changed_slots": [
+      0,
+      3
+    ],
+    "landscape_snapshots_equal": true,
+    "map_saved": false,
+    "material_instance_changed": false,
+    "scalar_readback": {
+      "Global Normal Flatten": 1.0,
+      "Macro Tiling": 0.05000000074505806
+    },
+    "saved_array_sha256": {
+      "Colour": "ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57",
+      "Normal": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+      "Masks": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94"
+    },
+    "fresh_reopen_verified": false,
+    "visual_accepted": false,
+    "technical_pass": false,
+    "branch_retention": "NINE_PACKAGE_SERVER_BYTES_VERIFIED_POINTERS_INCLUDED_IN_CONTAINING_COMMIT",
+    "retention_evidence_index": "docs/assets/lesson07-surface-repair-20261021/retention-39643271947-evidence.json",
+    "retention_run_id": 39643271947,
+    "retained_asset_count": 9,
+    "retained_asset_bytes": 115887110,
+    "prior_retention_timeout_evidence": "docs/assets/lesson07-surface-repair-20261021/retention-39638776920-evidence.json",
+    "metadata_discovery": {
+      "run_id": 39638776763,
+      "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+      "evidence_index": "docs/assets/lesson07-surface-repair-20261021/discovery-39638776763-evidence.json",
+      "native_tool_calls": 0,
+      "tool_count": 84,
+      "identity_stable": true,
+      "edit_graph_full_contract": "EXCLUDED_CONTRACT_SIZE",
+      "material_function_graph_read_supported": null,
+      "later_workflow_failure": "FAILURE_LOG_OWNER in the unchanged historical error reader; metadata discovery itself completed",
+      "frozen_observer_retried": false
+    },
+    "retention_source_protected_ci": {
+      "run_id": 39638791772,
+      "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+      "conclusion": "failure",
+      "failed_native_job": 119358375984,
+      "reason": "Native workspace-lock admission refused LOCAL_BUSY while preserving the active owner Editor; no new native build or Automation proof."
+    },
+    "protected_ci": {
+      "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351",
+      "conclusion": "failure",
+      "failed_native_job": 119351259602,
+      "reason": "Native workspace-lock admission refused LOCAL_BUSY with the owner Editor open. Hosted code/policy/security checks passed; native build/Automation not reached."
+    },
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3"
+  },
+  "normal_contract_source_analysis": {
+    "status": "OFFLINE_SOURCE_CONTRACT_VERIFIED_PRIVATE_NATIVE_CANDIDATE_NOT_EXECUTED",
+    "report": "docs/assets/lesson07-normal-contract-20261021/README.md",
+    "compact_evidence_sha256": "1be16149e7fbe87770eae7bdad11444da7d7bd477e4ca12dd9696e7273bd49c7",
+    "original_assets_unchanged": true,
+    "normal_sampler_requirement": "All four explicit SAMPLERTYPE_Normal",
+    "corner_correction": "BR=Samples.G; TL=Samples.B, matching Colour/Masks",
+    "signed_rotation_correction": "(G,1-R,B) -> (G,-R,B)",
+    "planned_native_scope": [
+      "new private normal material function",
+      "new private landscape master"
+    ],
+    "active_mi_changed": false,
+    "native_candidate_executed": false,
+    "candidate_applied": false,
+    "technical_pass": false,
+    "performance_pass": false,
+    "native_candidate_status": "PAUSED_BY_OWNER_ORIGINAL_WORKFLOW_REINSPECTION_NOT_EXECUTED"
+  },
+  "current_reader_pin_alignment": {
+    "ci_run_id": 39644687140,
+    "failed_test": "test_current_pins_match_committed_asset_pointers_without_lfs_payloads",
+    "cause": "The retained MI pointer superseded the old Flatten-only checkpoint, while two reader pins remained stale.",
+    "new_mi_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "new_mi_size_bytes": 40154,
+    "authority": "docs/assets/lesson07-surface-repair-20261021/retention-39643271947-server-lfs-readback.json",
+    "map_lineage_changed": false,
+    "local_tests": {
+      "reader_tests_run": 59,
+      "skipped": 2,
+      "failures": 0,
+      "exact_remote_pointer_test_run": 1,
+      "exact_remote_pointer_test_failures": 0,
+      "pointer_source_commit": "61d3a245124284283fb2600cb1b1379e410e492c"
+    },
+    "hosted_revalidation": {
+      "status": "PASS",
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "ci_run_id": 39658455912,
+      "job_id": 119425014052,
+      "test_module": "scripts/ue/test_lesson07_readback.py",
+      "tests_passed": 60,
+      "module_result_utc": "2026-10-21T19:06:58.6682130Z",
+      "client_tests_passed": 110,
+      "overall_ci_conclusion": "failure",
+      "native_lane_job_id": 119426772514,
+      "native_lane_reason": "LOCAL_BUSY before checkout/build; owner Editor preserved. Log staging then failed for the absent worktree; final cleanup again refused LOCAL_BUSY.",
+      "native_build_executed": false
+    },
+    "prior_hosted_revalidation": {
+      "status": "PASS",
+      "source_commit": "1f6828d5d2d75f3d8b73547a76175de8b7e4c715",
+      "ci_run_id": 39654542444,
+      "job_id": 119411407332,
+      "test_module": "scripts/ue/test_lesson07_readback.py",
+      "tests_passed": 60,
+      "module_result_utc": "2026-10-21T18:40:43.5512837Z",
+      "overall_ci_conclusion": "failure",
+      "native_lane_reason": "LOCAL_BUSY; open owner Editor preserved"
+    }
+  },
+  "original_sidefx_reinspection_20261021": {
+    "status": "ORIGINAL_ZIP_TEXTURES_DELIVERED_NATIVE_APPLICATION_UNCHANGED",
+    "report": "docs/assets/lesson07-sidefx-source-20261021/README.md",
+    "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+    "archive_bytes": 605943562,
+    "full_transcript_read": true,
+    "full_motion_every_frame_reviewed": false,
+    "official_default_arrays_are_final_pbr": false,
+    "custom_normal_candidate_paused": true,
+    "native_material_application": false,
+    "lesson07_technical_pass": false,
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3",
+    "native_source_inspection_report": "docs/assets/lesson07-sidefx-source-20261021/source-inventory-39658443621-1-evidence.json",
+    "native_source_inspection_run": 39658443621,
+    "native_source_inspection_attempt": 1,
+    "native_source_inspection_complete_for_standard_folder": true,
+    "standard_megascans_texture_count": 0,
+    "project_wide_expected_id_search": "COMPLETE_NO_REGISTERED_NAME_MATCHES",
+    "fresh_owner_pid": 11284,
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "standard_folder_inspection_run": 39654531355,
+    "standard_folder_inspection_attempt": 2,
+    "native_calls": 7,
+    "fresh_host_checks": 14,
+    "fresh_owner_interactive_session_id": 1,
+    "renamed_assets_verified": false,
+    "external_download_cache_verified": false,
+    "source_array_slot_refs_verified": false,
+    "mi_parameter_associations_verified": false,
+    "license_entitlement_verified": false,
+    "source_id_query_results": [
+      {
+        "id": "tkekcgfn",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "vjulbjjr",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "wenocdss",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "ultncbnlw",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "ullmagidy",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      }
+    ],
+    "owner_reports_possession_of_required_source_files": false,
+    "current_request": "Extract and deliver the textures actually contained in the supplied original SideFX ZIP.",
+    "current_request_complete": true,
+    "external_source_search_active": false,
+    "existing_local_export_requested_from_owner": false,
+    "archive_texture_delivery": {
+      "status": "DELIVERED_TO_OWNER",
+      "zip_name": "SideFX_Textures_From_Original_Zip.zip",
+      "zip_bytes": 217202273,
+      "zip_sha256": "672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee",
+      "original_file_count": 57,
+      "texture2d_count": 48,
+      "landscape_debug_texture2d_count": 9,
+      "foliage_texture2d_count": 39,
+      "texture2darray_count": 3,
+      "png_count": 4,
+      "exr_count": 2,
+      "uasset_metadata_inspected_count": 125,
+      "original_paths_and_bytes_preserved": true,
+      "all_zip_members_size_crc32_sha256_verified": true,
+      "native_import_performed": false,
+      "images_edited_or_converted": false,
+      "uassets_reserialized": false,
+      "five_final_video_pbr_families_supplied": false,
+      "manifest": "docs/assets/lesson07-sidefx-source-20261021/original-textures-extraction-manifest.json",
+      "source_image_inspection": "docs/assets/lesson07-sidefx-source-20261021/source-six-image-inspection.json"
+    },
+    "current_original_landscape_pointer_comparison": {
+      "report": "docs/assets/lesson07-sidefx-source-20261021/current-landscape-archive-comparison.json",
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "original_landscape_packages": 37,
+      "all_original_sha256_and_size_match_committed_canonical_lfs_pointers": true,
+      "remote_tree_truncated": false,
+      "lfs_binary_downloaded": false,
+      "lfs_server_object_availability_verified": false,
+      "windows_workspace_bytes_verified": false,
+      "unreal_invoked": false
+    },
+    "protected_ci_for_native_source": {
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "run_id": 39658455912,
+      "conclusion": "failure",
+      "hosted_python_job_id": 119425014052,
+      "hosted_python_conclusion": "success",
+      "saved_mi_reader_tests_passed": 60,
+      "wingman_client_tests_passed": 110,
+      "full_plan_modules_selected": 285,
+      "full_plan_modules_available": 285,
+      "selection_count_is_not_all_modules_passed": true,
+      "windows_job_id": 119426772514,
+      "windows_failure": "LOCAL_BUSY before checkout/build; later proof-log staging had no working directory, and final cleanup also refused LOCAL_BUSY",
+      "owner_editor_preserved": true,
+      "native_build_pass": false,
+      "automation_pass": false
+    }
+  },
+  "one_to_one_reproduction_20261021": {
+    "owner_request": "Implement the author's solution 1:1",
+    "base_commit": "0d6064147f14a89767007d381d7c292b81bdecbd",
+    "status": "ORIGINAL_MI_COPY_SAVED_NATIVE_ORDERED_VALUES_VERIFIED_OFFLINE_REVIEW_PARTIAL",
+    "metadata_contract_added": "edit_level",
+    "new_native_calls_admitted": 11,
+    "native_application_verified": false,
+    "global_colour_repaired": false,
+    "exact_final_video_pbr_sets_available": false,
+    "geography_and_existing_owner_session_preserved": true,
+    "metadata_source_commit": "a287c5a87c3d1410513512f9711eed04814290b4",
+    "metadata_discovery_run": 39668607144,
+    "metadata_discovery_verified": true,
+    "metadata_native_calls": 0,
+    "metadata_workflow_conclusion": "failure",
+    "metadata_later_failure": "FAILURE_LOG_OWNER",
+    "material_contract": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json",
+    "shared_master_expression_links_verified": 257,
+    "source_mi_copy_prepared": true,
+    "source_variant": "ZIP_SAVED_DEFAULTS_FINAL_VIDEO_PROFILE_SEPARATE",
+    "owner_checks_per_complete_preparation": 22,
+    "preparation_marker": "[l07-prepare-pegasus-candidate]",
+    "mi_parameter_comparison": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json",
+    "persisted_current_layer_and_blend_indices_match_source": true,
+    "explicit_current_global_colour_strength_overrides": 1,
+    "zip_profile_global_parameter_delta_count": 5,
+    "editor_only_layer_cache_verified": false,
+    "preparation_source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+    "preparation_run": 39672674724,
+    "preparation_workflow_conclusion": "success",
+    "preparation_native_tool_calls": 11,
+    "preparation_owner_checks": 22,
+    "preparation_evidence": "docs/assets/lesson07-sidefx-source-20261021/preparation-39672674724-evidence.json",
+    "native_current_mi_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "small_rgb_canary_admitted": false,
+    "small_rgb_cache_status": "MISSING",
+    "full_candidate_export_verified": false,
+    "backup_offline_parameter_contract_matches": true,
+    "candidate_prefix_parameters_match_zip_and_yacs_adaptations": true,
+    "candidate_added_terrain_scale_guid_matches_existing_yacs_mi": false,
+    "base_coverage_recipe_corrected": true,
+    "base_coverage_recipe_evidence": "docs/assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json",
+    "existing_colour_caches_rebuilt": false,
+    "automatic_cache_invalidation": false,
+    "input_inspection_marker": "[l07-inspect-pegasus-inputs]",
+    "input_inspection_status": "READY_FOR_NATIVE_INSPECTION_RESULTS_PENDING",
+    "input_inspection_native_calls": 1,
+    "input_inspection_owner_checks": 2
+  }
+}

@@ -1,0 +1,6 @@
+=== START TEST_PROC_UPDATE_UE ===
+Target landscape: SaCalobra_Detail_0_0
+Edit layers before: [Name("Houdini_Source_Pegasus_Gentle")]
+Cooking and baking Layer2_Procedural...
+Edit layers after: [Name("Houdini_Source_Pegasus_Gentle"), Name("Layer2_Procedural")]
+Level saved successfully with coexisting layers!

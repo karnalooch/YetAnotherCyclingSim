@@ -1,0 +1,380 @@
+{
+  "archive_url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip",
+  "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "inspection_scope": "Exactly six source PNG/EXR files; no conversions, no UE invocation, no asset writes",
+  "files": [
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_AO.png",
+      "size_bytes": 6331767,
+      "sha256": "266329a4cae29e9190275023a0c8af4de4a9fd75f83f61b43349ccca8c030e8f",
+      "matches_original_zip_inventory": true,
+      "width": 2048,
+      "height": 2048,
+      "bit_depth": 16,
+      "png_colour_type": 0,
+      "image_mode": "I;16",
+      "metadata": {
+        "srgb": 1,
+        "Artist": "georg",
+        "Comment": "none"
+      },
+      "validation": "PNG header and Pillow verify; original file unchanged"
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_Colour.png",
+      "size_bytes": 5889075,
+      "sha256": "4f41e611abb4f43de7cd5d55f22077ff30b8bfc2094dda9be62a0023d668ac89",
+      "matches_original_zip_inventory": true,
+      "width": 2048,
+      "height": 2048,
+      "bit_depth": 8,
+      "png_colour_type": 2,
+      "image_mode": "RGB",
+      "metadata": {
+        "srgb": 1,
+        "Artist": "georg",
+        "Comment": "none"
+      },
+      "validation": "PNG header and Pillow verify; original file unchanged"
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_IDMAP.png",
+      "size_bytes": 767017,
+      "sha256": "02e67e7485799af52c2960883cd68e9a41dda42760004d562271961bb6db708c",
+      "matches_original_zip_inventory": true,
+      "width": 2016,
+      "height": 2016,
+      "bit_depth": 8,
+      "png_colour_type": 0,
+      "image_mode": "L",
+      "metadata": {
+        "srgb": 1,
+        "Artist": "georg",
+        "Comment": "none"
+      },
+      "validation": "PNG header and Pillow verify; original file unchanged"
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_wetness.png",
+      "size_bytes": 7692217,
+      "sha256": "34a2a91e1b73452b6cb8e08ab0ae0bd68a6742115640a19a67810bcd26632258",
+      "matches_original_zip_inventory": true,
+      "width": 2016,
+      "height": 2016,
+      "bit_depth": 16,
+      "png_colour_type": 0,
+      "image_mode": "I;16",
+      "metadata": {
+        "srgb": 1,
+        "gamma": 0.45455,
+        "dpi": [
+          95.9866,
+          95.9866
+        ],
+        "Artist": "georg",
+        "Comment": "none"
+      },
+      "validation": "PNG header and Pillow verify; original file unchanged"
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Textures/tlonbisya_4K_Displacement.exr",
+      "size_bytes": 49398483,
+      "sha256": "e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30",
+      "matches_original_zip_inventory": true,
+      "width": 4096,
+      "height": 4096,
+      "format_magic": 20000630,
+      "version_flags": 2,
+      "data_window": [
+        0,
+        0,
+        4095,
+        4095
+      ],
+      "display_window": [
+        0,
+        0,
+        4095,
+        4095
+      ],
+      "channels": [
+        {
+          "name": "R",
+          "pixel_type": 2,
+          "pixel_type_name": "FLOAT32",
+          "p_linear": 0,
+          "x_sampling": 1,
+          "y_sampling": 1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "capDate",
+          "type": "string",
+          "bytes": 19,
+          "value": "2019:11:14 21:09:41",
+          "raw_hex": null
+        },
+        {
+          "name": "channels",
+          "type": "chlist",
+          "bytes": 19,
+          "value": [
+            {
+              "name": "R",
+              "pixel_type": 2,
+              "pixel_type_name": "FLOAT32",
+              "p_linear": 0,
+              "x_sampling": 1,
+              "y_sampling": 1
+            }
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "compression",
+          "type": "compression",
+          "bytes": 1,
+          "value": 4,
+          "raw_hex": null
+        },
+        {
+          "name": "dataWindow",
+          "type": "box2i",
+          "bytes": 16,
+          "value": [
+            0,
+            0,
+            4095,
+            4095
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "displayWindow",
+          "type": "box2i",
+          "bytes": 16,
+          "value": [
+            0,
+            0,
+            4095,
+            4095
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "lineOrder",
+          "type": "lineOrder",
+          "bytes": 1,
+          "value": 0,
+          "raw_hex": null
+        },
+        {
+          "name": "pixelAspectRatio",
+          "type": "float",
+          "bytes": 4,
+          "value": 1.0,
+          "raw_hex": null
+        },
+        {
+          "name": "screenWindowCenter",
+          "type": "v2f",
+          "bytes": 8,
+          "value": [
+            0.0,
+            0.0
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "screenWindowWidth",
+          "type": "float",
+          "bytes": 4,
+          "value": 1.0,
+          "raw_hex": null
+        },
+        {
+          "name": "utcOffset",
+          "type": "float",
+          "bytes": 4,
+          "value": 0.0,
+          "raw_hex": null
+        },
+        {
+          "name": "writer",
+          "type": "string",
+          "bytes": 23,
+          "value": "ProEXR EZ for Photoshop",
+          "raw_hex": null
+        },
+        {
+          "name": "xDensity",
+          "type": "float",
+          "bytes": 4,
+          "value": 72.0,
+          "raw_hex": null
+        }
+      ],
+      "header_length_bytes": 403,
+      "validation": "Read-only standard EXR header metadata; compressed image pixels not decoded. Installed ImageMagick has no EXR delegate; ffprobe cannot decode this single R channel."
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Textures/wepoeaw_4K_Displacement.exr",
+      "size_bytes": 49909184,
+      "sha256": "bfd92a6294d246c2ce58a2e93cbbfffa13c3653b77eb7ae00a9ed2a328f99993",
+      "matches_original_zip_inventory": true,
+      "width": 4096,
+      "height": 4096,
+      "format_magic": 20000630,
+      "version_flags": 2,
+      "data_window": [
+        0,
+        0,
+        4095,
+        4095
+      ],
+      "display_window": [
+        0,
+        0,
+        4095,
+        4095
+      ],
+      "channels": [
+        {
+          "name": "R",
+          "pixel_type": 2,
+          "pixel_type_name": "FLOAT32",
+          "p_linear": 0,
+          "x_sampling": 1,
+          "y_sampling": 1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "capDate",
+          "type": "string",
+          "bytes": 19,
+          "value": "2022:06:27 13:31:47",
+          "raw_hex": null
+        },
+        {
+          "name": "channels",
+          "type": "chlist",
+          "bytes": 19,
+          "value": [
+            {
+              "name": "R",
+              "pixel_type": 2,
+              "pixel_type_name": "FLOAT32",
+              "p_linear": 0,
+              "x_sampling": 1,
+              "y_sampling": 1
+            }
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "compression",
+          "type": "compression",
+          "bytes": 1,
+          "value": 4,
+          "raw_hex": null
+        },
+        {
+          "name": "dataWindow",
+          "type": "box2i",
+          "bytes": 16,
+          "value": [
+            0,
+            0,
+            4095,
+            4095
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "displayWindow",
+          "type": "box2i",
+          "bytes": 16,
+          "value": [
+            0,
+            0,
+            4095,
+            4095
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "lineOrder",
+          "type": "lineOrder",
+          "bytes": 1,
+          "value": 0,
+          "raw_hex": null
+        },
+        {
+          "name": "pixelAspectRatio",
+          "type": "float",
+          "bytes": 4,
+          "value": 1.0,
+          "raw_hex": null
+        },
+        {
+          "name": "screenWindowCenter",
+          "type": "v2f",
+          "bytes": 8,
+          "value": [
+            0.0,
+            0.0
+          ],
+          "raw_hex": null
+        },
+        {
+          "name": "screenWindowWidth",
+          "type": "float",
+          "bytes": 4,
+          "value": 1.0,
+          "raw_hex": null
+        },
+        {
+          "name": "utcOffset",
+          "type": "float",
+          "bytes": 4,
+          "value": 0.0,
+          "raw_hex": null
+        },
+        {
+          "name": "writer",
+          "type": "string",
+          "bytes": 23,
+          "value": "ProEXR EZ for Photoshop",
+          "raw_hex": null
+        },
+        {
+          "name": "xDensity",
+          "type": "float",
+          "bytes": 4,
+          "value": 72.0,
+          "raw_hex": null
+        }
+      ],
+      "header_length_bytes": 403,
+      "validation": "Read-only standard EXR header metadata; compressed image pixels not decoded. Installed ImageMagick has no EXR delegate; ffprobe cannot decode this single R channel."
+    }
+  ],
+  "roles": {
+    "T_Pegasus_Landscape_Colour.png": "Whole-landscape colour image, not five separately authored tiled surface albedos",
+    "T_Pegasus_Landscape_AO.png": "Whole-landscape ambient occlusion image",
+    "T_Terrain_IDMAP.png": "Whole-landscape material/layer ID control map; not albedo, normal, or roughness",
+    "T_Terrain_wetness.png": "Whole-landscape wetness control map; not a matching per-surface roughness scan",
+    "tlonbisya_4K_Displacement.exr": "Displacement/height source according to original filename; single-channel EXR metadata inspected",
+    "wepoeaw_4K_Displacement.exr": "Displacement/height source according to original filename; single-channel EXR metadata inspected"
+  },
+  "scope_limits": [
+    "These six source images do not constitute five complete matched surface PBR families.",
+    "No tangent-space normal maps or surface roughness maps are included among these six files.",
+    "The two displacement files have no same-ID basecolour/normal/roughness/AO partners among these six files.",
+    "Whole-landscape colour/AO/control maps are source assets for the provided terrain and cannot be relabeled as matching surface-scanned albedo/AO sets.",
+    "Other Unreal uasset texture classes are being inventoried separately; this report makes no claim that the archive has no other textures.",
+    "No physical metres-per-tile scale or author-proven relation to the five video surfaces is established by these EXR headers."
+  ]
+}

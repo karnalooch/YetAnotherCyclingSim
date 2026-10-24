@@ -63,6 +63,18 @@ class WorkflowLifecycleContractTests(unittest.TestCase):
         self.assertIn("github.actor == github.repository_owner", text)
         self.assertIn("github.ref == 'refs/heads/main'", text)
 
+    def test_runner_recovery_never_sweeps_from_active_worker(self) -> None:
+        text = (WORKFLOWS / "runner-space-recovery.yml").read_text(encoding="utf-8")
+        self.assertIn("archive_stale_probe_runs.py", text)
+        self.assertIn("cancel-in-progress: false", text)
+        for unsafe in (
+            "Remove-Item",
+            "git clean",
+            "--apply-plan",
+            "--apply-reviewplan",
+        ):
+            self.assertNotIn(unsafe, text)
+
     def test_unknown_workflows_are_bounded_to_active_m3_transition(self) -> None:
         unknown = {row["file"] for row in self.rows if row["state"] == "UNKNOWN"}
         self.assertEqual(

@@ -11,7 +11,13 @@
 ## Decision record
 For disputes, record `decision_id`, `scope`, `status` (ACTIVE/SUPERSEDED/HISTORICAL), `source_issue_or_pr`, `authority_file`, `supersedes`, `effective_since` and `expiration_or_review_gate`. Ambiguity blocks the specific mutation; don't choose a convenient precedent.
 
-## Guarded examples (2026-10-10)
+## Active world executor decision (2026-10-16)
+
+`MA2141_ROADS_CLIFFS_20261024` is ACTIVE from 2026-10-24, sourced from the owner's explicit local request to research and implement Pegasus cliffs/rock forms and real Ma-2141 roads, plus permission to revise earlier project safeguards when a better solution is established. Authority: [World Building Bible](../WORLD_BUILDING_BIBLE.md#current-executor-decision--houdini--sidefx-2026-10-16); delivery: [Roadmap](../ROADMAP.md). It supersedes the terrain-only boundary for #368/#337/#459-related M3 work and repeated approval for those actions. Review gate: source-mapped candidate, geometry/contact and consumer evidence, then assembled-M3 review. Current appearance is accepted; newly authored output is not implicitly accepted. Tool/security boundaries, factual geography and honest proof reporting are unchanged.
+
+`HOUDINI_SIDEFX_PRIMARY_20261016` is ACTIVE, sourced from the owner's explicit local task instructions, with authority in the [World Building Bible](../WORLD_BUILDING_BIBLE.md) and [Houdini/SideFX workflow](../tooling/sidefx/README.md). It supersedes native-first producer selection and the blanket freeze only for the separate fresh terrain candidate. Its scope is Houdini-based source-traceable world authoring; the immediate deliverable is terrain only. Review gates remain recipe cook/reload, source-delta and eventual scoped consumer proof; it grants no production admission or scene deletion.
+
+## Guarded examples (2026-10-10; historical scope retained)
 - #363 is accepted; #384 remains the bounded official Epic MCP spike before #364. It is not general permission to control/modify world truth.
 - Performance is measured after assembled M3 under the 2026-10-09 directive: record `DEFERRED_AFTER_M3` / `performance_pass: false`. Whole-area visual, native, exact-SHA and protected CI gates still apply.
 - Frozen Landscape directives have narrow later authorized local-correction exceptions, with fixed original data, bounded delta and rollback. See [M3 scoped decisions](policies/M3_WORLD_OPERATIONS.md) and current world SSOT before any editing.

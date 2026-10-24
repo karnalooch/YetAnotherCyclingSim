@@ -94,6 +94,11 @@ jobs:
       - name: Verify final architecture/tooling contract
         run: python scripts/ci/test_final_architecture_contract.py
 
+      - name: Verify evidence storage integrity and JSON budget
+        run: |
+          python scripts/ci/check_evidence_storage.py
+          python scripts/ci/test_evidence_storage.py
+
       - name: Verify locked UE-MCP install plan
         run: npm ci --prefix tools/ue-mcp --ignore-scripts --dry-run
 
@@ -130,6 +135,11 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-python.yml
+    with:
+      # Only the latest single verified Draft commit can use scoped tests.
+      # Ready-for-review and all other events force the full discovered suite.
+      draft_incremental: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository }}
+      previous_sha: ${{ github.event.before || '' }}
 
   security-base:
     name: Security baseline

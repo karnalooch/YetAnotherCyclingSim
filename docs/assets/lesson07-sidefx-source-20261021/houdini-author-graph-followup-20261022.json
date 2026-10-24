@@ -1,0 +1,1764 @@
+{
+  "schema_version": 1,
+  "observed_date_utc": "2026-10-22",
+  "document_status": "EVIDENCE",
+  "status": "PARTIAL_AUTHOR_GRAPH_CLOSURE;NO_NATIVE_ACCEPTANCE",
+  "repository_context": {
+    "repository": "karnalooch/YetAnotherCyclingSim",
+    "branch": "codex/365-world-graph",
+    "base_head_sha": "fbe2eb785f5089b3092f7a9fdce5b3dc5e785908",
+    "issue": 365,
+    "draft_pr": 474,
+    "milestone": "M3"
+  },
+  "scope": "Followup to the retained author-material observations: resolve cliff-tint wiring, rocky-base mask provenance, and the last visible tint/ramp/mask configuration in original Pegasus Landscape Workflow Lessons03-05. No native process, cook, cache mutation, asset substitution or geography change is part of this receipt.",
+  "prior_evidence": {
+    "file": "houdini-author-material-observations-20261022.json",
+    "sha256_at_followup_read": "a49737e3450bd5596ed8bd4c8764fa10ac2ef97b0afe2329908efa8d62183d1d",
+    "preserved_without_edit": true,
+    "relation": "The prior receipt remains a historical account of its selected frames. New observations below close specified UNKNOWN fields and distinguish later settings from its intermediate samples."
+  },
+  "official_course_url": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+  "catalog_reference": "docs/tooling/sidefx/catalog/PEG-02.md",
+  "source_videos": [
+    {
+      "lesson": 3,
+      "public_player_url": "https://player.vimeo.com/video/888568015",
+      "captions_sha256": "2500bef6f0ba343b177ba8bd4fa66acf01ea20b81c53d095f6f20dd17d2bf99c",
+      "captions_size_bytes": 14324,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    },
+    {
+      "lesson": 4,
+      "public_player_url": "https://player.vimeo.com/video/888568278",
+      "captions_sha256": "0a1b906617532bc3b9dc9daefca9cc6a12bf9632e515474de4684730a38c9ed6",
+      "captions_size_bytes": 23661,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    },
+    {
+      "lesson": 5,
+      "public_player_url": "https://player.vimeo.com/video/888568753",
+      "captions_sha256": "d72a5b91f2d7b5a10600cb18d2650fdbe145d59db53c5a804a61dc09443062d7",
+      "captions_size_bytes": 24227,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    }
+  ],
+  "status_rules": {
+    "VERIFIED": "Visible connection, displayed value, or explicitly identified source observation at the cited time. Values retain the displayed precision. This is not a saved-HIP/native parameter dump.",
+    "INFERRED": "A conclusion from separate observations, narration, or visual ramp shape; excluded from claims of complete exact configuration.",
+    "UNKNOWN": "The requested exact field is unread or unproved. No numeric value is reverse engineered from pixel position or filled from an assumed default.",
+    "final_visible": "Last directly read setting in the inspected sequence, followed by the author moving to another operation; not proof of the complete saved final HIP.",
+    "input_numbering": "target_input_ordinal is one-based, left to right in the author UI, not HOM zero-based setInput numbering."
+  },
+  "source_environment": {
+    "hip_titlebar": "D:/PegasusDemo/Promotional/Landscapes/Main/Landscape_Workflow_03_Detailing.hip",
+    "houdini_titlebar": "Houdini FX 20.0.484 - Py3.10",
+    "material_asset_label": "PE_heightfield_material",
+    "material_ui_label": "Pe Heightfield Material",
+    "tint_type_visible": "PE_heightfield_tint::1.0",
+    "texture_root": "D:/Megascans Library/Downloaded/surface",
+    "evidence": [
+      "L03_564.000",
+      "L04_981.000"
+    ],
+    "author_hip_availability": "NOT_FOUND_IN_INSPECTED_OFFICIAL_ARCHIVES"
+  },
+  "native_operator_identity": {
+    "tint": {
+      "status": "VERIFIED",
+      "value": {
+        "ui_label": "Pe Heightfield Tint",
+        "visible_type": "PE_heightfield_tint::1.0"
+      },
+      "evidence": [
+        "L05_596.000",
+        "L05_630.000",
+        "L05_850.000",
+        "L05_922.000"
+      ]
+    },
+    "mask_builder": {
+      "status": "VERIFIED",
+      "value": {
+        "ui_label": "HeightField Mask by Feature",
+        "node_name_prefix": "heightfield_maskbyfeature",
+        "asset_library_basename": "OPLibTerrain.hda"
+      },
+      "evidence": [
+        "L03_488.000",
+        "L04_742.000",
+        "L05_910.000"
+      ],
+      "precision_or_temporal_limit": "The type field is truncated in these views. Full native type/version and parameter-template tuples were not queried."
+    },
+    "visualize": {
+      "status": "VERIFIED",
+      "value": {
+        "visible_type": "heightfield_visualize",
+        "ui_label": "HeightField Visualize",
+        "node": "heightfield_visualize4"
+      },
+      "evidence": [
+        "L05_671.000"
+      ]
+    },
+    "full_native_template_and_saved_hip_dump": {
+      "status": "UNKNOWN",
+      "reason": "The author HIP is not available in the inspected official archives. No Houdini import or introspection was run for this followup."
+    }
+  },
+  "closed_cliff_to_scree_wiring": {
+    "status": "VERIFIED",
+    "prior_gap": "At L05 579 s the tint has inputs but no output wire; that frame alone did not establish its insertion into the main chain.",
+    "transition": [
+      {
+        "state": "Tint output unconnected",
+        "evidence": [
+          "L05_579.500",
+          "L05_580.000"
+        ]
+      },
+      {
+        "state": "Author drags the output wire",
+        "evidence": [
+          "L05_581.000"
+        ]
+      },
+      {
+        "state": "Tint output is connected to the first/left input of the scree material",
+        "evidence": [
+          "L05_581.500",
+          "L05_582.000"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_material5",
+        "target_node": "PE_heightfield_tint3",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_582.000",
+          "L05_662.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature9",
+        "target_node": "PE_heightfield_tint3",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L05_582.000",
+          "L05_662.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_tint3",
+        "target_node": "PE_heightfield_material6",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_581.500",
+          "L05_582.000",
+          "L05_662.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_remap1",
+        "target_node": "PE_heightfield_material6",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L05_630.000",
+          "L05_661.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_material6",
+        "target_node": "PE_heightfield_tint4",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_630.000",
+          "L05_661.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_remap1",
+        "target_node": "PE_heightfield_tint4",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L05_630.000",
+          "L05_661.000"
+        ]
+      }
+    ]
+  },
+  "rocky_base_mask_builder": {
+    "node": "heightfield_maskbyfeature2",
+    "lesson": 3,
+    "copy_provenance": {
+      "status": "VERIFIED",
+      "value": "Copied from the native heightfield_maskbyfeature1 used in the preceding manual-layer demonstration",
+      "evidence": [
+        "L03_366.000",
+        "L03_374.000",
+        "L03_488.000"
+      ],
+      "precision_or_temporal_limit": "The copied node is still disconnected at 488 s; wiring is established by 494/500 s."
+    },
+    "edges": [
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_layer3",
+        "target_node": "heightfield_maskbyfeature2",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L03_494.000",
+          "L03_500.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_layer3",
+        "target_node": "PE_heightfield_material1",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L03_494.000",
+          "L03_500.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature2",
+        "target_node": "PE_heightfield_material1",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L03_494.000",
+          "L03_500.000"
+        ]
+      }
+    ],
+    "verified_on_copied_node": {
+      "status": "VERIFIED",
+      "value": {
+        "Mask by Slope": true,
+        "Min Slope Angle": 0,
+        "Max Slope Angle": 90,
+        "Mask by Height": true,
+        "Min Height": 14.8582,
+        "Max Height": 424.469,
+        "Mask by Curvature": false
+      },
+      "evidence": [
+        "L03_488.000"
+      ]
+    },
+    "source_node_top_controls": {
+      "status": "VERIFIED",
+      "value": {
+        "node": "heightfield_maskbyfeature1",
+        "Smooth Radius": 1,
+        "Combine with Existing": "Replace",
+        "Invert Mask": false
+      },
+      "evidence": [
+        "L03_318.000",
+        "L03_326.000"
+      ],
+      "precision_or_temporal_limit": "Earlier source-node view, before slope/height adjustments; these top controls were not re-read on the copied node."
+    },
+    "copied_top_control_retention": {
+      "status": "INFERRED",
+      "value": {
+        "Smooth Radius": 1,
+        "Combine with Existing": "Replace",
+        "Invert Mask": false
+      },
+      "reason": "Visible copy and no observed change to those controls, but the copied node top panel is not displayed.",
+      "evidence": [
+        "L03_318.000",
+        "L03_488.000"
+      ]
+    },
+    "slope_ramp_shape": {
+      "status": "VERIFIED",
+      "value": "Two visible endpoints with a straight descending profile; author describes a linear inverse slope falloff.",
+      "evidence": [
+        "L03_342.000",
+        "L03_488.000"
+      ],
+      "precision_or_temporal_limit": "Exact native ramp tuples/interpolation field were not expanded; nominal endpoint positions/values are not asserted as a native dump."
+    },
+    "height_ramp_shape": {
+      "status": "VERIFIED",
+      "value": "Two visible handles: a low left endpoint and an upper knot pulled well left of the right boundary, followed by a constant high segment.",
+      "evidence": [
+        "L03_361.000",
+        "L03_366.000",
+        "L03_374.000",
+        "L03_488.000"
+      ]
+    },
+    "height_ramp_exact_knots": {
+      "status": "UNKNOWN",
+      "reason": "The numeric point controls are collapsed throughout the inspected 359-365 s adjustment and copied-node view at 488 s. The upper knot position must not be estimated from pixels."
+    },
+    "remaining_layer_bindings_and_exact_ramp_tuples": {
+      "status": "UNKNOWN",
+      "reason": "The Layer Bindings tab and all exact ramp-point positions, values and interpolation fields were not exposed."
+    },
+    "complete_builder_ready_for_exact_replay": false
+  },
+  "grass_tint_and_mask_branch": {
+    "tint_node": "PE_heightfield_tint1",
+    "final_visible_common": {
+      "status": "VERIFIED",
+      "value": {
+        "Mode": "Gradient",
+        "Mask": "",
+        "Strength": 0.95,
+        "Ramp Layer": "mask"
+      },
+      "evidence": [
+        "L04_842.000",
+        "L04_844.000",
+        "L04_981.000"
+      ]
+    },
+    "ramp_points_last_directly_observed": [
+      {
+        "status": "VERIFIED",
+        "value": {
+          "Point No.": 1,
+          "Position": 0,
+          "Color": [
+            0.34,
+            0.55,
+            0.12705
+          ],
+          "Interpolation": "Linear"
+        },
+        "evidence": [
+          "L04_981.000"
+        ],
+        "precision_or_temporal_limit": "Last grass-colour adjustment near the end of L04; reused retained frame, not recaptured."
+      },
+      {
+        "status": "VERIFIED",
+        "value": {
+          "Point No.": 2,
+          "Position": 0.996694,
+          "Color": [
+            1,
+            0.822741,
+            0.538
+          ],
+          "Interpolation": "Linear"
+        },
+        "evidence": [
+          "L04_840.000",
+          "L04_842.000",
+          "L04_844.000"
+        ],
+        "precision_or_temporal_limit": "The endpoint is 0.996694, not an assumed 1. Later inspected adjustment selects point1."
+      }
+    ],
+    "assembled_two_point_final_state": {
+      "status": "INFERRED",
+      "value": "Point1 from 981 s combined with point2 from 840-844 s",
+      "reason": "Both points were read separately; no later change to point2 is observed, but both final numeric point records are not visible in one saved-state dump.",
+      "evidence": [
+        "L04_844.000",
+        "L04_981.000"
+      ]
+    },
+    "edges": [
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature4",
+        "target_node": "heightfield_maskbyfeature6",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L04_540.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature4",
+        "target_node": "PE_heightfield_material3",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L04_540.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature6",
+        "target_node": "heightfield_maskbyfeature7",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L04_808.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature7",
+        "target_node": "heightfield_maskbyfeature8",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L04_808.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature8",
+        "target_node": "PE_heightfield_tint1",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L04_808.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_material3",
+        "target_node": "PE_heightfield_tint1",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L04_808.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_tint1",
+        "target_node": "PE_heightfield_tint2",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L04_808.000"
+        ]
+      }
+    ],
+    "height_mask6": {
+      "node": "heightfield_maskbyfeature6",
+      "top_controls_and_slope": {
+        "status": "VERIFIED",
+        "value": {
+          "Smooth Radius": 1,
+          "Combine with Existing": "Replace",
+          "Invert Mask": false,
+          "Mask by Slope": false
+        },
+        "evidence": [
+          "L04_534.000"
+        ],
+        "precision_or_temporal_limit": "This view precedes enabling height; retained as last directly observed top controls."
+      },
+      "height_controls": {
+        "status": "VERIFIED",
+        "value": {
+          "Mask by Height": true,
+          "Min Height": 14.8582,
+          "Max Height": 426.961,
+          "Mask by Curvature": false
+        },
+        "evidence": [
+          "L04_540.000"
+        ]
+      },
+      "height_ramp_shape": {
+        "status": "VERIFIED",
+        "value": "Straight ascending two-handle ramp after resetting the profile",
+        "evidence": [
+          "L04_540.000"
+        ]
+      },
+      "exact_height_ramp_tuple": {
+        "status": "UNKNOWN",
+        "reason": "Point controls are collapsed; no native tuple dump was made."
+      },
+      "important_source_difference": "The displayed upper height is 426.961, distinct from 424.469 on the earlier rocky mask2. These are author-terrain observations, not permission to change accepted Sa Calobra heights."
+    },
+    "slope_mask7": {
+      "node": "heightfield_maskbyfeature7",
+      "top_controls_and_slope": {
+        "status": "VERIFIED",
+        "value": {
+          "Combine with Existing": "Add",
+          "Invert Mask": false,
+          "Mask by Slope": true,
+          "Min Slope Angle": 0,
+          "Max Slope Angle": 90
+        },
+        "evidence": [
+          "L04_648.000",
+          "L04_654.000"
+        ]
+      },
+      "smooth_radius": {
+        "status": "VERIFIED",
+        "value": 1,
+        "evidence": [
+          "L04_640.000"
+        ],
+        "precision_or_temporal_limit": "Last readable value immediately before selecting Add."
+      },
+      "other_features": {
+        "status": "VERIFIED",
+        "value": {
+          "Mask by Height": false,
+          "Mask by Curvature": false,
+          "Mask by Direction": false,
+          "Mask by Occlusion": false
+        },
+        "evidence": [
+          "L04_820.000",
+          "L04_828.000"
+        ]
+      },
+      "slope_ramp_shape": {
+        "status": "VERIFIED",
+        "value": "Straight ascending two-handle ramp",
+        "evidence": [
+          "L04_648.000",
+          "L04_654.000",
+          "L04_820.000"
+        ]
+      },
+      "exact_slope_ramp_tuple": {
+        "status": "UNKNOWN",
+        "reason": "Point controls are not expanded in these final views."
+      }
+    },
+    "occlusion_mask8": {
+      "node": "heightfield_maskbyfeature8",
+      "last_directly_observed_top_controls": {
+        "status": "VERIFIED",
+        "value": {
+          "Smooth Radius": 1,
+          "Combine with Existing": "Subtract",
+          "Invert Mask": false,
+          "Mask by Slope": false,
+          "Mask by Height": false,
+          "Mask by Curvature": false,
+          "Mask by Direction": false,
+          "Mask by Occlusion": true
+        },
+        "evidence": [
+          "L04_742.000"
+        ]
+      },
+      "last_directly_observed_occlusion_quality": {
+        "status": "VERIFIED",
+        "value": {
+          "Minimum Occlusion": 0,
+          "Maximum Occlusion": 1,
+          "View Distance": 15,
+          "Step Scale": 1,
+          "Number of Searches": 16
+        },
+        "evidence": [
+          "L04_798.000",
+          "L04_800.000",
+          "L04_804.000",
+          "L04_808.000",
+          "L04_730.000"
+        ],
+        "precision_or_temporal_limit": "Searches 16 is visible at the lower edge; corroborated by the unobscured earlier quality view 730 s."
+      },
+      "final_visible_ramp_points": [
+        {
+          "status": "VERIFIED",
+          "value": {
+            "Point No.": 1,
+            "Position": 0.656198,
+            "Value": 1,
+            "Interpolation": "Linear"
+          },
+          "evidence": [
+            "L04_800.000",
+            "L04_804.000",
+            "L04_808.000"
+          ]
+        },
+        {
+          "status": "VERIFIED",
+          "value": {
+            "Point No.": 2,
+            "Position": 1,
+            "Value": 0,
+            "Interpolation": "Linear"
+          },
+          "evidence": [
+            "L04_798.000"
+          ],
+          "precision_or_temporal_limit": "Later inspected frames move point1 only; this is the last numeric read of point2."
+        }
+      ],
+      "critical_inversion_distinction": {
+        "status": "VERIFIED",
+        "value": "The general Invert Mask checkbox is OFF after Subtract is selected. The author uses the ramp inversion control, then later replaces the shape with the final descending two-point Linear ramp.",
+        "evidence": [
+          "L04_742.000",
+          "L04_743.000",
+          "L04_744.000",
+          "L04_750.000",
+          "L04_800.000",
+          "L04_808.000"
+        ]
+      },
+      "transient_values_not_final": [
+        "View Distance 22 or 7",
+        "Bezier round profile",
+        "Point1 positions 0.345455,0.499174,0.604959",
+        "Add or Replace combination during isolated previews"
+      ],
+      "layer_bindings": {
+        "status": "UNKNOWN",
+        "reason": "Not shown."
+      }
+    },
+    "unmasked_brightness_tint2_reference": {
+      "status": "VERIFIED",
+      "source_receipt": "houdini-author-material-observations-20261022.json",
+      "ui_parameters": {
+        "Mode": "Solid Colour",
+        "Mask": "",
+        "Strength": 1,
+        "Tint": [
+          2,
+          2,
+          2
+        ]
+      },
+      "evidence": [
+        "L04_983.000",
+        "L04_984.000"
+      ],
+      "placement": "After tint1 and before sand material4, as retained in the prior receipt. It is not a global multiplier after all materials."
+    }
+  },
+  "solid_tints_last_visible": [
+    {
+      "node": "PE_heightfield_tint3",
+      "role": "cliff_before_scree",
+      "final_visible": {
+        "status": "VERIFIED",
+        "value": {
+          "Mode": "Solid Colour",
+          "Mask": "mask",
+          "Strength": 1,
+          "Tint": [
+            0.597,
+            0.597,
+            0.597
+          ]
+        },
+        "evidence": [
+          "L05_596.000"
+        ]
+      },
+      "superseded_samples": [
+        {
+          "value": [
+            0.437,
+            0.437,
+            0.437
+          ],
+          "evidence": [
+            "L05_579.000"
+          ]
+        },
+        {
+          "value": [
+            0.487,
+            0.487,
+            0.487
+          ],
+          "evidence": [
+            "L05_582.000",
+            "L05_588.000"
+          ]
+        }
+      ],
+      "temporal_basis": "After reconnecting the tinted cliff to scree, the author adjusts the cliff brightness again; by 600 s attention moves to the copied scree tint4."
+    },
+    {
+      "node": "PE_heightfield_tint4",
+      "role": "scree_after_material6",
+      "final_visible": {
+        "status": "VERIFIED",
+        "value": {
+          "Mode": "Solid Colour",
+          "Mask": "mask",
+          "Strength": 1,
+          "Tint": [
+            0.874,
+            0.822347,
+            0.701822
+          ]
+        },
+        "evidence": [
+          "L05_630.000",
+          "L05_634.000"
+        ]
+      },
+      "precision_note": "These are the three HDA numeric fields after the colour editor is closed. They supersede the rounded picker fragments in the prior receipt."
+    }
+  ],
+  "exposure_tint_and_mask_branch": {
+    "edges": [
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_tint4",
+        "target_node": "PE_heightfield_tint5",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_654.000",
+          "L05_660.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_tint4",
+        "target_node": "heightfield_maskbyfeature12",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_654.000",
+          "L05_660.000"
+        ],
+        "note": "Initial direct connection before the visualization helper is inserted."
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_visualize4",
+        "target_node": "heightfield_maskbyfeature12",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_671.000",
+          "L05_718.000",
+          "L05_910.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature12",
+        "target_node": "PE_heightfield_tint5",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L05_718.000",
+          "L05_910.000"
+        ]
+      }
+    ],
+    "visualize_insertion": {
+      "status": "VERIFIED",
+      "value": "The copied heightfield_visualize4 is dropped on the existing tint4-to-mask12 branch, not on the main tint4-to-tint5 wire.",
+      "evidence": [
+        "L05_660.000",
+        "L05_665.000",
+        "L05_667.000",
+        "L05_668.000",
+        "L05_670.000",
+        "L05_671.000"
+      ],
+      "precision_or_temporal_limit": "The insertion is read across the selected transition frames; the upstream tint4 label scrolls above the viewport during the final drop."
+    },
+    "visualize_parameters": {
+      "status": "VERIFIED",
+      "value": {
+        "Update Tinting": "Default Tinting",
+        "Update Material": "No Change"
+      },
+      "evidence": [
+        "L05_671.000"
+      ]
+    },
+    "mask12": {
+      "node": "heightfield_maskbyfeature12",
+      "top_controls": {
+        "status": "VERIFIED",
+        "value": {
+          "Smooth Radius": 1,
+          "Combine with Existing": "Replace",
+          "Invert Mask": false,
+          "Mask by Slope": false,
+          "Mask by Height": false,
+          "Mask by Curvature": false,
+          "Mask by Direction": false,
+          "Mask by Occlusion": true
+        },
+        "evidence": [
+          "L05_667.000",
+          "L05_668.000"
+        ]
+      },
+      "last_directly_observed_quality": {
+        "status": "VERIFIED",
+        "value": {
+          "Minimum Occlusion": 0,
+          "Maximum Occlusion": 1,
+          "View Distance": 145,
+          "Step Scale": 1,
+          "Number of Searches": 16
+        },
+        "evidence": [
+          "L05_804.000"
+        ]
+      },
+      "last_directly_observed_ramp_point2": {
+        "status": "VERIFIED",
+        "value": {
+          "Point No.": 2,
+          "Position": 1,
+          "Value": 1,
+          "Interpolation": "Linear"
+        },
+        "evidence": [
+          "L05_804.000"
+        ]
+      },
+      "last_visible_ramp_shape": {
+        "status": "VERIFIED",
+        "value": "The earlier round/Monotone Cubic experiments have been reset to a straight ascending two-handle profile before the author returns to tint5.",
+        "evidence": [
+          "L05_802.000",
+          "L05_804.000"
+        ]
+      },
+      "ramp_point1_final_numeric_read": {
+        "status": "UNKNOWN",
+        "reason": "Point1 was read as (0,0,Linear) at 780 s, then moved and interpolated differently during 800-802 s. The reset profile at 804 s displays point2, not point1. Do not promote the older point1 tuple to a final direct read."
+      },
+      "layer_bindings": {
+        "status": "UNKNOWN",
+        "reason": "Not shown."
+      }
+    },
+    "tint5": {
+      "node": "PE_heightfield_tint5",
+      "final_visible_common": {
+        "status": "VERIFIED",
+        "value": {
+          "Mode": "Gradient",
+          "Mask": "",
+          "Strength": 1,
+          "Ramp Layer": "mask"
+        },
+        "evidence": [
+          "L05_843.000",
+          "L05_847.000",
+          "L05_850.000"
+        ]
+      },
+      "ramp_points": [
+        {
+          "status": "VERIFIED",
+          "value": {
+            "Point No.": 1,
+            "Position": 0,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Interpolation": "Linear"
+          },
+          "evidence": [
+            "L05_718.000"
+          ],
+          "precision_or_temporal_limit": "Last numeric read of point1 before later middle-point adjustments; not a full final saved-ramp dump."
+        },
+        {
+          "status": "VERIFIED",
+          "value": {
+            "Point No.": 2,
+            "Position": 0.93538,
+            "Color": [
+              0.651,
+              0.651,
+              0.651
+            ],
+            "Interpolation": "Linear"
+          },
+          "evidence": [
+            "L05_843.000",
+            "L05_847.000",
+            "L05_850.000"
+          ]
+        },
+        {
+          "status": "UNKNOWN",
+          "reason": "The rightmost white endpoint remains visible, but its exact position/RGB/interpolation fields were not selected in the inspected frames."
+        }
+      ],
+      "transient_states_not_final": [
+        "Middle values 0.324,0.330175 or0.42",
+        "Middle positions 0.189015,0.369952,0.786753,0.861066,0.865913",
+        "Four-point trial at 808 s"
+      ],
+      "complete_exact_ramp": false
+    }
+  },
+  "curvature_tint_and_mask_branch": {
+    "edges": [
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature12",
+        "target_node": "heightfield_maskbyfeature13",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_910.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "heightfield_maskbyfeature13",
+        "target_node": "PE_heightfield_tint6",
+        "target_input_ordinal": 2,
+        "evidence": [
+          "L05_910.000"
+        ]
+      },
+      {
+        "status": "VERIFIED",
+        "source_node": "PE_heightfield_tint5",
+        "target_node": "PE_heightfield_tint6",
+        "target_input_ordinal": 1,
+        "evidence": [
+          "L05_910.000"
+        ]
+      }
+    ],
+    "source_lineage_warning": "Mask13 is a continuation of mask12 geometry in the visible author graph; it is not fed by tint5 and is not demonstrated to be equivalent to an earlier post-cliff-only cache.",
+    "mask13": {
+      "node": "heightfield_maskbyfeature13",
+      "last_directly_observed_top_controls": {
+        "status": "VERIFIED",
+        "value": {
+          "Smooth Radius": 1,
+          "Combine with Existing": "Replace",
+          "Invert Mask": false
+        },
+        "evidence": [
+          "L05_890.000"
+        ]
+      },
+      "final_visible_feature_controls": {
+        "status": "VERIFIED",
+        "value": {
+          "Mask by Slope": false,
+          "Mask by Height": false,
+          "Mask by Curvature": true,
+          "Max Curvature": 0.18,
+          "Mask by Direction": false
+        },
+        "evidence": [
+          "L05_906.000",
+          "L05_910.000"
+        ]
+      },
+      "curvature_ramp_shape": {
+        "status": "VERIFIED",
+        "value": "Straight ascending two-handle profile",
+        "evidence": [
+          "L05_894.000",
+          "L05_906.000",
+          "L05_910.000"
+        ]
+      },
+      "exact_curvature_ramp_tuple": {
+        "status": "UNKNOWN",
+        "reason": "Final point fields are collapsed. A full exact tuple is not inferred from the straight profile."
+      },
+      "transient_values_not_final": [
+        "Initial Max Curvature 10",
+        "Max Curvature 0 at 894 s before the final slider adjustments",
+        "Slider trials 0.57 and 0.21"
+      ],
+      "important_limit": "Compute Range alone is not the authored final numeric configuration; the last observed maximum is 0.18.",
+      "mask_by_occlusion": {
+        "status": "VERIFIED",
+        "value": false,
+        "evidence": [
+          "L05_864.000",
+          "L05_886.000"
+        ],
+        "precision_or_temporal_limit": "Last directly visible Mask by Occlusion checkbox before curvature is enabled."
+      }
+    },
+    "tint6": {
+      "node": "PE_heightfield_tint6",
+      "final_visible_common": {
+        "status": "VERIFIED",
+        "value": {
+          "Mode": "Gradient",
+          "Mask": "",
+          "Strength": 0.613,
+          "Ramp Layer": "mask"
+        },
+        "evidence": [
+          "L05_918.000",
+          "L05_922.000",
+          "L05_925.000"
+        ]
+      },
+      "final_visible_point2": {
+        "status": "VERIFIED",
+        "value": {
+          "Point No.": 2,
+          "Position": 1,
+          "Color": [
+            2,
+            2,
+            2
+          ],
+          "Interpolation": "Linear"
+        },
+        "evidence": [
+          "L05_918.000",
+          "L05_922.000",
+          "L05_925.000"
+        ]
+      },
+      "point1": {
+        "status": "INFERRED",
+        "value": {
+          "intended_scalar_brightness": 1
+        },
+        "reason": "The author narrates a start value of 1 and second value 2 at 14:32.885-14:36.165; the inspected frames show the reset white left handle but never display its final numeric point fields.",
+        "evidence": [
+          "L05_871.000",
+          "L05_873.000",
+          "L05_878.000"
+        ]
+      },
+      "point1_exact_position_rgb_interpolation": {
+        "status": "UNKNOWN",
+        "reason": "No final numeric selection of point1 was found in the inspected frames; do not fill its tuple from an assumed white-ramp preset."
+      },
+      "complete_exact_ramp": false,
+      "transient_states_not_final": [
+        "Copied exposure ramp immediately after duplication",
+        "Strength 1 and 0.172 before the final 0.613 adjustment"
+      ]
+    }
+  },
+  "evidence_retention": {
+    "scratch_source_directory": "/workspace/scratch/eff428cbad56/pegasus-lesson03-05-source-20261022",
+    "new_capture_subdirectory": "graph-followup",
+    "frame_receipt_file": "graph-followup/frame-receipts.json",
+    "frames_selected_for_this_receipt_only": true,
+    "frame_media_committed": false,
+    "captions_committed": false,
+    "signed_media_urls_committed": false,
+    "access": "Only ordinary anonymous public-player-advertised media URLs were used; no blocked endpoint was bypassed. Existing cached segments were reused, and additional public segments were read for the cited transitions.",
+    "reproduction": "Use the public player and cited timestamps. SHA256 identifies these decoded 1080p PNG captures; a different decoder or neighbouring decoded frame may produce a different PNG hash.",
+    "review_limit": "Selected new frames plus targeted retained frames and previously read full captions; no claim of uninterrupted full-video playback."
+  },
+  "remaining_source_gaps": [
+    "Exact upper height-ramp knot and complete final bindings/tuples for rocky mask2.",
+    "Complete final native tuples for the visually straight mask6/7/12/13 ramps, and unshown Layer Bindings.",
+    "Final numeric right endpoint of exposure tint5 and first endpoint of curvature tint6.",
+    "Original source image bytes, hashes, exact unresolved filename suffixes/extensions and colour-space behaviour remain governed by the prior material receipt and public-ID mapping.",
+    "Author saved HIP and complete final native parameter-template/wiring dump remain unavailable."
+  ],
+  "native_proof": {
+    "native_calls": 0,
+    "houdini_cooks": 0,
+    "ue_calls": 0,
+    "cache_mutations": 0,
+    "host_resource_claims": []
+  },
+  "one_to_one_material_acceptance": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "source_frames": [
+    {
+      "evidence_id": "L03_318.000",
+      "lesson": 3,
+      "time_seconds": 318,
+      "file": "lesson03-frame-318.000.png",
+      "size_bytes": 1683886,
+      "sha256": "ddcac24048dee7d21a76de5fa2d42a8d1a6034911dab6704607ee412d919f0ce",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_326.000",
+      "lesson": 3,
+      "time_seconds": 326,
+      "file": "lesson03-frame-326.000.png",
+      "size_bytes": 1417036,
+      "sha256": "1cecdff77c2e091b2fab6abf72a6eecbe24704eef63df4e149870c4d787d4a65",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_342.000",
+      "lesson": 3,
+      "time_seconds": 342,
+      "file": "lesson03-frame-342.000.png",
+      "size_bytes": 1520232,
+      "sha256": "8f2a9f024b268be65089163280f39cfbd8ef39eac8739a97ca827d33899725f4",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_361.000",
+      "lesson": 3,
+      "time_seconds": 361,
+      "file": "lesson03-frame-361.000.png",
+      "size_bytes": 2161004,
+      "sha256": "a0f141201cf51f3806941f9d486b6752923ed4ea424ddda0b1c80c406b863561",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_366.000",
+      "lesson": 3,
+      "time_seconds": 366,
+      "file": "lesson03-frame-366.000.png",
+      "size_bytes": 1915248,
+      "sha256": "8ecf3cf8e0752aa2720b7fb9a2e67ccec68a38b79d752131933b2a6a2c342cff",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_374.000",
+      "lesson": 3,
+      "time_seconds": 374,
+      "file": "lesson03-frame-374.000.png",
+      "size_bytes": 1695134,
+      "sha256": "8fb5f91e41f81eb8ac9b038c0f20df708288007e5a767e9f0122870d01d06c34",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_488.000",
+      "lesson": 3,
+      "time_seconds": 488,
+      "file": "lesson03-frame-488.000.png",
+      "size_bytes": 1567083,
+      "sha256": "bbc0edd1a8f22b78163a61404c7e447e57f4bdb2d340ed9ed58ac2be20208aff",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_494.000",
+      "lesson": 3,
+      "time_seconds": 494,
+      "file": "lesson03-frame-494.000.png",
+      "size_bytes": 1760401,
+      "sha256": "e32f9c5820c6ba1bb43ef3c55f72bd8232474d8ff82dde049dffff7cfcf3ba43",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L03_500.000",
+      "lesson": 3,
+      "time_seconds": 500,
+      "file": "lesson03-frame-500.000.png",
+      "size_bytes": 1438556,
+      "sha256": "d728cc8c501e97a4ce791b90788eee50f108031a2925c75036958548f7ed1869",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L03_564.000",
+      "lesson": 3,
+      "time_seconds": 564,
+      "file": "lesson03-frame-564.000.png",
+      "size_bytes": 1444992,
+      "sha256": "3fdf9ca5d290cc05acb7eb43abf9f264eef37380b5e0949434c680dda57143aa",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L04_534.000",
+      "lesson": 4,
+      "time_seconds": 534,
+      "file": "lesson04-frame-534.000.png",
+      "size_bytes": 986999,
+      "sha256": "17a6c7afb969e38b17e5be71a3caf02b0230a5e1ce52c050ed8d2ba591eac746",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_540.000",
+      "lesson": 4,
+      "time_seconds": 540,
+      "file": "lesson04-frame-540.000.png",
+      "size_bytes": 605704,
+      "sha256": "5bb4a7367304f5a77c7aa1417839f8acdfe0bf148f9f771341cda17155f7d9f7",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_640.000",
+      "lesson": 4,
+      "time_seconds": 640,
+      "file": "lesson04-frame-640.000.png",
+      "size_bytes": 1942623,
+      "sha256": "9715ab0323330e0889181efc5014fd5761251faf9e54ec77bc6b4cd9ac12b811",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_648.000",
+      "lesson": 4,
+      "time_seconds": 648,
+      "file": "lesson04-frame-648.000.png",
+      "size_bytes": 1564058,
+      "sha256": "fec24839ce463a2324cd4f601c0116c70b966a38450ae0ee0e11eaa02be8949d",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_654.000",
+      "lesson": 4,
+      "time_seconds": 654,
+      "file": "lesson04-frame-654.000.png",
+      "size_bytes": 1050008,
+      "sha256": "ca4c6af7310c1b710fd232b9c0f2e6a0692e9e5d1802cdae25b56bc265a7ee0e",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_730.000",
+      "lesson": 4,
+      "time_seconds": 730,
+      "file": "lesson04-frame-730.000.png",
+      "size_bytes": 2259801,
+      "sha256": "9ca14f17d761c7ef8d62b592711eb8ad395024f10f29b98a15ae8e5189ea486b",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_742.000",
+      "lesson": 4,
+      "time_seconds": 742,
+      "file": "lesson04-frame-742.000.png",
+      "size_bytes": 1414102,
+      "sha256": "24aef3b400f722d43c7f22196de9bbbf556610d7c3efd9a30dd4133460d2a2d5",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_743.000",
+      "lesson": 4,
+      "time_seconds": 743,
+      "file": "lesson04-frame-743.000.png",
+      "size_bytes": 1469669,
+      "sha256": "781170ed76d26177ca32ce97fdc7a6f3618582f6ec0468c6187d7a97bfbcd6bd",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_744.000",
+      "lesson": 4,
+      "time_seconds": 744,
+      "file": "lesson04-frame-744.000.png",
+      "size_bytes": 1471573,
+      "sha256": "ef888a6a3145ded129e2cb335212d46f350758050d86d82404624e64097f3084",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_750.000",
+      "lesson": 4,
+      "time_seconds": 750,
+      "file": "lesson04-frame-750.000.png",
+      "size_bytes": 1490966,
+      "sha256": "5bb15709a4ad8333101359f91a62e3efeb9e24c31ef2b3bd7bc97268116b666b",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_798.000",
+      "lesson": 4,
+      "time_seconds": 798,
+      "file": "lesson04-frame-798.000.png",
+      "size_bytes": 1794195,
+      "sha256": "873a5e27cce98a7d82cb9e2ff8201cd10596a427dcfaaabe6e03c7ba9273e644",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_800.000",
+      "lesson": 4,
+      "time_seconds": 800,
+      "file": "lesson04-frame-800.000.png",
+      "size_bytes": 1802661,
+      "sha256": "05f688ba44ea3965d5c72bb0f3fbeaa595fa224106fc8ea471a590a73df657e7",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_804.000",
+      "lesson": 4,
+      "time_seconds": 804,
+      "file": "lesson04-frame-804.000.png",
+      "size_bytes": 1686628,
+      "sha256": "ff35ce4f1ac60a29bd8fb950f785659c37256c42cbc739b0e14219a30c9359d8",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_808.000",
+      "lesson": 4,
+      "time_seconds": 808,
+      "file": "lesson04-frame-808.000.png",
+      "size_bytes": 2208451,
+      "sha256": "88abfa4313206164fe69954d745d50322e95fc142816960ac24a9dacf58b6886",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_820.000",
+      "lesson": 4,
+      "time_seconds": 820,
+      "file": "lesson04-frame-820.000.png",
+      "size_bytes": 2072764,
+      "sha256": "cbf54216053752888e71b9c0854b2233410d4cb02febcbd28c4a8981bdf9d7a6",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_828.000",
+      "lesson": 4,
+      "time_seconds": 828,
+      "file": "lesson04-frame-828.000.png",
+      "size_bytes": 1768935,
+      "sha256": "91fe4a64ce69ec7990a25a1eb6cf96c12f2331ffd7f09e450578bf56f72b2cd7",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_840.000",
+      "lesson": 4,
+      "time_seconds": 840,
+      "file": "lesson04-frame-840.000.png",
+      "size_bytes": 1357684,
+      "sha256": "23da45e26a2850e33e531baa268999566bd574833de01446bf7d510f7e774861",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_842.000",
+      "lesson": 4,
+      "time_seconds": 842,
+      "file": "lesson04-frame-842.000.png",
+      "size_bytes": 1388575,
+      "sha256": "9a3c128a2f9919b785e327767c833ea992ca7c081f889b73d14cba637ed8c972",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_844.000",
+      "lesson": 4,
+      "time_seconds": 844,
+      "file": "lesson04-frame-844.000.png",
+      "size_bytes": 1649268,
+      "sha256": "6b337f45a094badcb696019a64c927256a23b67d4d53181809e70b3875697ccb",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L04_981.000",
+      "lesson": 4,
+      "time_seconds": 981,
+      "file": "lesson04-frame-981.000.png",
+      "size_bytes": 1337260,
+      "sha256": "ee5269f744cc7e8c95c31438cfcbdd4378849aa36fa9956f07407b0a838a0e88",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L04_983.000",
+      "lesson": 4,
+      "time_seconds": 983,
+      "file": "lesson04-frame-983.000.png",
+      "size_bytes": 1664093,
+      "sha256": "5f0a8af28ebd466f388d819dbf7f9a1fa0dddafe1fbf4fabe53bd833ef50a438",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L04_984.000",
+      "lesson": 4,
+      "time_seconds": 984,
+      "file": "lesson04-frame-984.000.png",
+      "size_bytes": 1764987,
+      "sha256": "b69f41c48837a61205410e3454a550b02be5498d66ab1099d354d9c5b89a25cc",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L05_579.000",
+      "lesson": 5,
+      "time_seconds": 579,
+      "file": "lesson05-frame-579.000.png",
+      "size_bytes": 1539828,
+      "sha256": "9b51cfeb4951c368e93cc3bb6fd7b289843d1a05752fbb73e6dac1b66550501e",
+      "scratch_subdirectory": "."
+    },
+    {
+      "evidence_id": "L05_579.500",
+      "lesson": 5,
+      "time_seconds": 579.5,
+      "file": "lesson05-frame-579.500.png",
+      "size_bytes": 1499788,
+      "sha256": "903dcc3689b250237d68889e2e61096c36b42af10e19b6e9499733981b35495a",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_580.000",
+      "lesson": 5,
+      "time_seconds": 580,
+      "file": "lesson05-frame-580.000.png",
+      "size_bytes": 1503048,
+      "sha256": "300e99a619ba33840d1f905849b8a1b27d840d30ab334a612e50a5c5ec83564c",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_581.000",
+      "lesson": 5,
+      "time_seconds": 581,
+      "file": "lesson05-frame-581.000.png",
+      "size_bytes": 1451448,
+      "sha256": "970f137f16977f59e08a0e14d0edde7ec9d2d89a6baa07b8f276d66d8c9099fd",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_581.500",
+      "lesson": 5,
+      "time_seconds": 581.5,
+      "file": "lesson05-frame-581.500.png",
+      "size_bytes": 1451716,
+      "sha256": "9e3664163d663da8e2bf4c14cbfef1d55bea65bcb990f772647e3a70c0b7264e",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_582.000",
+      "lesson": 5,
+      "time_seconds": 582,
+      "file": "lesson05-frame-582.000.png",
+      "size_bytes": 1469890,
+      "sha256": "a9d9b6377b9e888f6e15ec94271e112e293973d725d72185261690d0f0eedacc",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_588.000",
+      "lesson": 5,
+      "time_seconds": 588,
+      "file": "lesson05-frame-588.000.png",
+      "size_bytes": 1231566,
+      "sha256": "0355edb6ad6a380e63978b0e182c486e785841f1d5b3a7cd00625c63c502b1b6",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_596.000",
+      "lesson": 5,
+      "time_seconds": 596,
+      "file": "lesson05-frame-596.000.png",
+      "size_bytes": 1318522,
+      "sha256": "f876888ccfa525224a3e29704cf41cd02bf675e9f8ba54389a65209ba637f980",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_630.000",
+      "lesson": 5,
+      "time_seconds": 630,
+      "file": "lesson05-frame-630.000.png",
+      "size_bytes": 1674090,
+      "sha256": "6800750eff80a655507dd8031a803672d3fc9fbf64721c7013291dc7ff8aa550",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_634.000",
+      "lesson": 5,
+      "time_seconds": 634,
+      "file": "lesson05-frame-634.000.png",
+      "size_bytes": 1466646,
+      "sha256": "5539bf30e67b13cd32b3b2323ca90ef4cb504d9705c20b9d5106fe0cfd9fb0d2",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_654.000",
+      "lesson": 5,
+      "time_seconds": 654,
+      "file": "lesson05-frame-654.000.png",
+      "size_bytes": 1740610,
+      "sha256": "c088cf504b1af8a1d3c0e97ae3abff286e303203e943856119797678666890b6",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_660.000",
+      "lesson": 5,
+      "time_seconds": 660,
+      "file": "lesson05-frame-660.000.png",
+      "size_bytes": 1588755,
+      "sha256": "380dcad0c6a0e1bceb96f0971f7f17277375a0dee7cd898ba24e47aaab263e42",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_661.000",
+      "lesson": 5,
+      "time_seconds": 661,
+      "file": "lesson05-frame-661.000.png",
+      "size_bytes": 1633175,
+      "sha256": "7755a1e8a239cbdd7a3d2ea6fc0057fe64a388c0b2ffa6c82d5fd7cfabe1e1ea",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_662.000",
+      "lesson": 5,
+      "time_seconds": 662,
+      "file": "lesson05-frame-662.000.png",
+      "size_bytes": 1667031,
+      "sha256": "f255b7b21ce3c02372dff16bc491eee00ee7a2204d96640683d75e308b967943",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_665.000",
+      "lesson": 5,
+      "time_seconds": 665,
+      "file": "lesson05-frame-665.000.png",
+      "size_bytes": 1604102,
+      "sha256": "b0fb0f56aba2d512da89d35600344a1b9c1f429de9d74355b3126fb51ab76df4",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_667.000",
+      "lesson": 5,
+      "time_seconds": 667,
+      "file": "lesson05-frame-667.000.png",
+      "size_bytes": 1594105,
+      "sha256": "944354942a15666ff996c317bc8d69d6b69ef0e207c57383537715bd64f49c4f",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_668.000",
+      "lesson": 5,
+      "time_seconds": 668,
+      "file": "lesson05-frame-668.000.png",
+      "size_bytes": 1594411,
+      "sha256": "e4e8792b794b51cc21574ac41cde611e44a1bc78135f66dc2fbad338dbade22a",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_670.000",
+      "lesson": 5,
+      "time_seconds": 670,
+      "file": "lesson05-frame-670.000.png",
+      "size_bytes": 1600510,
+      "sha256": "3d5da3d670ccf8dfc2783c97ae76cd31fbf471025ac78e4dbcb21d9ec510672c",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_671.000",
+      "lesson": 5,
+      "time_seconds": 671.0,
+      "file": "lesson05-frame-671.000.png",
+      "size_bytes": 1980821,
+      "sha256": "0883de0bfbee6ec00ced1409f02bf9c8fd9cff90b62355122977dd249d37f1e7",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_718.000",
+      "lesson": 5,
+      "time_seconds": 718,
+      "file": "lesson05-frame-718.000.png",
+      "size_bytes": 1842695,
+      "sha256": "5c3ca754b946c187e72615d914995ae2a958c62c5f272745514b5119b9b7d112",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_802.000",
+      "lesson": 5,
+      "time_seconds": 802,
+      "file": "lesson05-frame-802.000.png",
+      "size_bytes": 1525690,
+      "sha256": "d7761c0f1d5f13b493ea4f8111e02cbd0b63d529d54a66164897c316dfcb1803",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_804.000",
+      "lesson": 5,
+      "time_seconds": 804,
+      "file": "lesson05-frame-804.000.png",
+      "size_bytes": 1398088,
+      "sha256": "f02d01038a9d8fe6bd28f293a68d21d5bf325f258a033f8f37be3cd348581b1a",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_843.000",
+      "lesson": 5,
+      "time_seconds": 843,
+      "file": "lesson05-frame-843.000.png",
+      "size_bytes": 1499932,
+      "sha256": "e0fb29c59def0999bb0201d107b7b08984de1c0d0ebdb728b6af796668a01ccf",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_847.000",
+      "lesson": 5,
+      "time_seconds": 847,
+      "file": "lesson05-frame-847.000.png",
+      "size_bytes": 1494155,
+      "sha256": "bf9cc2fcf9a38ae799d94c8e4f280fe93eee4252778dbf2997e97d108b5b1cc1",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_850.000",
+      "lesson": 5,
+      "time_seconds": 850,
+      "file": "lesson05-frame-850.000.png",
+      "size_bytes": 912834,
+      "sha256": "5e823e107aa265dc0d692fcb1cafe76006ad3f22e4efc67d5fa196a83b69ab14",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_864.000",
+      "lesson": 5,
+      "time_seconds": 864,
+      "file": "lesson05-frame-864.000.png",
+      "size_bytes": 1491677,
+      "sha256": "f2a592c1ff4867e6f7a189b6410de89af97ec4ac79416e704f10d2af0f7bee6c",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_871.000",
+      "lesson": 5,
+      "time_seconds": 871,
+      "file": "lesson05-frame-871.000.png",
+      "size_bytes": 1388153,
+      "sha256": "1632e1ad0eef178e1a532731e7a0b6d98b622e1746f9c542a80b9efd0523c2f6",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_873.000",
+      "lesson": 5,
+      "time_seconds": 873,
+      "file": "lesson05-frame-873.000.png",
+      "size_bytes": 1540222,
+      "sha256": "dea8921c80a2e386f69d1922d4041a2facd14a5d55a75841d8499e4c2d845d5c",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_878.000",
+      "lesson": 5,
+      "time_seconds": 878,
+      "file": "lesson05-frame-878.000.png",
+      "size_bytes": 1638130,
+      "sha256": "4668e3912c7cb558f17a134e774a9d7b2542d27957597530df6b5983b78df093",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_886.000",
+      "lesson": 5,
+      "time_seconds": 886,
+      "file": "lesson05-frame-886.000.png",
+      "size_bytes": 1528061,
+      "sha256": "3e3cbaff5f01a1beff41aa70dcd92cac49e4ceb7f0424566da982de8f58764d8",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_890.000",
+      "lesson": 5,
+      "time_seconds": 890,
+      "file": "lesson05-frame-890.000.png",
+      "size_bytes": 1538373,
+      "sha256": "c18584ce87a16eb604f74bacb9e1ea6f6ba39d552e1244dff6baed1b30397f1d",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_894.000",
+      "lesson": 5,
+      "time_seconds": 894,
+      "file": "lesson05-frame-894.000.png",
+      "size_bytes": 1724404,
+      "sha256": "f6b79e1c2a1268b33a18b17d6fcef4dcd0c6bd28fe4f0a1aacca8d59c34f753a",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_906.000",
+      "lesson": 5,
+      "time_seconds": 906,
+      "file": "lesson05-frame-906.000.png",
+      "size_bytes": 2077419,
+      "sha256": "67288adc043016093980f9fc386f1858dd7f916d5a0ee09d82f66da35c6216d2",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_910.000",
+      "lesson": 5,
+      "time_seconds": 910,
+      "file": "lesson05-frame-910.000.png",
+      "size_bytes": 1992387,
+      "sha256": "af85e77032ad7b1ee1d7bde4394ceb766cdd2dfda8053673977ffb02ab950c86",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_918.000",
+      "lesson": 5,
+      "time_seconds": 918,
+      "file": "lesson05-frame-918.000.png",
+      "size_bytes": 1954603,
+      "sha256": "73bc9896ff91cca01614e56070ea097b3eaf0cc745d72d4bffe24139a1a25334",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_922.000",
+      "lesson": 5,
+      "time_seconds": 922,
+      "file": "lesson05-frame-922.000.png",
+      "size_bytes": 2022471,
+      "sha256": "826ad96b015e7bfa6298c12ce71f17eedcae836bd0612bc3f6d787842763d44e",
+      "scratch_subdirectory": "graph-followup"
+    },
+    {
+      "evidence_id": "L05_925.000",
+      "lesson": 5,
+      "time_seconds": 925,
+      "file": "lesson05-frame-925.000.png",
+      "size_bytes": 2010365,
+      "sha256": "6b6913cae4844f83b89d4746837401787f7194fd40ac7ae53a06d1b8ea196a18",
+      "scratch_subdirectory": "."
+    }
+  ],
+  "published_pipeline_before_this_repair": {
+    "file": "scripts/houdini/lesson06_unified_pipeline.py",
+    "review_head": "fbe2eb785f5089b3092f7a9fdce5b3dc5e785908",
+    "verified_mismatches": [
+      {
+        "function": "stage4b_sand",
+        "author": "Grass material3 -> gradient tint1 -> unmasked brightness tint2 -> sand material4.",
+        "source": "Prior ordered_graph plus the grass branch evidence in this followup.",
+        "published_before_repair": "MAT_SAND precedes HEIGHTFIELD_TINT; the authored unmasked tint2 before sand is absent."
+      },
+      {
+        "function": "stage4d_scree",
+        "author": "Cliff tint3 is upstream of scree material6; scree tint4 follows material6.",
+        "evidence": [
+          "L05_581.500",
+          "L05_582.000",
+          "L05_630.000"
+        ],
+        "published_before_repair": "CLIFF_TINT receives MAT_SCREE."
+      },
+      {
+        "function": "stage4d_scree",
+        "author": "Both strengths 1; final visible cliff RGB (.597,.597,.597), scree RGB (.874,.822347,.701822).",
+        "evidence": [
+          "L05_596.000",
+          "L05_630.000"
+        ],
+        "published_before_repair": "Cliff/scree strengths 0.15/0.2 and colours differ from displayed author settings."
+      },
+      {
+        "function": "stage4d_scree",
+        "author": "Exposure quality last reads 145, post-scree tint4 branch; mask13 continues mask12, final Max Curvature 0.18.",
+        "evidence": [
+          "L05_660.000",
+          "L05_804.000",
+          "L05_910.000"
+        ],
+        "published_before_repair": "Exposure mask uses View Distance 25 and a pre-scree prev source; curvature mask also uses prev plus Compute Range."
+      },
+      {
+        "function": "stage4b_sand/stage4d_scree",
+        "author": "Use only individually verified fields above; incomplete exact ramps remain blocked.",
+        "published_before_repair": "Existing generic tint strengths, ramp points and supporting mask recipes do not reproduce the observed author settings."
+      }
+    ],
+    "implementation_ready_fragments": [
+      "Correct the demonstrated tint ordering in code without running it: grass tint1 and tint2 before sand; cliff tint3 before scree and scree tint4 after scree.",
+      "Record exact observed scalar/colour values and source timestamps in a fail-closed author profile; distinguish later .597 cliff RGB from earlier .437/.487 trials.",
+      "Represent the demonstrated native mask graph edges and explicit empty-mask versus mask-layer selectors; retain UNKNOWN fields as blockers rather than synthesizing replacement masks."
+    ],
+    "not_admitted_by_this_receipt": [
+      "Full native replay or crop cook",
+      "Replacing original source textures with SaCalobra/Forge assets",
+      "Regenerating accepted height/Alpha/masks",
+      "Treating an earlier cache as author-equivalent without source/lattice/layer proof",
+      "Claiming all ramp tuples, hidden settings or final saved-HIP state are known"
+    ],
+    "baseline_status": "PUBLISHED_BEFORE_THIS_REPAIR",
+    "published_file_sha256": "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37",
+    "comparison_scope": "The descriptions below refer only to the published file at fbe2eb785f5089b3092f7a9fdce5b3dc5e785908 before this repair. Root is preparing working-tree corrections concurrently; this is not a claim about the repaired working tree."
+  }
+}

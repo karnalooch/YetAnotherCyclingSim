@@ -1,0 +1,6 @@
+=== TESTING PE_LOAD_LANDSCAPE COOK IN UNREAL ===
+Target Landscape: SaCalobra_Detail_0_0
+Initial edit layers: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_0_0.LandscapeEditLayer_0'"]
+API session valid: True
+Instantiated wrapper: <Object '/Engine/Transient.HoudiniPublicAPI_0:HoudiniPublicAPIAssetWrapper_0' (0x0000019588790180) Class 'HoudiniPublicAPIAssetWrapper'>
+recook() returned: True

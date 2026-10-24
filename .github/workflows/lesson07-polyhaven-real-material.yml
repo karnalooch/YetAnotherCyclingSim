@@ -1,0 +1,800 @@
+name: YACS Lesson07 real source 5-material original Pegasus HDA canary
+
+# Uses independently hash-verified ORIGINAL accepted 16K L06 real source crop,
+# exact SideFX HDA and publisher-verified CC0 PBR maps. Bounded 256x256 site.
+# Sand mask coverage = 0 at this site; scree cliff-mask is a TEST PROXY only.
+# No material bake on full Landscape, no geometry/source cache/UE mutations.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-real-material.yml
+      - .gumball/workflow-lifecycle.json
+      - scripts/houdini/l07_real_material_canary.py
+      - scripts/houdini/test_l07_real_material_canary.py
+      - scripts/houdini/audit_l07_scree_cache.py
+      - scripts/houdini/verify_l07_scree_crop.py
+      - scripts/houdini/test_verify_l07_scree_crop.py
+      - scripts/houdini/l07_original_tint_hda_canary.py
+      - scripts/houdini/test_l07_original_tint_hda_canary.py
+      - scripts/houdini/l07_feature_native_contract.py
+      - scripts/houdini/l07_exposure_curvature_canary.py
+      - scripts/houdini/test_l07_exposure_curvature_canary.py
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Test exact material identity, input masks, and protected voxel invariants
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-real-material]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source guard tests and syntax
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py
+
+  material:
+    name: Original HDA on five CC0 maps and 256x256 actual Sa Calobra data
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout bounded native authoring source at exact event SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check isolated real source and native memory before any cook
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $data='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1'
+          foreach ($s in @('base-real-crop.npz','masks-real-crop.npz','real-source-verified.json')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $data $s))) {
+              throw "Verified real Sa Calobra crop missing: $s"
+            }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Memory preflight failed.' }
+          $m=$memJson | ConvertFrom-Json
+          if ([int64]$m.available_physical_bytes -lt 8GB) { throw 'Insufficient physical memory for original HDA canary.' }
+          Write-Host "Bounded material memory admission: $memJson"
+      - name: Cook five SideFX HDAs only on separately assembled real 256x256 crop
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Houdini 22.0.466 missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Real SideFX material HDA proof incomplete: preserve original source.' }
+      - name: Retain real native material images and one bounded final geometry
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-cc0-real-material-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-after-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+
+  scree_audit:
+    name: Read-only audit of original preexisting Stage3 scree-mask cache
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-scree-audit]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout historical scree audit source at exact event commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Inspect only preexisting scree cache, producer and native ginfo header
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong audited source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          & $python -B scripts/houdini/audit_l07_scree_cache.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only scree metadata audit failed.' }
+      - name: Retain existing screen-mask source identity only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-scree-source-inventory-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-cc0-scree-audit/${{ github.run_id }}-${{ github.run_attempt }}/native-scree-audit.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  real_scree_preflight:
+    name: Validate real Stage3 historical scree-mask contract and five-material safety
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-true-scree-material]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Validate 5 HDA roles, verified scree source, and zero geometry mutation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary scripts.houdini.test_verify_l07_scree_crop -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py
+
+  real_scree_material:
+    name: Re-cook 5 original SideFX HDAs using real historical Stage3 scree source
+    needs: real_scree_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact committed five-HDA and original scree-mask verification
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source identities and RAM, retain only isolated target
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          $orig='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          $scree='D:\yacs\work\lesson07-cc0-real-crops\39794174742-1\scree-diagnostic-verified.json'
+          $maps='D:\yacs\work\lesson07-polyhaven-cc0-v1\bindings-v1.json'
+          foreach ($file in @($orig,$scree,$maps)) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Native source evidence missing: $file" }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Memory guard failed.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough RAM for native HDA source preview.' }
+          Write-Host "Original SideFX material memory preflight: $memJson"
+      - name: Recreate real Sa Calobra material board with true historical Stage3 scree pixels
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Houdini 22.0.466 is missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --scree-token '39794174742-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Five-stage authentic Stage3 diagnostic failed without changing canonical terrain.' }
+          $resultPath='D:\yacs\work\lesson07-cc0-real-material\${{ github.run_id }}-${{ github.run_attempt }}\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $resultPath)) { throw 'No native five-HDA report was saved.' }
+          $proof=Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION') {
+            throw 'Native material status does not prove real Stage3 diagnostic input.'
+          }
+          $stages=@($proof.stages)
+          if ($stages.Count -ne 5) { throw 'Not all five Pegasus HDAs completed.' }
+          if ($stages[4].role -cne 'scree' -or $stages[4].mask -cne 'scree_mask' -or
+              $stages[4].mask_source -cne 'HISTORICAL_STAGE3_GEOREGISTERED_UPSTREAM_UNVERIFIED' -or
+              [int]$stages[4].mask_nonzero -ne 8619) {
+            throw 'Native scree preview did not use the exact real Stage3 diagnostic mask.'
+          }
+          if ($proof.stage3_upstream_lineage_accepted -ne $false -or
+              $proof.ground_truth_height_and_stage2_masks_unchanged -ne $true -or
+              $proof.whole_landscape_material_pass -ne $false -or
+              $proof.unreal_import -ne $false) {
+            throw 'Native diagnostic proof was incorrectly promoted to production.'
+          }
+          Write-Host 'REAL_STAGE3_8619_CELLS_AND_FIVE_HDA_SOURCE_INVARIANTS_VERIFIED'
+      - name: Preserve real images, diagnosed mask coverage and final scratch BGEO
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-hda-real-stage3-scree-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-after-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+
+  original_tint_preflight:
+    name: Test 4 original SideFX tint-HDA masks, ramps and position
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-tint-hda-proof]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Native tint source parameter and quality guard tests
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_original_tint_hda_canary -v
+          python -B -m py_compile scripts/houdini/l07_original_tint_hda_canary.py
+
+  original_tint_native:
+    name: Native original Pegasus Tint HDA on real 256-square site, no world mutation
+    needs: original_tint_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 35
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact-source tint HDA verification script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Require source material proof and resource headroom
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $source='D:\yacs\work\lesson07-cc0-real-material\39805083280-1\real-material-canary.json'
+          $stage3='D:\yacs\work\lesson07-cc0-real-crops\39794174742-1\scree-diagnostic-verified.json'
+          if (-not (Test-Path -LiteralPath $source) -or -not (Test-Path -LiteralPath $stage3)) {
+            throw 'Verified isolated five-HDA/Stage3 source is missing.'
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Native memory preflight failed.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Physical RAM guard failed.' }
+          Write-Host "Original SideFX Tint HDA memory admission: $memJson"
+      - name: Run actual Houdini 22 original Tint HDA on source-pinned real site
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini executable missing.' }
+          & $hython -B scripts/houdini/l07_original_tint_hda_canary.py --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Original SideFX Tint HDA readback failed; source world was not touched.' }
+          $out='D:\yacs\work\lesson07-cc0-tint-proofs\${{ github.run_id }}-${{ github.run_attempt }}\tint-native-evidence.json'
+          if (-not (Test-Path -LiteralPath $out)) { throw 'Native tint evidence manifest missing.' }
+          $proof=Get-Content -LiteralPath $out -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'ORIGINAL_PEGASUS_TINT_HDA_REAL_SITE_ISOLATED_PROOF_NOT_FULL_GRAPH' -or
+              @($proof.stages).Count -ne 4 -or $proof.full_graph -ne $false -or
+              $proof.whole_domain -ne $false -or $proof.final_ue_lit -ne $false) {
+            throw 'Isolated Tint HDA proof incorrectly claimed whole-world acceptance.'
+          }
+          if (@($proof.stages | Where-Object { $_.height_and_semantic_masks_preserved -ne $true }).Count -ne 0) {
+            throw 'Protected native geometry/source masks changed during Tint HDA testing.'
+          }
+          Write-Host 'FOUR_ORIGINAL_TINT_HDA_STAGE_PROOFS_WITH_PROTECTED_WORLD_MASKS'
+      - name: Upload small native tint before/after previews and exact manifest
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-sidefx-tints-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-native-evidence.json
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-*.png
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  neutral_limestone_preflight:
+    name: Test optional mask-weighted limestone-neutral native Tint HDA adapter
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-neutral-grade]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Verify five-HDA proof integrity, original tint settings, and explicit grade isolation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_original_tint_hda_canary -v
+          python -B -m py_compile scripts/houdini/l07_original_tint_hda_canary.py
+
+  neutral_limestone_native:
+    name: Test original tint followed by scoped neutral-gray YACS limestone adaptation
+    needs: neutral_limestone_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 35
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout pinned SideFX source adapter for one scratch-only A/B
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Authorize only hash-matched original source and safe physical memory
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong native source commit.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Expected Python absent.' }
+          $source='D:\yacs\work\lesson07-cc0-real-material\39805083280-1\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $source)) { throw 'Real five-HDA evidence not present.' }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Guard denied commit headroom.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Insufficient physical RAM.' }
+          Write-Host "Native neutral limestone source candidate memory: $memJson"
+      - name: Run original Pegasus tints and one verified source-mask grayscale correction
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini not installed.' }
+          & $hython -B scripts/houdini/l07_original_tint_hda_canary.py --run-token '${{ github.run_id }}-${{ github.run_attempt }}' --neutral-grade
+          if ($LASTEXITCODE -ne 0) { throw 'Native neutral-cliff A/B failed; no production material changed.' }
+          $manifest='D:\yacs\work\lesson07-cc0-tint-proofs\${{ github.run_id }}-${{ github.run_attempt }}\tint-native-evidence.json'
+          if (-not (Test-Path -LiteralPath $manifest)) { throw 'Native grade receipt missing.' }
+          $proof=Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
+          $stages=@($proof.stages)
+          if ($proof.status -cne 'ORIGINAL_PEGASUS_TINT_AND_YACS_LIMESTONE_GRADE_ISOLATED_PROOF' -or
+              $proof.grade_is_adaptation_not_author_source -ne $true -or
+              $proof.full_graph -ne $false -or $proof.whole_domain -ne $false -or
+              $stages.Count -ne 5 -or $stages[4].name -cne 'limestone_gray_candidate' -or
+              $stages[4].input2_mask -cne 'cliff_mask' -or
+              $stages[4].author_source_status -cne 'YACS_ADAPTATION_WEIGHTED_CLIFF_GRAY') {
+            throw 'Color candidate was improperly characterized as a source-author or full-domain output.'
+          }
+          if (@($stages | Where-Object { $_.height_and_semantic_masks_preserved -ne $true }).Count -ne 0) {
+            throw 'The test changed protected height/semantic masks.'
+          }
+          Write-Host 'FIVE_NATIVE_SIDEFX_TINT_OPERATORS_FOUR_AUTHOR_PLUS_ONE_EXPLICIT_YACS_GRADE'
+      - name: Publish grade A/B proof without publishing original full terrain
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-source-cliff-to-neutral-gray-ab-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-native-evidence.json
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-cliff.png
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-limestone_gray_candidate.png
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  interleaved_tints_preflight:
+    name: Check original SideFX four Tint HDA nodes interleaved with five material HDAs
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-interleaved-tints]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source-order graph guards and syntax
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary scripts.houdini.test_l07_original_tint_hda_canary -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py scripts/houdini/l07_original_tint_hda_canary.py
+
+  interleaved_tints_native:
+    name: Cook source-ordered 5 materials and 4 Tint HDAs on real Sa Calobra site
+    needs: interleaved_tints_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout reviewed native source modules only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Preserve existing source authority and check memory headroom
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source revision.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          $original='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          $stage3='D:\yacs\work\lesson07-cc0-real-crops\39794174742-1\scree-diagnostic-verified.json'
+          foreach ($file in @($original,$stage3)) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Missing read-only accepted real source: $file" }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Available commit guard rejected new cook.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough physical memory.' }
+          Write-Host "Original Pegasus 5+4 HDA source-order headroom: $memJson"
+      - name: Cook original Material and Tint HDAs in source topology, scratch only
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --scree-token '39794174742-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}' --interleaved-tints
+          if ($LASTEXITCODE -ne 0) { throw 'Interleaved original HDA source-order test failed, leaving source unchanged.' }
+          $manifest='D:\yacs\work\lesson07-cc0-real-material\${{ github.run_id }}-${{ github.run_attempt }}\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $manifest)) { throw 'No verified Material/Tint sequence receipt.' }
+          $proof=Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
+          $order=@($proof.tint_stages | ForEach-Object { $_.name })
+          if ($proof.status -cne 'FIVE_PEGASUS_CC0_REAL_STAGE3_SOURCE_ORDERED_TINTS_BOUNDED_PASS' -or
+              $proof.source_tints_interleaved_in_author_order -ne $true -or
+              $proof.complete_author_mask_and_tint_graph -ne $false -or
+              $proof.stage3_upstream_lineage_accepted -ne $false -or
+              $proof.ground_truth_height_and_stage2_masks_unchanged -ne $true -or
+              $proof.whole_landscape_material_pass -ne $false -or
+              $proof.unreal_import -ne $false -or
+              @($proof.stages).Count -ne 5 -or $order.Count -ne 4) {
+            throw 'Material+Tint candidate was promoted or incomplete.'
+          }
+          if (($order -join ',') -cne 'grass_gradient,grass_brightness,cliff,scree') {
+            throw 'Author SideFX Tint graph order was changed.'
+          }
+          if (@($proof.tint_stages | Where-Object { $_.height_and_semantic_masks_preserved -ne $true }).Count -gt 0) {
+            throw 'Protected source field changed in real Tint HDA chain.'
+          }
+          Write-Host 'FIVE_ORIGINAL_MATERIALS_FOUR_INTERLEAVED_SOURCE_TINTS_REAL_STAGE3_BOUNDED_PASS'
+      - name: Upload exact source-order receipt and real color stage previews only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-source-ordered-materials-and-tints-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/tint-*.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/tint-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+
+  native_feature_contract_preflight:
+    name: Check native MaskByFeature and Tint template introspection source safety
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-feature-native]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Syntax and original HDA input contract
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m py_compile scripts/houdini/l07_feature_native_contract.py
+          python -B -m unittest scripts.houdini.test_l07_original_tint_hda_canary -v
+
+  native_feature_contract:
+    name: Inspect actual Houdini 22 MaskByFeature/Visualize/Tint native parameters read-only
+    needs: native_feature_contract_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact native source inspection script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original source HDA parms without opening user project or cooking source
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini binary absent.' }
+          & $hython -B scripts/houdini/l07_feature_native_contract.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Native author-node parameter contract failed.' }
+          $report='D:\yacs\work\lesson07-feature-native-contract\${{ github.run_id }}-${{ github.run_attempt }}\native-feature-tint-parameter-contract.json'
+          if (-not (Test-Path -LiteralPath $report)) { throw 'No native contract report.' }
+          $result=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if ($result.status -cne 'SIDEFX_NATIVE_FEATURE_TINT_PARM_CONTRACT_READ_ONLY' -or
+              $result.houdini_scene_saved -ne $false -or $result.native_cook -ne $false -or
+              $result.original_height_and_masks_modified -ne $false) {
+            throw 'Source-only tool introspection wrongly claimed real-world acceptance.'
+          }
+          Write-Host 'NATIVE_MASKBYFEATURE_AND_TINT_PARAMETER_CONTRACT_READ_BACK'
+      - name: Preserve safe native parm labels, not scene or binary caches
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-native-exposure-curvature-parm-contract-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-feature-native-contract/${{ github.run_id }}-${{ github.run_attempt }}/native-feature-tint-parameter-contract.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  exposure_curvature_preflight:
+    name: Verify original SideFX Exposure/Curvature Tint source parameters and mask edge rules
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-exposure-curvature]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Test source branch wiring, video settings and separately admitted adaptations
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_exposure_curvature_canary -v
+          python -B -m py_compile scripts/houdini/l07_exposure_curvature_canary.py
+
+  exposure_curvature_native:
+    name: Cook original 145m Exposure and 0.18 Curvature branch on bounded real site
+    needs: exposure_curvature_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact source, no canonical UE project changes
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source ordered HDA proof and memory before occlusion cook
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source revision.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          $source='D:\yacs\work\lesson07-cc0-real-material\39808914161-1\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $source)) { throw 'Real bounded author-ordered material proof missing.' }
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Physical and commit admission rejected.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough available physical RAM.' }
+          Write-Host "Source feature native memory admission: $memJson"
+      - name: Cook original SideFX Mask12 and Mask13 plus Tint5 and Tint6
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          & $hython -B scripts/houdini/l07_exposure_curvature_canary.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Bounded original Exposure/Curvature source graph did not pass.' }
+          $file='D:\yacs\work\lesson07-exposure-curvature-native\${{ github.run_id }}-${{ github.run_attempt }}\exposure-curvature-proof.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'Source graph report not saved.' }
+          $proof=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'ORIGINAL_PEGASUS_EXPOSURE_CURVATURE_NATIVE_REAL_SITE_ADAPTED_RAMP_CANARY_PASS' -or
+              $proof.author_full_ramp_tuples_verified -ne $false -or
+              $proof.boundary_halo_adequate_for_145m_occlusion -ne $false -or
+              $proof.canonical_height_and_alpha_changed -ne $false -or
+              $proof.semantic_stage2_masks_changed -ne $false -or
+              $proof.full_domain_cooked -ne $false -or
+              $proof.unreal_imported -ne $false) {
+            throw 'Limited source graph incorrectly claimed full author/canonical proof.'
+          }
+          if ($proof.tint5.output.original_semantic_volumes_unchanged -ne $true -or
+              $proof.tint6.output.original_semantic_volumes_unchanged -ne $true) {
+            throw 'The original SideFX feature changed protected native data.'
+          }
+          Write-Host 'NATIVE_PEGASUS_MASK12_MASK13_TINT5_TINT6_PROOF_BOUNDED_RAMP_ADAPTED'
+      - name: Retain bounded real feature masks, original color nodes and evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-pegasus-real-exposure-curvature-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/exposure-curvature-proof.json
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/*.png
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/native-curvature.bgeo.sc
+          if-no-files-found: warn
+          retention-days: 30

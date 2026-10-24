@@ -1,0 +1,181 @@
+{
+  "status": "LESSON06_FULL_IDMAP_PASS",
+  "timestamp": "2026-10-19T16:09:11",
+  "base_commit": "7833e8bd8e5bfa19a183905335d2ba25b2c22969",
+  "houdini_version": "22.0.466",
+  "domain": {
+    "resolution": [
+      16000,
+      16000,
+      1
+    ],
+    "origin": [
+      -3999.75,
+      0.0,
+      3999.75
+    ],
+    "gridspacing": 0.5,
+    "bounds_x": [
+      -4000.0,
+      4000.0
+    ],
+    "bounds_z": [
+      -4000.0,
+      4000.0
+    ],
+    "total_voxels": 256000000
+  },
+  "source_dtm_verification": {
+    "source_dtm_file": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif",
+    "source_dtm_sha256": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+    "source_validity_file": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif",
+    "source_validity_sha256": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c",
+    "stage1_base_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+    "stage1_base_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+    "coordinate_mapping": "Raster (row r, col c) -> Houdini voxel (x=c, y=15999-r); World X = -3999.75 + x*0.5, World Z = 3999.75 - y*0.5",
+    "nodata_convention": "Source validity == 0 (offshore sea, 6,181,020 samples) maps to base Alpha == 0.0 and height == 0.0; valid land domain validity == 1 (249,818,980 samples) maps to base Alpha > 0",
+    "samples_compared": 256000000,
+    "height_mismatches": 0,
+    "height_max_diff_m": 0.0,
+    "validity_alpha_mismatches": 0,
+    "valid_land_samples": 249818980,
+    "nodata_sea_samples": 6181020,
+    "raw_source_elevation_valid_land_m": {
+      "min_m": -1.2999999523162842,
+      "max_m": 1437.158203125,
+      "mean_m": 429.34505,
+      "std_m": 358.3486
+    },
+    "raw_source_elevation_all_voxels_m": {
+      "min_m": -1.2999999523162842,
+      "max_m": 1437.158203125,
+      "mean_m": 418.97869873046875
+    }
+  },
+  "base_terrain_elevation_m": {
+    "min": -1.2999999523162842,
+    "max": 1437.158203125,
+    "mean": 418.97869873046875
+  },
+  "final_idmap_terrain_elevation_m": {
+    "min": -1.2999999523162842,
+    "max": 1437.158203125,
+    "mean": 418.9890441894531
+  },
+  "procedural_displacement_base_to_preid_m": {
+    "min_m": -0.3577566295862198,
+    "max_m": 0.53326416015625,
+    "mean_m": 0.010398120952568004,
+    "std_m": 0.05559084643177764,
+    "p50_m": 0.0,
+    "p95_m": 0.1434173583984375,
+    "p99_m": 0.20599365234375,
+    "changed_voxels": 127031426,
+    "changed_pct": 49.62165078125
+  },
+  "procedural_displacement_note": "Procedural displacement reflects intentional material and slump displacements from Pegasus workflow (L04 material displacement and L05 scree slump/transport), NOT a DTM reproduction error.",
+  "authentic_landforms": {
+    "puig_major": {
+      "x_m": -1283.7498779296875,
+      "z_m": 3495.25,
+      "height_m": 1437.158203125
+    },
+    "sa_calobra_cove": {
+      "x_m": 470.0,
+      "z_m": -1060.0,
+      "height_m": 10.34105396270752
+    }
+  },
+  "alpha_integrity": {
+    "valid_voxels": 249818980,
+    "valid_pct": 97.5855390625,
+    "mismatches_vs_base": 0
+  },
+  "invariant_b_preid_vs_postid_max_diff": {
+    "height": 0.0,
+    "r": 0.0,
+    "g": 0.0,
+    "b": 0.0,
+    "Alpha": 0.0
+  },
+  "id_distribution": {
+    "grass": {
+      "id": 0,
+      "code": 0,
+      "float_val": 0.0,
+      "count": 104122143,
+      "pct": 40.672712109375
+    },
+    "grass 2": {
+      "id": 1,
+      "code": 64,
+      "float_val": 0.25098039215686274,
+      "count": 55517706,
+      "pct": 21.68660390625
+    },
+    "sand": {
+      "id": 2,
+      "code": 128,
+      "float_val": 0.5019607843137255,
+      "count": 18624143,
+      "pct": 7.275055859375
+    },
+    "cliffs": {
+      "id": 3,
+      "code": 191,
+      "float_val": 0.7490196078431373,
+      "count": 77735227,
+      "pct": 30.365323046874998
+    },
+    "scree": {
+      "id": 4,
+      "code": 255,
+      "float_val": 1.0,
+      "count": 781,
+      "pct": 0.000305078125
+    }
+  },
+  "pegasus_decoder_mismatches": {
+    "grass": 0,
+    "grass 2": 0,
+    "sand": 0,
+    "cliffs": 0,
+    "scree": 0
+  },
+  "hashes": {
+    "source_dtm_tif": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif",
+    "source_dtm_tif_sha256": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+    "source_validity_tif": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif",
+    "source_validity_tif_sha256": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c",
+    "stage1_base": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+    "stage1_base_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+    "checkpoint_hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc",
+    "checkpoint_hip_sha256": "7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb",
+    "pre_id_cache": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.bgeo.sc",
+    "pre_id_cache_sha256": "b97969d87cc887bdea28b5f3e5b04ce7fc20e15f6cec682c1b46f21f4acda45e",
+    "final_unified_idmap": "D:\\yacs\\work\\lesson06-unified-20261019\\final_unified_idmap.bgeo.sc",
+    "final_unified_idmap_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24"
+  },
+  "evidence_image_manifest": [
+    "global_rgb_overview.png",
+    "global_idmap_overview.png",
+    "global_alpha_overview.png",
+    "decoded_mask_grass.png",
+    "decoded_mask_grass_2.png",
+    "decoded_mask_sand.png",
+    "decoded_mask_cliffs.png",
+    "decoded_mask_scree.png",
+    "closeup_former_north_seam.png",
+    "closeup_former_south_seam.png",
+    "closeup_former_west_seam.png",
+    "closeup_former_east_seam.png",
+    "closeup_former_nw_corner.png",
+    "closeup_former_ne_corner.png",
+    "closeup_former_sw_corner.png",
+    "closeup_former_se_corner.png",
+    "closeup_puig_major_peak.png",
+    "closeup_sa_calobra_cove.png",
+    "closeup_scree_occurrence.png"
+  ],
+  "elapsed_seconds": 277.69
+}

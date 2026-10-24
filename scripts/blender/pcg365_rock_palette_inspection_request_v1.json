@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "status": "EIGHT_LICENSED_SOURCE_COMPONENT_INSPECTION_REQUEST_ONLY",
+  "assets": [
+    {
+      "id": "namaqualand_boulder_02",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_02\\namaqualand_boulder_02_2k.fbx",
+      "sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "bytes": 3095484,
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_06\\namaqualand_boulder_06_2k.fbx",
+      "sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "bytes": 3421948,
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    },
+    {
+      "id": "rock_07",
+      "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_07_lod0.fbx",
+      "sha256": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+      "bytes": 514860,
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_EXPLICIT_LOD0_UNCHANGED_GEOMETRY",
+      "selected_source_object": "rock_07_LOD0",
+      "original_source_sha256": "a49a0fce3da2a976013aac8be3899817b0fe03a1f19628ea0677820df3bdbae1"
+    },
+    {
+      "id": "rock_09",
+      "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_09_lod0.fbx",
+      "sha256": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+      "bytes": 442236,
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_EXPLICIT_LOD0_UNCHANGED_GEOMETRY",
+      "selected_source_object": "rock_09_LOD0",
+      "original_source_sha256": "a04920ea816c4a3ca88c57ce8cbe2a9ba9315130df1c32b589640819d5096333"
+    },
+    {
+      "id": "boulder_01",
+      "path": "D:/yacs/data/assets/pcg365-boulder-source/boulder_01/boulder_01_2k.fbx",
+      "sha256": "b1125cd1e08a425fa89bc62b96279b40e9a921618e12bfbbe0d575cb78f53c95",
+      "bytes": 6482860,
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    },
+    {
+      "id": "namaqualand_boulder_03",
+      "path": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_03_2k.fbx",
+      "bytes": 2281932,
+      "md5": "7db8e6ecbcc8712319c357bdf142deab",
+      "sha256": "5890e368f33ed9807966f2ff6daf57ef76d1e5c045947e906bb437bbed90a181",
+      "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/namaqualand_boulder_03/namaqualand_boulder_03_2k.fbx",
+      "provider_page": "https://polyhaven.com/a/namaqualand_boulder_03",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "api_response_sha256": "5f0ed9ea7e3939d23ac0b5e4dbf1412d6e0c3e852bf1d38ce4479c2f6adb5a90",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    },
+    {
+      "id": "namaqualand_boulder_04",
+      "path": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_04_2k.fbx",
+      "bytes": 2058860,
+      "md5": "0bc2445f3423907b3cff3a03ae95e2c1",
+      "sha256": "72c573fa43e787a24f6bf98f96c24e2062e62c115d1937f45c20625d9af0856e",
+      "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/namaqualand_boulder_04/namaqualand_boulder_04_2k.fbx",
+      "provider_page": "https://polyhaven.com/a/namaqualand_boulder_04",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "api_response_sha256": "3109690bfd763fdf78b3cb9e034cd96be537d96689713eb462bff470e6089cab",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    },
+    {
+      "id": "namaqualand_boulder_05",
+      "path": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_05_2k.fbx",
+      "bytes": 3036268,
+      "md5": "01a8646f4664bf74f8f7ce749b5aa19b",
+      "sha256": "20bec082d679d510dd840243dc78b251e2ce1ebeb36ff13d7c4b626fbf96e77b",
+      "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/namaqualand_boulder_05/namaqualand_boulder_05_2k.fbx",
+      "provider_page": "https://polyhaven.com/a/namaqualand_boulder_05",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "api_response_sha256": "7265c5843d4b5a06c8b41ac365322b76cc0577ad5f54ff009c68c6d372e956bf",
+      "source_provenance": "POLY_HAVEN_RAW_FBX_ALL_OBJECTS_REQUIRE_REVIEWED_LOD_SELECTION"
+    }
+  ],
+  "acquisition_receipt": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\acquisition-receipt.json",
+  "acquisition_receipt_sha256": "ecead963298ede85da909bc69e74007fef08e4e8374511cf991095acc4f77182",
+  "placement": false,
+  "qualified_assets": [],
+  "terrain_modified": false
+}

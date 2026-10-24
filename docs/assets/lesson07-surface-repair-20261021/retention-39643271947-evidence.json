@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "status": "SERVER_BYTES_VERIFIED_NINE_POINTERS_INCLUDED_IN_CONTAINING_COMMIT",
+  "producer_source_commit": "e6446f4f1290e56eabdacd096293f55fe555aca4",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39643271947",
+  "attempt": 1,
+  "export_job_id": 119372237173,
+  "server_readback_job_id": 119373198809,
+  "readback_artifact": {
+    "id": 12365902556,
+    "bytes": 2288,
+    "sha256": "5f8c34715527f06e68e652ac6d306eb53fad064731c01bc3bca9454ef556a071",
+    "downloaded_and_rehashed_locally": true
+  },
+  "export_artifact": {
+    "id": 12366212186,
+    "bytes": 115911097,
+    "github_reported_sha256": "0afeaecf7769e600e879a0a3e32244d1cb38d3b782671dd65c8c87d14ce5aa15",
+    "downloaded_and_rehashed_locally": false
+  },
+  "reports": [
+    {
+      "path": "retention-39643271947-server-lfs-readback.json",
+      "artifact_entry": "server-lfs-readback.json",
+      "bytes": 2847,
+      "sha256": "39fe16f831f6eff5b898ec175ef9ad00765ce4ef6f921646444af78890d37879"
+    },
+    {
+      "path": "retention-39643271947-git-lfs-pointers.json",
+      "artifact_entry": "git-lfs-pointers.json",
+      "bytes": 3100,
+      "sha256": "6744b927b5b62daa02ae1790800d6938e328d227ab4333dbd999fd22f7174a3f"
+    }
+  ],
+  "asset_count": 9,
+  "total_asset_bytes": 115887110,
+  "scope": "Five imported textures, three arrays, previously approved Macro 0.05 material instance",
+  "storage_started_empty": true,
+  "native_calls": 0,
+  "canonical_assets_changed": false,
+  "canonical_editor_started_or_stopped": false,
+  "remote_server_bytes_verified": true,
+  "pointer_publication": "The containing commit includes exactly the nine text pointers in the raw pointer receipt. The raw producer receipt correctly retains remote_ref_updated=false because the hosted job does not update refs.",
+  "fresh_reopen_verified": false,
+  "visual_acceptance": false,
+  "technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "supersedes_retention_attempt": "retention-39638776920-evidence.json"
+}

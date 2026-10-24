@@ -1,0 +1,123 @@
+name: YACS L07 native four-tile transfer verification (isolated)
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-l07-native-transfer-verify.yml
+      - scripts/houdini/prepare_lesson07_ue_transfer.py
+      - scripts/houdini/l07_tile_invariants.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-l07-native-transfer-verify
+  cancel-in-progress: false
+
+jobs:
+  transfer:
+    name: Verify pinned L06 -> isolated L07 tiles and Alpha
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Preflight disk/source/idle native authoring
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $free = ([IO.DriveInfo]::new('D:\')).AvailableFreeSpace / 1GB
+          Write-Host ("D: free before generation: {0:N2} GiB" -f $free)
+          if ($free -lt 30) { throw 'L07 transfer requires at least 30 GiB free.' }
+          if (@(Get-Process -Name UnrealEditor,UnrealEditor-Cmd,hython,houdini,hbatch -ErrorAction SilentlyContinue).Count -gt 0) {
+            throw 'A native Unreal/Houdini session is active: no overlapping transfer.'
+          }
+          $source = 'D:\yacs\work\lesson06-unified-20261019\final_unified_idmap.bgeo.sc'
+          $file = Get-Item -LiteralPath $source -ErrorAction Stop
+          if ($file.Length -ne 4808520505) { throw 'L06 source size not accepted.' }
+          $sha = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne 'f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24') {
+            throw 'L06 accepted source SHA256 mismatch. No generation.'
+          }
+      - name: Checkout only exact transfer and numerical proof helpers
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _l07_native_transfer
+          persist-credentials: false
+          lfs: false
+          fetch-depth: 1
+          sparse-checkout: |
+            scripts/houdini/prepare_lesson07_ue_transfer.py
+            scripts/houdini/l07_tile_invariants.py
+          sparse-checkout-cone-mode: false
+      - name: Run native hython transfer into NEW non-authoritative proof directory
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $script = Join-Path $env:GITHUB_WORKSPACE '_l07_native_transfer\scripts\houdini\prepare_lesson07_ue_transfer.py'
+          $hython = 'D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython -PathType Leaf) -or
+              -not (Test-Path -LiteralPath $script -PathType Leaf)) {
+            throw 'Pinned native Houdini or exact-SHA script missing.'
+          }
+          $env:YACS_LESSON07_EXPORT_DIR = 'D:\yacs\work\lesson07-native-proof-${{ github.run_id }}-${{ github.run_attempt }}'
+          $out = Join-Path $env:RUNNER_TEMP 'l07-hython.stdout.log'
+          $err = Join-Path $env:RUNNER_TEMP 'l07-hython.stderr.log'
+          $report = Join-Path $env:RUNNER_TEMP 'l07-proof-summary.json'
+          $process = Start-Process -FilePath $hython -ArgumentList ('"' + $script + '"') -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+          $manifest = Join-Path $env:YACS_LESSON07_EXPORT_DIR 'manifest.json'
+          $manifestData = $null
+          if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+            $manifestData = Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
+          }
+          $files = @(Get-ChildItem -LiteralPath $env:YACS_LESSON07_EXPORT_DIR -Filter '*.bgeo.sc' -File -ErrorAction SilentlyContinue)
+          $size = [long](($files | Measure-Object Length -Sum).Sum)
+          $summary = [ordered]@{
+            status = if ($process.ExitCode -eq 0 -and $manifestData -and $manifestData.status -eq 'NATIVE_TRANSFER_READY_UE_VALIDATION_PENDING' -and $files.Count -eq 4) { 'NATIVE_TRANSFER_VERIFIED_NOT_UE_ACCEPTED' } else { 'FAILED_NATIVE_TRANSFER' }
+            commit = '${{ github.sha }}'
+            exit_code = $process.ExitCode
+            source_accepted_sha256 = if ($manifestData) { $manifestData.accepted_l06_sha256 } else { $null }
+            output_dir = $env:YACS_LESSON07_EXPORT_DIR
+            output_tiles = $files.Count
+            total_output_gib = [math]::Round($size / 1GB,2)
+            seam_verification = if ($manifestData) { $manifestData.seam_verification } else { $null }
+            masked_hole_material_ue_verified = $false
+            saved_map_mutated_by_this_job = $false
+            free_after_gib = [math]::Round(([IO.DriveInfo]::new('D:\')).AvailableFreeSpace / 1GB,2)
+          }
+          $summary | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath $report -Encoding UTF8
+          $summary | ConvertTo-Json -Depth 7
+          if ($summary.status -ne 'NATIVE_TRANSFER_VERIFIED_NOT_UE_ACCEPTED') {
+            throw 'Failed native Houdini transfer. No UE or map modifications were attempted.'
+          }
+          if ($size -gt 6GB) { throw 'Generated transfer exceeds bounded disk output budget.' }
+          $shaAgain = (Get-FileHash -LiteralPath 'D:\yacs\work\lesson06-unified-20261019\final_unified_idmap.bgeo.sc' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($shaAgain -ne 'f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24') {
+            throw 'Accepted original L06 changed during transfer; failed conservation.'
+          }
+      - name: Retain bounded logs and proof JSON, never GB-scale BGEO
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          foreach ($name in @('l07-hython.stdout.log','l07-hython.stderr.log')) {
+            $file = Join-Path $env:RUNNER_TEMP $name
+            if (Test-Path -LiteralPath $file) {
+              $tail = Join-Path $env:RUNNER_TEMP "$name.tail.txt"
+              Get-Content -LiteralPath $file -Tail 180 | Set-Content -LiteralPath $tail -Encoding utf8
+            }
+          }
+      - name: Upload small signed native receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: l07-native-tiles-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/l07-proof-summary.json
+            ${{ runner.temp }}/l07-hython.stdout.log.tail.txt
+            ${{ runner.temp }}/l07-hython.stderr.log.tail.txt
+          if-no-files-found: warn
+          retention-days: 10

@@ -1,0 +1,63 @@
+{
+  "branch": "codex/365-world-graph",
+  "expected_branch_head": "e6446f4f1290e56eabdacd096293f55fe555aca4",
+  "remote_ref_updated": false,
+  "repository": "karnalooch/YetAnotherCyclingSim",
+  "schema_version": 1,
+  "tree_elements": [
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d\nsize 40154\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57\nsize 25841089\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94\nsize 18473310\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003\nsize 37576130\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:3d3c13f9f5775d42dcd4da7ceb61ccbfa654f1bd91bb62c6b4dcbb6add4723fa\nsize 2975373\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Colour.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:ed381d67ebc89f8e2660886c24b27be70974b0ab62d9cc13d947282ed7787dad\nsize 6825984\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Masks.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:de84b4056ad848acf39912caced1e3ef30ba0e5572792169b97f09079e160987\nsize 9705348\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Normal.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:1ae09f0213d92086da89c3b322f86d9022400fea594c135c5f1b84a7ce29a377\nsize 3538545\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Masks.uasset",
+      "type": "blob"
+    },
+    {
+      "content": "version https://git-lfs.github.com/spec/v1\noid sha256:04ad96871796aad244d62dc911ec309c1374273d41f949b2914025616ffd7c68\nsize 10911177\n",
+      "mode": "100644",
+      "path": "Content/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Normal.uasset",
+      "type": "blob"
+    }
+  ]
+}

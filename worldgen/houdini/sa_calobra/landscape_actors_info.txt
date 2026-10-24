@@ -1,0 +1,48 @@
+Found 5 landscape actors:
+
+--- SaCalobra_Detail_0_0 ---
+  Class: Landscape
+  Location: (X=-190025.00, Y=73975.00, Z=0.00)
+  Rotation: (P=0.00, Y=-90.00, R=0.00)
+  Scale: (X=50.0000, Y=50.0000, Z=225.1445)
+  Bounds origin: <Struct 'Vector' (0x000001C65FB52720) {x: -94774.999168, y: -53025.000000, z: 28782.440827}>, box_extent: <Struct 'Vector' (0x000001C65FB52F90) {x: 95250.000835, y: 127000.000000, z: 28852.798927}>
+  Edit layers count: 2
+    - Houdini_Source_Pegasus_Gentle
+    - Layer2_Procedural
+
+--- SaCalobra_Detail_1_0 ---
+  Class: Landscape
+  Location: (X=475.00, Y=73975.00, Z=0.00)
+  Rotation: (P=0.00, Y=-90.00, R=0.00)
+  Scale: (X=50.0000, Y=50.0000, Z=293.6055)
+  Bounds origin: <Struct 'Vector' (0x000001C65FB51500) {x: 95725.000899, y: -53025.000000, z: 37581.507160}>, box_extent: <Struct 'Vector' (0x000001C65FBBD730) {x: 95250.000899, y: 127000.000000, z: 37579.213802}>
+  Edit layers count: 1
+    - Houdini_Source_Pegasus_Gentle
+
+--- SaCalobra_Detail_0_1 ---
+  Class: Landscape
+  Location: (X=-190025.00, Y=327975.00, Z=0.00)
+  Rotation: (P=0.00, Y=-90.00, R=0.00)
+  Scale: (X=50.0000, Y=50.0000, Z=552.7188)
+  Bounds origin: <Struct 'Vector' (0x000001C67758C150) {x: -94774.997748, y: 200975.000000, z: 86994.906831}>, box_extent: <Struct 'Vector' (0x000001C65FBBCE20) {x: 95250.001140, y: 127000.000000, z: 54496.772011}>
+  Edit layers count: 1
+    - Houdini_Source_Pegasus_Gentle
+
+--- SaCalobra_Detail_1_1 ---
+  Class: Landscape
+  Location: (X=475.00, Y=327975.00, Z=0.00)
+  Rotation: (P=0.00, Y=-90.00, R=0.00)
+  Scale: (X=50.0000, Y=50.0000, Z=353.9727)
+  Bounds origin: <Struct 'Vector' (0x000001C67754E360) {x: 95725.002134, y: 200975.000000, z: 60349.569219}>, box_extent: <Struct 'Vector' (0x000001C65FBBD7D0) {x: 95250.000764, y: 127000.000000, z: 30264.665370}>
+  Edit layers count: 1
+    - Houdini_Source_Pegasus_Gentle
+
+--- SaCalobra_Context_Valid ---
+  Class: Landscape
+  Location: (X=-393554.69, Y=393945.31, Z=0.00)
+  Rotation: (P=0.00, Y=-90.00, R=0.00)
+  Scale: (X=390.6250, Y=390.6250, Z=561.2485)
+  Bounds origin: <Struct 'Vector' (0x000001C65FB52F90) {x: 195.314821, y: 195.312500, z: 71554.785589}>, box_extent: <Struct 'Vector' (0x000001C65FBBD730) {x: 393750.002341, y: 393750.000000, z: 72120.430609}>
+  Edit layers count: 1
+    - Houdini_Source_Pegasus_Gentle
+

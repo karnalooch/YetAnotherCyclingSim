@@ -375,6 +375,24 @@ class ChangeClassifierTests(unittest.TestCase):
             unknown.write_text("v2\n", encoding="utf-8")
             self.assertNotEqual(first, cc.unreal_compile_fingerprint(root))
 
+    def test_fingerprint_implementation_change_requires_fresh_runtime_proof(self):
+        relative = "scripts/ci/classify_changes.py"
+        result = cc.classify_paths([relative])
+        self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_runtime)
+        self.assertFalse(result.unreal_compile)
+        self.assertEqual(result.unreal_execution_class, "runtime")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            classifier = root / relative
+            classifier.parent.mkdir(parents=True)
+            classifier.write_bytes(b"# original fingerprint implementation\n")
+            compile_before = cc.unreal_compile_fingerprint(root)
+            proof_before = cc.unreal_proof_fingerprint(root)
+            classifier.write_bytes(b"# corrected fingerprint implementation\n")
+            self.assertEqual(compile_before, cc.unreal_compile_fingerprint(root))
+            self.assertNotEqual(proof_before, cc.unreal_proof_fingerprint(root))
+
     def test_warm_plugin_build_outputs_are_not_compile_fingerprint_inputs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -434,6 +452,68 @@ class ChangeClassifierTests(unittest.TestCase):
             before = cc.unreal_compile_fingerprint(root)
             unknown.write_bytes(b"two")
             self.assertNotEqual(before, cc.unreal_compile_fingerprint(root))
+
+    def test_nested_plugin_outputs_do_not_fingerprint_their_own_build(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            project = root / "YetAnotherCyclingSim.uproject"
+            project.write_bytes(b'{"FileVersion":3}\n')
+            plugin = root / "Plugins/Runtime/HoudiniEngine"
+            source = plugin / "Source/HoudiniEngine/Private/Fixture.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"int fixture = 1;\n")
+            manifest = plugin / "HoudiniEngine.uplugin"
+            manifest.write_bytes(b'{"Version":1}\n')
+            baseline = cc.unreal_compile_fingerprint(root)
+            baseline_proof = cc.unreal_proof_fingerprint(root)
+
+            products = (
+                plugin / "Binaries/Win64/UnrealEditor-HoudiniEngine.dll",
+                plugin / "Binaries/Win64/UnrealEditor.modules",
+                plugin / "Intermediate/Build/Win64/Inc/Fixture/UHT/Fixture.gen.cpp",
+                plugin / "Intermediate/Build/Win64/Inc/Fixture/UHT/Fixture.generated.h",
+            )
+            for product in products:
+                product.parent.mkdir(parents=True, exist_ok=True)
+                product.write_bytes(b"generated first build")
+            self.assertEqual(baseline, cc.unreal_compile_fingerprint(root))
+            self.assertEqual(baseline_proof, cc.unreal_proof_fingerprint(root))
+            for product in products:
+                product.write_bytes(b"generated second build")
+            self.assertEqual(baseline, cc.unreal_compile_fingerprint(root))
+            self.assertEqual(baseline_proof, cc.unreal_proof_fingerprint(root))
+
+            for authored in (source, manifest):
+                original = authored.read_bytes()
+                authored.write_bytes(original + b"\n")
+                self.assertNotEqual(baseline, cc.unreal_compile_fingerprint(root))
+                authored.write_bytes(original)
+            self.assertEqual(baseline, cc.unreal_compile_fingerprint(root))
+
+    def test_nested_plugin_authored_and_unknown_inputs_remain_fingerprinted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plugin = root / "Plugins/Runtime/HoudiniEngine"
+            plugin.mkdir(parents=True)
+            (plugin / "HoudiniEngine.uplugin").write_bytes(b'{"Version":1}\n')
+            # UE stops plugin discovery under a discovered plugin. A descriptor
+            # inside authored source must not hide its adjacent inputs.
+            nested = plugin / "Source/Fixtures"
+            nested.mkdir(parents=True)
+            (nested / "Fixture.uplugin").write_bytes(b'{"Version":1}\n')
+            for relative in (
+                "Source/Fixtures/Binaries/vendor.lib",
+                "Source/Fixtures/Intermediate/Fixture.cpp",
+                "Resources/custom.runtime",
+                "Build/custom.runtime",
+            ):
+                with self.subTest(relative=relative):
+                    path = plugin / relative
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(b"first authored input")
+                    baseline = cc.unreal_compile_fingerprint(root)
+                    path.write_bytes(b"changed authored input")
+                    self.assertNotEqual(baseline, cc.unreal_compile_fingerprint(root))
 
     def test_embark_terrain_proof_modes(self):
         self.assertEqual(

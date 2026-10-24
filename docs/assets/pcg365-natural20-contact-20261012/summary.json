@@ -1,0 +1,361 @@
+{
+  "issue": 365,
+  "milestone": "M3",
+  "producer_sha": "1a02ac21a7fb1dbc84364843e862b186a2ea0a18",
+  "run": "D:\\yacs\\work\\pcg365\\1a02ac21a7fb1dbc84364843e862b186a2ea0a18\\natural20-contact04",
+  "completed_actions": [
+    "inspect",
+    "material",
+    "material-reload",
+    "rock-collection",
+    "rock-collection-reload",
+    "collection-contact-all"
+  ],
+  "completed_action_count": 6,
+  "contact_process_exit": 0,
+  "cases": 100,
+  "decisions": {
+    "REJECTED": 100
+  },
+  "reason_counts": {
+    "EXCESSIVE_LOCAL_SLOPE": 94,
+    "EXCESSIVE_EMBEDDING": 100,
+    "INSUFFICIENT_EXPOSED_HEIGHT": 100,
+    "INSUFFICIENT_EXPOSED_RAYS": 99,
+    "ROOT_NOT_CONVERGED": 77,
+    "EMBEDDING_NOT_CONVERGED": 93
+  },
+  "meshes": [
+    {
+      "mesh_id": "boulder_01_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 65130,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 5.442534305497247,
+        "embedding_fraction": 0.6446164245331764,
+        "exposed_height_fraction": 0.3612913278891877,
+        "exposed_ray_fraction": 0.5473279776458261,
+        "root_delta_cm": 5.38610611846525,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "boulder_01_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 65130,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.4834827891390887,
+        "embedding_fraction": 0.6561148593772733,
+        "exposed_height_fraction": 0.35274203805950205,
+        "exposed_ray_fraction": 0.5392396232996163,
+        "root_delta_cm": 0.0,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "boulder_01_03",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 65130,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 6.45976498570235,
+        "embedding_fraction": 0.6552575015429646,
+        "exposed_height_fraction": 0.34984846040208367,
+        "exposed_ray_fraction": 0.5359270942867157,
+        "root_delta_cm": 6.277200582771911,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_02_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 82558,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 3.5437941836134996,
+        "embedding_fraction": 0.7812690774776441,
+        "exposed_height_fraction": 0.41474840135831675,
+        "exposed_ray_fraction": 0.3565469713456656,
+        "root_delta_cm": 3.4608820210269187,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_02_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 82558,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 6.698340058188478,
+        "embedding_fraction": 0.8615151489484322,
+        "exposed_height_fraction": 0.3912384265152798,
+        "exposed_ray_fraction": 0.2976104272266474,
+        "root_delta_cm": 6.30254055820842,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_03_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 52084,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.17030929018073948,
+        "embedding_fraction": 0.8034422352608593,
+        "exposed_height_fraction": 0.20104185513102393,
+        "exposed_ray_fraction": 0.7146311970979444,
+        "root_delta_cm": 0.0,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_03_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 52084,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.3283220440061996,
+        "embedding_fraction": 0.7611581768669965,
+        "exposed_height_fraction": 0.2546700044959241,
+        "exposed_ray_fraction": 0.7981577893472167,
+        "root_delta_cm": 0.3283220440061996,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_03_03",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 52084,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 5.464890430303058,
+        "embedding_fraction": 0.756003334656059,
+        "exposed_height_fraction": 0.24449572562202135,
+        "exposed_ray_fraction": 0.7835093419983753,
+        "root_delta_cm": 5.310598326708714,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_04_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 46886,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 14.809393459319836,
+        "embedding_fraction": 0.8473843555309178,
+        "exposed_height_fraction": 0.25064090160368013,
+        "exposed_ray_fraction": 0.5279078141879726,
+        "root_delta_cm": 14.260448637753143,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_04_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 46886,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 3.7555470486113336,
+        "embedding_fraction": 0.8539106390506667,
+        "exposed_height_fraction": 0.2821562585341265,
+        "exposed_ray_fraction": 0.5506512301013025,
+        "root_delta_cm": 3.0791434339625994,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_04_03",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 46886,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.18829421348345932,
+        "embedding_fraction": 0.7871268423987644,
+        "exposed_height_fraction": 0.2865845636487233,
+        "exposed_ray_fraction": 0.5740540540540541,
+        "root_delta_cm": 0.0,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_05_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 84424,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.053946891785017215,
+        "embedding_fraction": 0.7890582591470588,
+        "exposed_height_fraction": 0.22027163015608833,
+        "exposed_ray_fraction": 0.582358837287003,
+        "root_delta_cm": 0.0,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_05_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 84424,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 1.1968389511748683,
+        "embedding_fraction": 0.8036212497647828,
+        "exposed_height_fraction": 0.20970121735434483,
+        "exposed_ray_fraction": 0.548064085447263,
+        "root_delta_cm": 1.1968389511748683,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_05_03",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 84424,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 18.77391116382527,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 3.114520235474629,
+        "embedding_fraction": 0.6795855186120476,
+        "exposed_height_fraction": 0.32918343067459604,
+        "exposed_ray_fraction": 0.8001336898395722,
+        "root_delta_cm": 3.058005702077935,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_06_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 103250,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 9.93714830666048,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 1.126939093832334,
+        "embedding_fraction": 0.9560557055927817,
+        "exposed_height_fraction": 0.08194243664982989,
+        "exposed_ray_fraction": 0.18136178224035143,
+        "root_delta_cm": 1.0975015615331358,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "namaqualand_boulder_06_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 103250,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 9.93714830666048,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.728435327502666,
+        "embedding_fraction": 0.9491615063822728,
+        "exposed_height_fraction": 0.09005551989345378,
+        "exposed_ray_fraction": 0.19677826910928617,
+        "root_delta_cm": 0.6464373316848651,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "rock_07_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 11256,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 5.877836180076455,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.7614257168679615,
+        "embedding_fraction": 0.9714804820184835,
+        "exposed_height_fraction": 0.10174474883813142,
+        "exposed_ray_fraction": 0.13572496263079223,
+        "root_delta_cm": 0.7412815797215444,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "rock_07_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 11256,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 5.877836180076455,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.6047922532452503,
+        "embedding_fraction": 0.9715818205857293,
+        "exposed_height_fraction": 0.10559345062115505,
+        "exposed_ray_fraction": 0.14597014925373133,
+        "root_delta_cm": 0.5831985374825308,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "rock_09_01",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 11178,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 5.877836180076455,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.021406217267212924,
+        "embedding_fraction": 0.7779840228079087,
+        "exposed_height_fraction": 0.3090578736251228,
+        "exposed_ray_fraction": 0.6018672890963654,
+        "root_delta_cm": 0.021406217267212924,
+        "valid_ground_fraction": 1.0
+      }
+    },
+    {
+      "mesh_id": "rock_09_02",
+      "sampled_pass": 0,
+      "rejected": 5,
+      "triangles": 11178,
+      "least_slope_candidate": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+      "least_slope_deg": 5.877836180076455,
+      "least_slope_metrics": {
+        "embedding_delta_cm": 0.0,
+        "embedding_fraction": 0.7820957970841721,
+        "exposed_height_fraction": 0.3091323325976555,
+        "exposed_ray_fraction": 0.5991321762349799,
+        "root_delta_cm": 0.0,
+        "valid_ground_fraction": 1.0
+      }
+    }
+  ],
+  "aggregate_process_exit": -1073741819,
+  "aggregate_status": "RECEIPT_WRITTEN_PROCESS_FAILED_NO_COMPLETION",
+  "render": "NOT_RUN",
+  "final_png_count": 0,
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "native_build": "NOT_RUN_RETAINED_BINARIES",
+  "performance": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "minimum_restart_workflow": "THREE_SESSION_PLAN_NOT_IMPLEMENTED"
+}

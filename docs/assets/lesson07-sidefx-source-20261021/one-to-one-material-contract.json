@@ -1,0 +1,736 @@
+{
+  "status": "READ_ONLY_SOURCE_CONTRACT_FOR_ISOLATED_MI_IMPLEMENTATION",
+  "observed_utc": "2026-10-21T19:48:44.306060+00:00",
+  "task_context": {
+    "issue": 365,
+    "milestone": "M3",
+    "draft_pr": 474,
+    "parent_supplied_remote_base": "0d6064147f14a89767007d381d7c292b81bdecbd",
+    "latest_native_read_source": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "latest_native_read_run": 39658443621,
+    "latest_native_read_attempt": 1,
+    "native_calls_this_analysis": 0,
+    "repo_edits": false,
+    "asset_edits": false
+  },
+  "implementation_conclusion": "Duplicate original MI_Landscape_Instance into an isolated candidate, retain its source layer/Blend tuples, reparent to retained M_Landscape_YACS for geographic visibility adaptation, bind current five texture parameters and current geography, then apply the explicitly chosen final-video unique globals. Full source globalRGB mixing and flatten0 remain a preview with known source-data/normal risks, not accepted active-material restoration.",
+  "evidence": [
+    {
+      "file": "asset-research/official-sidefx-landscape-20261021/original-material-settings.json",
+      "bytes": 28118,
+      "sha256": "2c3da8c52b69b3ee31e578639aca094f7ebbc82ebd97067d6a18ca9908c6f970"
+    },
+    {
+      "file": "asset-research/official-sidefx-landscape-20261021/parsed/parser-receipt.json",
+      "bytes": 79532,
+      "sha256": "7e49f4b0cbfc513119d906fd17b6323e62621b69995da834042bc7dbb633cf9b"
+    },
+    {
+      "file": "asset-research/official-sidefx-landscape-20261021/current-landscape-archive-comparison.json",
+      "bytes": 39605,
+      "sha256": "83a87ec85cfa52fe9342553c32b266f208f39fd5df5cbd5e58882947b6c78a3c"
+    },
+    {
+      "file": "asset-research/normal-function-inspection/resolved-source-graph.json",
+      "bytes": 654223,
+      "sha256": "a5ff45819b95cf015ca72ad480cf33094fb74ce39e93e42d2e891d6659939a9a"
+    },
+    {
+      "file": "asset-research/normal-function-inspection/M_Landscape_YACS.uasset.memory-diff.json",
+      "bytes": 1803661,
+      "sha256": "f0fba6cb7bdf56f2b8d25a459f2c3c2d7dc4eb4a4a94e182adb1a006b802f96a"
+    },
+    {
+      "file": "asset-research/lesson07-video-rewatch/observations.json",
+      "bytes": 2996,
+      "sha256": "422e687a7e90c871df557e5a3e04a3b301c68598a9d0c52e8d03e1a320b5e144"
+    },
+    {
+      "file": "asset-research/lesson07-video-rewatch/uv-rotation-trace.json",
+      "bytes": 10178,
+      "sha256": "ca08d1dff6b94ec18f803a048522888a59f673ad6df1fa3f0ec202c0b49104b5"
+    },
+    {
+      "file": "yacs/docs/assets/lesson07-sidefx-source-20261021/source-inventory-39658443621-1-bridge.json",
+      "bytes": 120838,
+      "sha256": "0be8a7f45e33972f4e68bf9038d5318d105b161dcb27eec22ddde9103149b2c0"
+    },
+    {
+      "file": "native-evidence/import-39636694686/live-import.json",
+      "bytes": 8989,
+      "sha256": "c1485abbc5cd56d51bc044c59b8ae7be23f21679ec3fe298014ccb5166542d5b"
+    },
+    {
+      "file": "asset-research/darkness-analysis/pixel-statistics.json",
+      "bytes": 14835,
+      "sha256": "7ac0bed3792f8cfa18ae4395f53bd7c6235f4a20469481bd01998e7f154e07e9"
+    },
+    {
+      "file": "asset-research/darkness-analysis/albedo-source-comparison.json",
+      "bytes": 20663,
+      "sha256": "498ff6fefd7b639b9576cbd048109a6429830d2b442d8f153dcbf4ceedcee2f6"
+    },
+    {
+      "file": "yacs/docs/assets/lesson07-appearance-20261020/receipt.json",
+      "bytes": 13590,
+      "sha256": "cae32c993d8cf5aa34581c08117e757a40c67683f19e268b4e0b1484ba6be2f6"
+    },
+    {
+      "file": "yacs/docs/assets/lesson07-surface-repair-20261021/retention-39643271947-server-lfs-readback.json",
+      "bytes": 2847,
+      "sha256": "39fe16f831f6eff5b898ec175ef9ad00765ce4ef6f921646444af78890d37879"
+    }
+  ],
+  "asset_pins": [
+    {
+      "name": "Original M_Pegasus_Landscape_Master.uasset",
+      "bytes": 211283,
+      "sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171"
+    },
+    {
+      "name": "Original MI_Landscape_Instance.uasset",
+      "bytes": 38181,
+      "sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7"
+    },
+    {
+      "name": "Retained M_Landscape_YACS.uasset",
+      "bytes": 208956,
+      "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66"
+    },
+    {
+      "name": "Shared original MF_PE_TextureAtlas_SampleNormal.uasset",
+      "bytes": 20948,
+      "sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a"
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+      "size_bytes": 40154
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "sha256": "ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57",
+      "size_bytes": 25841089
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "sha256": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94",
+      "size_bytes": 18473310
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "sha256": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+      "size_bytes": 37576130
+    },
+    {
+      "name": "Retained L_SaCalobra_Lesson07.umap lineage",
+      "bytes": 1838638056,
+      "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+      "fresh_host_read_this_analysis": false
+    }
+  ],
+  "master_comparison": {
+    "original_expression_count": 258,
+    "current_expression_count": 260,
+    "common_expression_count": 257,
+    "all_common_classes_and_connections_outputindices_channelmasks_identical": true,
+    "normalized_nested_properties_equal_count": 256,
+    "remaining_node": "MaterialExpressionMaterialAttributeLayers_0",
+    "remaining_difference": "DefaultLayers.EditorOnly typed in original, opaque RawStruct in current; runtime Layers/Blends and all other decoded properties agree after excluding only this EditorOnly field.",
+    "normalization": "ObjectProperty references resolved to referenced object names; ignore Material owner pointer, editor X/Y, and observed cross-version serialization metadata PropertyTagFlags/PropertyTypeName. Compare decoded connection producer names, output indices and masks independently.",
+    "original_only_nodes": [
+      "MaterialExpressionLandscapeGrassOutput_1"
+    ],
+    "current_only_nodes": [
+      "MaterialExpressionConstant_2",
+      "MaterialExpressionLandscapeVisibilityMask_0",
+      "MaterialExpressionMaterialFunctionCall_1"
+    ],
+    "visibility_wrapper": "LandscapeVisibilityMask_0 plus Constant_2=1 feed MatLayerBlend_OverrideOpacityMask Call_1 with Base=SetMaterialAttributes_9; current BlendMode explicitlyMasked.",
+    "preserve": "Retain visibility and removed grass-output adaptation; Allow Grass=false in both MI states. Do not copy demo opaque behavior over geographicNoData holes.",
+    "parser_limits": "Original master full binary roundtrip succeeds but its EditorOnlyData root is a RawExport. Current full UE5.8 package roundtrip fails; all260 MaterialExpression payloads independently roundtrip exactly. This is decoded core-expression equivalence, not a whole-material engine/compiler proof.",
+    "source_mi_reparent_assessment": "Justified isolated candidate: same core expressionGUID/function-caches and runtime layer references; verify preserved layer stack after engine reparent before any active assignment.",
+    "all_common_object_reference_full_paths_identical": true
+  },
+  "parameter_rows": [
+    {
+      "parameter": "Detail Brightness",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 1.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 5.0,
+      "current_native_values_in_returned_order": [
+        1
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Final-video target5. Unique global. Multiplies detail BaseColor only inside Use Terrain Colour=true branch. Isolated trial can retain current disabled RGB-mix controls; affects every class and may clip bright source albedos."
+    },
+    {
+      "parameter": "Detail Tiling",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.25,
+      "original_master_default_if_no_override": null,
+      "final_video": 0.25,
+      "current_native_values_in_returned_order": [
+        0.25
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Macro Tiling",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.05000000074505806,
+      "original_master_default_if_no_override": null,
+      "final_video": 0.05,
+      "current_native_values_in_returned_order": [
+        0.05000000074505806
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Macro Texture Distance",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 10000.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 10000.0,
+      "current_native_values_in_returned_order": [
+        10000
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Global Colour Strength",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.5,
+      "original_master_default_if_no_override": null,
+      "final_video": 0.5,
+      "current_native_values_in_returned_order": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Original global tuple(GlobalParameter,-1)=0.5. Original MI has no LayerParameter overrides of this name. Native output has five zero rows without association/index; do not assign0.5 to all five. Copy original MI to retain correct override scope."
+    },
+    {
+      "parameter": "Global Brightness",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.5,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Source MI0.5; video value not independently read. Retained native A/B identified black valid-class RGB and saved0 to avoid black patches. Restoring0.5 is isolated-preview only until sourceRGB valid."
+    },
+    {
+      "parameter": "Global Saturation",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.5,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Source MI0.5; video value not independently read. Depends on globalRGB. Keep source setting in isolated source candidate; do not claim safe active restoration before RGB repair."
+    },
+    {
+      "parameter": "Global Normal Flatten",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 0.0,
+      "current_native_values_in_returned_order": [
+        1
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Source and video0. Current1 is the retained workaround.0 enables original normal path; isolated preview/compile/readback needed, no custom graph rewrite is part of this1:1 contract."
+    },
+    {
+      "parameter": "Global Specular Scale",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 1.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 1.0,
+      "current_native_values_in_returned_order": [
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Source/video1; current0. Unique global, independent of globalRGB generation; valid isolated restoration with lighting comparison."
+    },
+    {
+      "parameter": "Specular Falloff Exponent",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.5,
+      "original_master_default_if_no_override": null,
+      "final_video": 1.0,
+      "current_native_values_in_returned_order": [
+        0.5
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "ZIP0.5, final video1. Unique global, independent of globalRGB generation. Keep explicit source-vs-final-video distinction."
+    },
+    {
+      "parameter": "UV Distort",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 4.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 1.0,
+      "current_native_values_in_returned_order": [
+        4
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "ZIP4, final video1. Perturbs four-corner ID sampling coordinates, not only detail tiling. Leaves base registered grid/ID source bytes unchanged but changes local blended boundaries."
+    },
+    {
+      "parameter": "Num IDmap Layers",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 5.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 5.0,
+      "current_native_values_in_returned_order": [
+        5
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "5 already agrees with source/video and current encoded classes."
+    },
+    {
+      "parameter": "Terrain Resolution",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 2016.0,
+      "original_master_default_if_no_override": null,
+      "final_video": 2016.0,
+      "current_native_values_in_returned_order": [
+        16000
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Keep16000. ZIP/video2016 belongs to demo; do not copy."
+    },
+    {
+      "parameter": "Terrain Scale",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": null,
+      "original_master_default_if_no_override": 200.0,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        50
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Keep50. Original master default200; original MI has no explicit override. Source MI duplication MUST set current50."
+    },
+    {
+      "parameter": "UV Rotate",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": -90.0,
+      "original_master_default_if_no_override": null,
+      "final_video": -90.0,
+      "current_native_values_in_returned_order": [
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Keep0. Demo-90 rotates Terrain Colour and all IDMap read coordinates; not a cosmetic detailUV option."
+    },
+    {
+      "parameter": "Noise_Scale",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.0005000000237487257,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        0.0005000000237487257
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Global AO Power",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 1.0,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        1
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Displacement",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 1.0,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        1
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Preserve existing1 and inactive geometry behavior; do not activate terrain/displacement authoring from this scalar alone."
+    },
+    {
+      "parameter": "Displacement_Micro",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.0,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        0
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    },
+    {
+      "parameter": "Displacement Offset",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 0.5019999742507935,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        0.5019999742507935
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "ZIP/current~0.502. Video showed an inactive unoverridden0; not a directive to enable or alter displacement."
+    },
+    {
+      "parameter": "Macro Texture Displacement",
+      "source_association": "GlobalParameter",
+      "source_index": -1,
+      "original_zip_override": 5.0,
+      "original_master_default_if_no_override": null,
+      "final_video": null,
+      "current_native_values_in_returned_order": [
+        5
+      ],
+      "current_native_association_index_exposed": false,
+      "action_note": "Retain current value: agrees with original source; no extra change justified."
+    }
+  ],
+  "original_association_contract": {
+    "global_colour_strength": {
+      "name": "Global Colour Strength",
+      "association": "GlobalParameter",
+      "index": -1,
+      "override_value": 0.5
+    },
+    "layer_global_colour_strength_overrides": [],
+    "layer_global_colour_strength_note": "No explicit source MI override for LayerParameter indices1..4; do not infer0.5 inheritance from similarly named global. Base exposes Global_Colour_Weight instead.",
+    "layer_material_selection": [
+      {
+        "association": "LayerParameter",
+        "index": 1,
+        "value": 1
+      },
+      {
+        "association": "LayerParameter",
+        "index": 2,
+        "value": 2
+      },
+      {
+        "association": "LayerParameter",
+        "index": 3,
+        "value": 3
+      },
+      {
+        "association": "LayerParameter",
+        "index": 4,
+        "value": 4
+      }
+    ],
+    "base_material_selection": "No explicit sourceMI index0 override; current native returned base0. Preserve originalbase layer rather than guessing association from orderedrows.",
+    "blend_bits": [
+      {
+        "association": "BlendParameter",
+        "index": 0,
+        "value": 1
+      },
+      {
+        "association": "BlendParameter",
+        "index": 1,
+        "value": 2
+      },
+      {
+        "association": "BlendParameter",
+        "index": 2,
+        "value": 3
+      },
+      {
+        "association": "BlendParameter",
+        "index": 3,
+        "value": 4
+      }
+    ],
+    "layers": [
+      "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.ML_PE_Landscape_Base",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer"
+    ],
+    "blends": [
+      "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+      "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape"
+    ],
+    "native_reader_limit": "61 scalar rows are ordered but do not expose association/index. No claim that the current full tuple set was decoded: the current MI UAssetAPI read failed at ReadLocMetadataObject."
+  },
+  "geographic_contract": {
+    "Terrain Resolution": 16000,
+    "Terrain Scale": 50,
+    "Offset": [
+      -8000,
+      -8000,
+      0,
+      0
+    ],
+    "UV Rotate": 0,
+    "current_texture_bindings": [
+      {
+        "name": "Normal Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Colour Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain Colour",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+        "overridden": true
+      },
+      {
+        "name": "Masks Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain IDmap",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+        "overridden": true
+      }
+    ],
+    "class_codes": [
+      0,
+      64,
+      128,
+      191,
+      255
+    ],
+    "class_order": [
+      "Grass",
+      "Grass2",
+      "Sand",
+      "Cliffs",
+      "Scree"
+    ],
+    "classification_source_mutation_authorized_by_this_report": false
+  },
+  "source_profiles": {
+    "updated_zip": {
+      "Detail Brightness": 1,
+      "UV Distort": 4,
+      "Specular Falloff Exponent": 0.5,
+      "Global Colour Strength_global_only": 0.5,
+      "Global Brightness": 0.5,
+      "Global Saturation": 0.5,
+      "Global Normal Flatten": 0,
+      "Global Specular Scale": 1
+    },
+    "final_video_unique_global_overrides_on_source_mi": {
+      "Detail Brightness": 5,
+      "UV Distort": 1,
+      "Specular Falloff Exponent": 1,
+      "Global Specular Scale": 1
+    },
+    "shared": {
+      "Detail Tiling": 0.25,
+      "Macro Tiling": 0.05,
+      "Macro Texture Distance": 10000,
+      "Num IDmap Layers": 5,
+      "Use IDmap": true,
+      "Use Terrain Colour": true,
+      "Allow Grass": false
+    },
+    "before_global_rgb_repair": "Source MI is valid to prepare/compile/readback in isolation. Current-data render is an A/B candidate only; inherited source GlobalBrightness0.5 is known to expose validblackRGB. A separate control using current MI with its existing RGB-bypass values can test unique globals without claiming fullsource restoration.",
+    "important_switch_trap": "Use Terrain Colour=false bypasses the whole global processing branch INCLUDING DetailBrightness. Do not claim DetailBrightness5 fixes darkness in that bypass configuration."
+  },
+  "darkness": {
+    "confirmed_source_contribution": "Imported achromatic dark_rock_02 median linear Rec.709 Y=0.034340; original source=0.034490. 94.75% of pixels are below0.05. Neutralization preserves luminance with mean absolute quantization delta0.00024701; no double gamma or mask-packing error was found in that pinned offline analysis.",
+    "ao": "Imported AO median0.960784; roughness median0.823529. These map distributions do not isolate final lighting or shadow contribution.",
+    "native_evidence": "Same-camera surface-before.jpg and surface-after.jpg from run39636694686 were visually rechecked: cliff surfaces darken strongly, while vertical streaks and yellow-green ground remain. The import changed Cliffs D/N/M and Grass N/M; MI, master and lighting parameters were unchanged.",
+    "grade": "The shared Colour array retained AdjustHue25, AdjustSaturation0.7 and AdjustBrightness1.1 from pinned20October readback plus guarded import success. The grade is not independently printed by the latest typed texture read. It is a YACS adaptation affecting all classes; an unchanged grade alone does not explain the new before/after darkening.",
+    "video_difference": "Final video Detail Brightness5 versus current1 is a valid source-exact isolated test, not proof that every class can be multiplied by5 without clipping.",
+    "global_black_pixels": "Retained20October native A/B connected black valid-class Terrain Colour to Global Brightness0.5 patches;0 was saved to remove the symptom. The upstream generation cause is NOT_ISOLATED and no source RGB repair occurred in later imports or read-only inventories.",
+    "global_graph_connections": {
+      "detail_rgb": "Multiply_3=(GetMaterialAttributes_0.BaseColor)*DetailBrightness before RGBtoHSV",
+      "Lerp_3Color_Call13_inputs": [
+        "detail HSV V",
+        "2*detail HSV V*global HSV V",
+        "global HSV V",
+        "Global Brightness"
+      ],
+      "saturation": "Lerp_2(detail HSV S,global HSV S,GlobalSaturation)",
+      "hue_rgb_mix": "Add_0=(1-GlobalColourStrength)*HSVtoRGB(detailHue,mixedS,mixedV)+GlobalColourStrength*HSVtoRGB(globalHue,mixedS,mixedV)"
+    },
+    "function_body_limit": "The Lerp_3Color engine function interior was not present in the supplied project and was not reread. Caller inputs above are exact; the complete engine-function formula is not newly proven. Native0.5-to-0 A/B is the empirical black-patch evidence.",
+    "not_proved": "Complete contribution of GPU compression, array grade, lighting/shadows and preimport Cliffs raster; no full causal attribution from JPEGs."
+  },
+  "pbr_family_requirement": {
+    "same_five_exact_megascans_ids_required_for_structure": false,
+    "same_five_exact_megascans_ids_required_for_source_texture_identity": true,
+    "reason": "The original system indexes matching Colour/Normal/ORD maps per class. Five coherent current families satisfy the array interface without matching the video assets. Source identity and identical appearance remain different claims. Five slices cover active indices0..4; the video uses eight entries including three unused diagnostic slots. Do not replace current PBR arrays with the diagnostic8/1/1 ZIP arrays.",
+    "current_array_sources_from_saved_import": {
+      "Colour": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Colour.T_Grass_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.T_Grass2_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Colour.T_Sand_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Colour.T_Cliffs_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Colour.T_Scree_Colour"
+      ],
+      "Normal": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Normal.T_Grass_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.T_Grass2_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Normal.T_Sand_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Normal.T_Cliffs_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Normal.T_Scree_Normal"
+      ],
+      "Masks": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Masks.T_Grass_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.T_Grass2_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Masks.T_Sand_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Masks.T_Cliffs_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks.T_Scree_Masks"
+      ]
+    },
+    "latest_native_array_settings": [
+      {
+        "name": "TA_Colour_Unified",
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+        "width": 2048,
+        "height": 2048,
+        "source_width": 2048,
+        "source_height": 2048,
+        "pixel_format": "<n/a>",
+        "compression": "TC_Default",
+        "srgb": true,
+        "virtual_texture_streaming": false,
+        "lod_group": "TEXTUREGROUP_World",
+        "filter": "TF_Default",
+        "mip_gen": "TMGS_FromTextureGroup",
+        "lod_bias": 0,
+        "virtual_streaming": false,
+        "required_sampler": "SAMPLERTYPE_Color(0)"
+      },
+      {
+        "name": "TA_Normal_Unified",
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+        "width": 2048,
+        "height": 2048,
+        "source_width": 2048,
+        "source_height": 2048,
+        "pixel_format": "<n/a>",
+        "compression": "TC_Normalmap",
+        "srgb": false,
+        "virtual_texture_streaming": false,
+        "lod_group": "TEXTUREGROUP_HierarchicalLOD",
+        "filter": "TF_Default",
+        "mip_gen": "TMGS_FromTextureGroup",
+        "lod_bias": 0,
+        "virtual_streaming": false,
+        "required_sampler": "SAMPLERTYPE_Normal(3)"
+      },
+      {
+        "name": "TA_Masks_Unified",
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+        "width": 2048,
+        "height": 2048,
+        "source_width": 2048,
+        "source_height": 2048,
+        "pixel_format": "<n/a>",
+        "compression": "TC_Masks",
+        "srgb": false,
+        "virtual_texture_streaming": false,
+        "lod_group": "TEXTUREGROUP_World",
+        "filter": "TF_Default",
+        "mip_gen": "TMGS_FromTextureGroup",
+        "lod_bias": 0,
+        "virtual_streaming": false,
+        "required_sampler": "SAMPLERTYPE_Masks(4)"
+      }
+    ],
+    "settings_limits": "The latest typed read does not expose SourceTextures, GPU format or actual function sampler nodes. The saved-import receipt and parser provide separately scoped evidence."
+  },
+  "video_evidence": {
+    "url": "https://vimeo.com/888569514",
+    "transcript_sha256": "2f0c5e8292219b145ab59ecb173f706bcced71bec15622cb0e926c500a32fa80",
+    "frames": [
+      {
+        "time_seconds": 1364.0,
+        "segment": 227,
+        "segment_start": 1362.2332650000037,
+        "offset": 1.766734999996288,
+        "file": "frame-1364.000.png",
+        "bytes": 1759304,
+        "sha256": "85980008ba8e65001bf096fc12a5b569d74d844cc02530d4d4041b4b3d99a81d"
+      },
+      {
+        "time_seconds": 1463.0,
+        "segment": 243,
+        "segment_start": 1458.099927000005,
+        "offset": 4.900072999995018,
+        "file": "frame-1463.000.png",
+        "bytes": 1426054,
+        "sha256": "c2d869a2a0272cf2fc5cd8c957b4008094c0bc49b0ab49c9a02dc09e6bb141dd"
+      },
+      {
+        "time_seconds": 1542.0,
+        "segment": 256,
+        "segment_start": 1536.199923000006,
+        "offset": 5.800076999993962,
+        "file": "frame-1542.000.png",
+        "bytes": 1328091,
+        "sha256": "f610de7322ce271c0b018d42d996d9cfcad9cb50311b007c2e4ee05bcad99dbc"
+      }
+    ],
+    "detail_brightness_final_time": "24:23",
+    "specular_restoration_time": "25:42",
+    "idmap_settings_times": [
+      "15:50",
+      "16:22",
+      "17:20"
+    ],
+    "colour_srgb_reenabled_time": "22:17–22:20",
+    "material_internal_scope_excluded_time": "01:01–01:07"
+  },
+  "technical_pass": false,
+  "native_candidate_executed": false,
+  "active_material_modified": false
+}

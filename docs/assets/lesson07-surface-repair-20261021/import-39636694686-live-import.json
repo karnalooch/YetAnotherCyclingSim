@@ -1,0 +1,251 @@
+{
+  "status": "SURFACE_REPAIR_SAVED_NATIVE_READBACK_PENDING_VISUAL",
+  "manifest_sha256": "e8e0ae6cbd752b6b564a67b830aa16a5c4dbb01db3af9792963e8c6121bc88a6",
+  "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+  "before": {
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_0_0": {
+      "location": [
+        -406425.0,
+        -25.01220703125,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_1_0": {
+      "location": [
+        -24.98779296875,
+        -25.01220703125,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_0_1": {
+      "location": [
+        -406425.0,
+        406375.0,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_1_1": {
+      "location": [
+        -24.98779296875,
+        406375.0,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    }
+  },
+  "array_backups": {
+    "Colour": {
+      "file": "TA_Colour_Unified.uasset",
+      "size_bytes": 24178947,
+      "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf"
+    },
+    "Normal": {
+      "file": "TA_Normal_Unified.uasset",
+      "size_bytes": 40441798,
+      "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1"
+    },
+    "Masks": {
+      "file": "TA_Masks_Unified.uasset",
+      "size_bytes": 12124066,
+      "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8"
+    }
+  },
+  "saved": true,
+  "classification_changed": false,
+  "terrain_changed": false,
+  "map_saved": false,
+  "material_instance_changed": false,
+  "normal_flatten_preserved": true,
+  "visual_acceptance": false,
+  "fresh_reopen_verified": false,
+  "failure_count": 0,
+  "import_inputs": {
+    "Grass_Normal": "T_Grass_Normal.png",
+    "Grass_Masks": "T_Grass_Masks.png",
+    "Cliffs_Colour": "T_Cliffs_Colour.png",
+    "Cliffs_Normal": "T_Cliffs_Normal.png",
+    "Cliffs_Masks": "T_Cliffs_Masks.png"
+  },
+  "after": {
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_0_0": {
+      "location": [
+        -406425.0,
+        -25.01220703125,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_1_0": {
+      "location": [
+        -24.98779296875,
+        -25.01220703125,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_0_1": {
+      "location": [
+        -406425.0,
+        406375.0,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07:PersistentLevel.SaCalobra_Unified_1_1": {
+      "location": [
+        -24.98779296875,
+        406375.0,
+        0.0
+      ],
+      "scale": [
+        49.99999701976776,
+        49.99999701976776,
+        561.389892578125
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+      "nanite": false,
+      "components": 1024
+    }
+  },
+  "changed_slots": [
+    0,
+    3
+  ],
+  "grass_colour_preserved": true,
+  "other_slots_preserved": [
+    1,
+    2,
+    4
+  ],
+  "scalar_readback": {
+    "Global Normal Flatten": 1.0,
+    "Macro Tiling": 0.05000000074505806
+  },
+  "imported": {
+    "Grass_Normal": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Normal.T_Grass_Normal",
+    "Grass_Masks": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Masks.T_Grass_Masks",
+    "Cliffs_Colour": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Colour.T_Cliffs_Colour",
+    "Cliffs_Normal": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Normal.T_Cliffs_Normal",
+    "Cliffs_Masks": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Masks.T_Cliffs_Masks"
+  },
+  "array_sources": {
+    "Colour": [
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Colour.T_Grass_Colour",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.T_Grass2_Colour",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Colour.T_Sand_Colour",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Colour.T_Cliffs_Colour",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Colour.T_Scree_Colour"
+    ],
+    "Normal": [
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Normal.T_Grass_Normal",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.T_Grass2_Normal",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Normal.T_Sand_Normal",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Normal.T_Cliffs_Normal",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Normal.T_Scree_Normal"
+    ],
+    "Masks": [
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Masks.T_Grass_Masks",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.T_Grass2_Masks",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Masks.T_Sand_Masks",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Masks.T_Cliffs_Masks",
+      "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks.T_Scree_Masks"
+    ]
+  },
+  "saved_array_hashes": {
+    "Colour": "ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57",
+    "Normal": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+    "Masks": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94"
+  }
+}

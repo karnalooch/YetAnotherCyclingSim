@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_STAGE4A_SOURCE_OBSERVATIONS_RETAINED",
+  "run_id": 39747236507,
+  "job_id": 119718642669,
+  "artifact": {
+    "id": 12411623446,
+    "bytes": 2167,
+    "sha256": "69f63981f8c74a354cd947c7dfe1798c2fbcab99c72d3d9fe4d90861febb717f"
+  },
+  "observation": {
+    "status": "READ_ONLY_SOURCE_METADATA_OBSERVED_NOT_COOK_ADMISSION",
+    "commit": "e81d01e89c8eecf12c9547ddb14012c3c38376c6",
+    "profile": "STAGE4A_SOURCE_METADATA_ONLY",
+    "memory_before": {
+      "observed_utc": "2026-10-22T08:22:34.0909462Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 16554868736,
+      "available_commit_bytes": 53218320384,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "memory_after": {
+      "observed_utc": "2026-10-22T08:22:40.5758616Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 16589434880,
+      "available_commit_bytes": 53255008256,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "stage1": {
+      "file": {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 519575557,
+        "modified_utc": "2026-10-19T06:49:41.8043940Z",
+        "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952"
+      },
+      "accepted_size_bytes": 519575557,
+      "accepted_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+      "accepted_pin_matches": true
+    },
+    "stage2": {
+      "file": {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 1167222140,
+        "modified_utc": "2026-10-19T07:01:06.4195101Z",
+        "sha256": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8"
+      },
+      "hash_limit_bytes": 6442450944,
+      "producer_sha_match": true,
+      "previously_accepted_pin_exists": false,
+      "source_lineage_independently_verified": false
+    },
+    "producer_receipts": {
+      "stage1": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 608,
+          "modified_utc": "2026-10-19T06:49:42.9496429Z",
+          "sha256": "a4a0c81d6e8a80a598b7922a83c2a528c5c34988b8218007ec8761ade35dc2f7"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage1_base",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+          "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+          "statistics": {
+            "height": {
+              "min": -1.2999999523162842,
+              "max": 1437.158203125,
+              "mean": 418.9786798986856,
+              "count": 256000000
+            },
+            "alpha": {
+              "min": 0,
+              "max": 1.0001100301742554,
+              "mean": 0.9759627641636786,
+              "count": 256000000
+            }
+          }
+        },
+        "independently_accepted": false
+      },
+      "stage2": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 695,
+          "modified_utc": "2026-10-19T07:01:18.2809760Z",
+          "sha256": "80a0eaa341af90ad86918ec8c969a7b6874f0dabfe16a8850e46f57b3de24d18"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage2_masks",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+          "sha256": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
+          "statistics": {
+            "grass_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.3950157924123836,
+              "count": 256000000
+            },
+            "sand_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.07240492912124141,
+              "count": 256000000
+            },
+            "cliff_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.30394656722987845,
+              "count": 256000000
+            },
+            "ramp_layer": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.4128230467630489,
+              "count": 256000000
+            }
+          }
+        },
+        "independently_accepted": false
+      },
+      "pre_id": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 944,
+          "modified_utc": "2026-10-19T12:34:07.4418681Z",
+          "sha256": "4f810017445d53626daf8b3b4c81a8d087d400d09e75823460e14764b6679ffc"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage4_materials_and_tints",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.bgeo.sc",
+          "sha256": "b97969d87cc887bdea28b5f3e5b04ce7fc20e15f6cec682c1b46f21f4acda45e",
+          "statistics": {
+            "height": {
+              "min": -1.2999999523162842,
+              "max": 1437.158203125,
+              "mean": 418.9890780196411,
+              "count": 256000000
+            },
+            "r": {
+              "min": 0,
+              "max": 0.7616127729415894,
+              "mean": 0.3320504529042193,
+              "count": 256000000
+            },
+            "g": {
+              "min": 0,
+              "max": 0.7639183402061462,
+              "mean": 0.3181091296490887,
+              "count": 256000000
+            },
+            "b": {
+              "min": 0,
+              "max": 0.7685295343399048,
+              "mean": 0.24294083889350576,
+              "count": 256000000
+            }
+          },
+          "layers": [
+            "height",
+            "mask",
+            "Alpha",
+            "r",
+            "g",
+            "b",
+            "roughness",
+            "ramp",
+            "grass",
+            "grass 2",
+            "sand",
+            "cliffs",
+            "scree"
+          ]
+        },
+        "independently_accepted": false
+      }
+    },
+    "ginfo_tool": {
+      "file": {
+        "path": "D:\\yacs\\tools\\houdini-22.0.466\\bin\\ginfo.exe",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 4369200,
+        "modified_utc": "2026-10-08T15:27:54.0000000Z",
+        "sha256": "be4c5d9d9753483596d7eb9664dab27fc816d0ba912597d78a6ce9061689d31d"
+      },
+      "file_version": "22, 0, 0, 466",
+      "version_matches_known_installation": false,
+      "provenance_basis": "FIXED_EXISTING_INSTALLATION_AND_FILE_VERSION",
+      "accepted_executable_sha256_pin_exists": false
+    },
+    "headers": [
+      {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+        "arguments": [
+          "-S",
+          "-u",
+          "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc"
+        ],
+        "status": "PENDING_TOOL_PROVENANCE",
+        "started": false,
+        "exit_code": null,
+        "time_limit_seconds": 30,
+        "output_limit_bytes": 65536,
+        "stdout": "",
+        "stderr": "",
+        "source_metadata_unchanged": null
+      },
+      {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+        "arguments": [
+          "-S",
+          "-u",
+          "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc"
+        ],
+        "status": "PENDING_TOOL_PROVENANCE",
+        "started": false,
+        "exit_code": null,
+        "time_limit_seconds": 30,
+        "output_limit_bytes": 65536,
+        "stdout": "",
+        "stderr": "",
+        "source_metadata_unchanged": null
+      }
+    ],
+    "final_cache_metadata": {
+      "path": "D:\\yacs\\work\\lesson06-unified-20261019\\final_unified_idmap.bgeo.sc",
+      "status": "METADATA_ONLY",
+      "bytes": 4808520505,
+      "modified_utc": "2026-10-19T12:39:57.4343723Z",
+      "sha256": null
+    },
+    "full_geometry_load_requested": false,
+    "hou_imported": false,
+    "hip_loaded": false,
+    "terrain_cook_requested": false,
+    "cache_written": false,
+    "editor_started_or_stopped": false,
+    "project_files_written": false,
+    "source_profile_admitted": false,
+    "performance_pass": false
+  },
+  "interpretation": {
+    "stage1_current_bytes_match_accepted_pin": true,
+    "stage2_current_bytes_match_local_producer_receipt": true,
+    "stage2_historical_independent_lineage_verified": false,
+    "ginfo_header_not_executed": "Windows FileVersion reports 22, 0, 0, 466; the reader incorrectly expected build component 466.",
+    "full_cache_hashed": false,
+    "native_crop_extracted": false,
+    "colour_canary_run": false,
+    "production_colour_repaired": false,
+    "lesson07_technical_pass": false
+  }
+}

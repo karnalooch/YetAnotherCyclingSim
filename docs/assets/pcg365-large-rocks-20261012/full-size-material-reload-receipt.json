@@ -1,0 +1,69 @@
+{
+  "action": "material-reload",
+  "binding_readback": {
+    "component_checked": true,
+    "derived_mesh": "/Game/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.SM_Boulder_ForgeDiagnostic",
+    "material": {
+      "TileSizeCm": 400.0,
+      "displacement_connected": null,
+      "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
+      "instance": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/88750577705f/MI_MaterialForge.MI_MaterialForge",
+      "max_displacement_world_m": null,
+      "nanite_tessellation_enabled": false,
+      "normal_space_readback": {
+        "function_interior_branch_semantics": "NOT_VERIFIED",
+        "function_package_identity": "BOUND_BY_SAVED_DIRECT_DEPENDENCIES",
+        "master_tangent_space_normal": true,
+        "world_aligned_normal_world_space_input": false
+      },
+      "parent": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/88750577705f/M_MaterialForge.M_MaterialForge",
+      "projection": "native_world_aligned_4m",
+      "protected_constant_and_displacement_readback": "UNAVAILABLE",
+      "rock_appearance": {
+        "physical_tile_cm": 400.0,
+        "recipe": "LEGACY_BASELINE"
+      },
+      "shader_gpu_compilation_verified": false,
+      "source_audited_geometry_readback": {
+        "basis": "UE5.8.2 WPO fallback and tessellation compiler guard with loaded master/instance readback; not GPU parity or all-deformer proof",
+        "displacement_connected": null,
+        "displacement_default_scalar": 0.5,
+        "displacement_root_readback": "UNAVAILABLE_PYTHON_ENUM",
+        "instance_tessellation_override": false,
+        "max_displacement_world_m": 0.0,
+        "nanite_tessellation_enabled": false,
+        "status": "SOURCE_AUDITED_ZERO_WPO_TESSELLATION_DISPLACEMENT_READBACK",
+        "use_material_attributes": false,
+        "wpo_default_world_m": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "world_aligned_functions": [
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture"
+      ],
+      "wpo_connected": false
+    },
+    "performance_pass": false,
+    "placement": false,
+    "qualification_status": "PENDING",
+    "status": "ISOLATED_NATIVE_MATERIAL_BINDING_READBACK",
+    "terrain_contact": "NOT_RUN",
+    "visual_accepted": false
+  },
+  "code_sha": "8fef0e99041df25d52e3aa3ad32355b76132aa1f",
+  "issue": 365,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "schema_version": 1,
+  "status": "MATERIAL_BINDING_FRESH_READBACK",
+  "terrain_contact": "NOT_RUN"
+}

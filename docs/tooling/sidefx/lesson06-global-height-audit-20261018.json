@@ -1,0 +1,81 @@
+{
+  "stage": "final",
+  "tiles": [
+    {
+      "name": "SaCalobra_Detail_0_0",
+      "source_baseline": "BIT_EXACT_REGISTERED_SOURCE_WITH_ORIGINAL_PADDING",
+      "samples": 19363691,
+      "max_abs_source_delta_m": 0.509857177734375,
+      "above_2m": 0,
+      "source_code_mismatches": 6744221,
+      "masks": {
+        "mask": "BIT_EXACT",
+        "visibility": "BIT_EXACT"
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_1_0",
+      "source_baseline": "BIT_EXACT_REGISTERED_SOURCE_WITH_ORIGINAL_PADDING",
+      "samples": 19363691,
+      "max_abs_source_delta_m": 0.509246826171875,
+      "above_2m": 0,
+      "source_code_mismatches": 8832859,
+      "masks": {
+        "mask": "BIT_EXACT",
+        "visibility": "BIT_EXACT"
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_0_1",
+      "source_baseline": "BIT_EXACT_REGISTERED_SOURCE_WITH_ORIGINAL_PADDING",
+      "samples": 19363691,
+      "max_abs_source_delta_m": 0.47119140625,
+      "above_2m": 0,
+      "source_code_mismatches": 7822825,
+      "masks": {
+        "mask": "BIT_EXACT",
+        "visibility": "BIT_EXACT"
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_1_1",
+      "source_baseline": "BIT_EXACT_REGISTERED_SOURCE_WITH_ORIGINAL_PADDING",
+      "samples": 19363691,
+      "max_abs_source_delta_m": 0.510986328125,
+      "above_2m": 0,
+      "source_code_mismatches": 4787865,
+      "masks": {
+        "mask": "BIT_EXACT",
+        "visibility": "BIT_EXACT"
+      }
+    },
+    {
+      "name": "SaCalobra_Context_Valid",
+      "source_baseline": "BIT_EXACT_REGISTERED_SOURCE_WITH_ORIGINAL_PADDING",
+      "samples": 4068289,
+      "max_abs_source_delta_m": 0.36260223388671875,
+      "above_2m": 0,
+      "source_code_mismatches": 1225771,
+      "masks": {
+        "mask": "BIT_EXACT",
+        "visibility": "BIT_EXACT"
+      }
+    }
+  ],
+  "limit_m": 2.0,
+  "source_hashes": {
+    "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\source_working_05m.bgeo.sc": "01dd245efdcedde5352b9142905bc53aa43c2794231039ab8bca0893d18690c0",
+    "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\Pegasus\\Landscape\\Landscape Heightfield Layers\\Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc": "de46c2f2d0ea12c7ca937edafdc70f70b1b0504e1d4015092a7c72bcf1adccd2",
+    "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_working_material_05m.bgeo.sc": "afe0dbf675b3bf81066b7cdffbf1fae6867c57e1ff7cea751f32d4701640a300",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_0.bgeo.sc": "c3493cd71fdab4372c59ea78e16cfcd47da92852604e5630b4ab026e6d0dc351",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_0.bgeo.sc": "dd98506eaf50e515bdff2a2859827fac1c0ac834bf3c790042b456bc057ec576",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_1.bgeo.sc": "060b7395d52267f504756363a3b182a54326335657ad868a36b17b136f1f1d67",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_1.bgeo.sc": "063cf62e6da1943c7c38560e4f0c58bc5e492704dd2a42f57a57012347de3964",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Context_Valid.bgeo.sc": "7d9d17ee60c58542e0599e12ec7d26032ecc6513b8dac10fb130cfb03fa6ec89",
+    "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\context_source.bgeo.sc": "cbab49ef798a91891602a085d2a8347de69e07344e5232c85190d9ad59377ae5",
+    "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_context_material.bgeo.sc": "54e8d16351083d8b96933ff4801d64bdd9cb779ef83bfdb976222a20d45577a7"
+  },
+  "maximum_m": 0.510986328125,
+  "total_samples": 81523053,
+  "status": "PASS"
+}

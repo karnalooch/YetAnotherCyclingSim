@@ -5,9 +5,10 @@
 **Owned domain:** `road-earthworks`
 
 ## Mission
-source-aligned road mesh, BOB CUT/FILL, transitions and contact.
+Source-aligned road and BOB earthworks constraints, transitions and contact; new geometry execution uses a verified SideFX/Houdini recipe. No road generation is included in the current terrain-only task.
 
 ## Read only the required authority
+- [`docs/tooling/sidefx/README.md`](../../../docs/tooling/sidefx/README.md)
 - [`docs/WORLD_BUILDING_BIBLE.md`](../../../docs/WORLD_BUILDING_BIBLE.md)
 - [`docs/STAGE_3_ROUTE_GEOMETRY_CONTRACT.md`](../../../docs/STAGE_3_ROUTE_GEOMETRY_CONTRACT.md)
 - [`docs/ROAD_PHYSICS_PROFILE.md`](../../../docs/ROAD_PHYSICS_PROFILE.md)

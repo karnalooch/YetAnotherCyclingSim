@@ -1,0 +1,16 @@
+=== START TEST_CACHE_WITH_PLUGINS ===
+Target landscape: SaCalobra_Detail_0_0
+Existing edit layers: [Name("Houdini_Source_Pegasus_Gentle")]
+Creating Layer1_Manual via sop_PE_Load_Landscape_2 bake...
+Layers after load bake: [Name("Houdini_Source_Pegasus_Gentle"), Name("Layer1_Manual")]
+Applying sculpt mound at <Struct 'Vector' (0x0000023AD6DDCBA0) {x: -95000.000000, y: -53000.000000, z: 30000.000000}> (r=40.0m, delta=+4.5m)...
+apply_manual_sculpt_mound returned: True
+wrapper_cache.set_input_at_index(0, inp0) returned: True
+Recooking wrapper_cache...
+wrapper_cache.recook() returned: True
+Processing wrapper_cache synchronous...
+Post-cook last_error: 'None'
+Triggering button parameter 'execute'...
+trigger_button_parameter result: True
+Post-execute last_error: 'None'
+Test complete successfully!

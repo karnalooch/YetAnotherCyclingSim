@@ -1,0 +1,37 @@
+{
+  "collection_path": "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/DA_Rocks",
+  "entrypoint": "build_pcg365_world.py --mode build-pcgex",
+  "implementation": "scripts/worldgen/pcg365_pcgex_graph.py",
+  "placement_logic": "EXISTING_PCG_AND_PCGEX_NODES_ONLY",
+  "policy": {
+    "embed_along_normal_cm": 5.0,
+    "id": "PCG365_PCGEX_SLOPE_ALIGNED_PREVIEW_V3",
+    "maximum_slope_degrees": 42.0,
+    "seed": 36501,
+    "source_clearance_cm": 50.0,
+    "support_plane_tolerance_cm": 20.0,
+    "support_status": "PCGEX_FIVE_PROBE_SCREEN_NOT_V2_CONTACT_QUALIFICATION",
+    "uniform_scale": 1.0
+  },
+  "radius_cm": 93.89170245394254,
+  "stages": [
+    "exact source points",
+    "native source mask filters",
+    "Landscape projection and alignment",
+    "native slope filter",
+    "PCGEx collection/staging/selector",
+    "road primitive sphere sweep",
+    "PCGEx self pruning",
+    "four native support probes",
+    "embedding",
+    "staged mesh spawner"
+  ],
+  "toolsets": [
+    "PCGExAssistant.PCGExToolset",
+    "PCGToolset.PCGToolset",
+    "editor_toolset.toolsets.asset.AssetTools",
+    "editor_toolset.toolsets.object.ObjectTools",
+    "editor_toolset.toolsets.static_mesh.StaticMeshTools",
+    "editor_toolset.toolsets.scene.SceneTools"
+  ]
+}

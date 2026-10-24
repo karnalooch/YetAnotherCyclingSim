@@ -1,0 +1,69 @@
+{
+  "status": "SOURCE_SURFACES_DIFFER_AT_SAME_XZ",
+  "houdini": "22.0.466",
+  "method": "Working native perimeter samples versus hou.Volume.sample Context at identical world positions; continuous volume interpolation, not UE triangulated surface",
+  "samples_including_duplicate_corners": 33966,
+  "working_lattice": {
+    "resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "origin": [
+      -1771.25,
+      0.0,
+      3144.25
+    ],
+    "x": [
+      0.5,
+      0.0,
+      0.0
+    ],
+    "y": [
+      0.0,
+      0.0,
+      -0.5
+    ]
+  },
+  "context_lattice": {
+    "resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "origin": [
+      -3998.046875,
+      0.0,
+      3998.046875
+    ],
+    "x": [
+      3.90625,
+      0.0,
+      0.0
+    ],
+    "y": [
+      0.0,
+      0.0,
+      -3.90625
+    ]
+  },
+  "mean_abs_m": 0.5928942084450413,
+  "max_abs_m": 39.300689697265625,
+  "over_0_05m": 28832,
+  "worst": {
+    "position_houdini_m": [
+      1805.2501220703125,
+      0.0,
+      326.2499694824219
+    ],
+    "working_m": 342.1655578613281,
+    "context_m": 381.46624755859375
+  },
+  "source_sha256": {
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2"
+  },
+  "height_or_mask_written": false,
+  "hip_loaded": false,
+  "terrain_cooked": false
+}

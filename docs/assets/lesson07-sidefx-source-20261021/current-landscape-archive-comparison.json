@@ -1,0 +1,801 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-10-21T19:30:42.089994+00:00",
+  "scope": "Read-only comparison of original archive Landscape packages against GitHub commit tree; no editor or LFS object readback.",
+  "repository": "karnalooch/YetAnotherCyclingSim",
+  "commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+  "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "archive_inventory_sha256": "3be24582dca0d1cc4d821ee627c7208703632a289697fa2c017833b91f2e46ae",
+  "contents_url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/contents/Content/PegasusDemo/Materials?ref=5869953cc0924b5078e2067e55336d720f3e6ea7",
+  "landscape_tree_sha1": "5af7bc19b068652abc9fac69525e9277011839c3",
+  "tree_url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/5af7bc19b068652abc9fac69525e9277011839c3?recursive=1",
+  "tree_truncated": false,
+  "remote_tree_entry_count": 42,
+  "remote_blob_count": 37,
+  "original_uasset_count": 37,
+  "all_extracted_original_hashes_and_sizes_match_inventory": true,
+  "canonical_pointer_template": "version https://git-lfs.github.com/spec/v1\noid sha256:<original_sha256>\nsize <original_size_decimal>\n",
+  "git_blob_oid_method": "SHA1(ASCII(\"blob \"+decimal byte length)+NUL+exact blob bytes)",
+  "comparison_counts": {
+    "CANONICAL_LFS_POINTER_MATCH": 37,
+    "RAW_BLOB_MATCH": 0,
+    "MISSING": 0,
+    "DIFFERENT_OR_NONCANONICAL_POINTER": 0
+  },
+  "all_37_originals_referenced_exactly": true,
+  "lfs_binary_downloaded": false,
+  "lfs_server_object_availability_verified": false,
+  "windows_workspace_bytes_verified": false,
+  "unreal_invoked": false,
+  "active_landscape_modified": false,
+  "repository_modified": false,
+  "limitations": [
+    "A matching canonical LFS pointer establishes the exact original SHA256 and byte-size recorded in the immutable repository commit.",
+    "This metadata-only comparison does not verify LFS server object availability, downloaded Windows workspace bytes, loaded editor state, or visual correctness."
+  ],
+  "files": [
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BilinearBlend.uasset",
+      "archive_size_bytes": 13914,
+      "archive_sha256": "f67f4057eba49d734c6dcd54e260f17a4edc350ed713d8af85f12942174dc64d",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "793893ea10ac0b804b42716a1bcacfed012e6137",
+      "expected_raw_git_blob_sha1": "f8984926df84017960cfc5aff97b9be1a2a6f65c",
+      "remote_git_blob_sha1": "793893ea10ac0b804b42716a1bcacfed012e6137",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BitUnpack.uasset",
+      "archive_size_bytes": 24620,
+      "archive_sha256": "1e50ba670a62ae0f7520af773e5454491691ac7e9b423069cd9ff2e9912c2209",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "5c6ca868a3af561eeeb36814bc34d7202fc6d299",
+      "expected_raw_git_blob_sha1": "46f02286bea6d282fb18f3feef3d5b8f8a44fb49",
+      "remote_git_blob_sha1": "5c6ca868a3af561eeeb36814bc34d7202fc6d299",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Bitpack.uasset",
+      "archive_size_bytes": 49072,
+      "archive_sha256": "3e2760d864a92f22b65db568831ed5c05783cbd60e00e8515b68290aea09ae7f",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "c9a0903dc1d3cad6ecce902e47e6a51b479c114a",
+      "expected_raw_git_blob_sha1": "4bf908643c82d7308eaf393c16a3260a1efdbebc",
+      "remote_git_blob_sha1": "c9a0903dc1d3cad6ecce902e47e6a51b479c114a",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BlendLayers.uasset",
+      "archive_size_bytes": 15602,
+      "archive_sha256": "b4c8c26908bc0b3da33d60ce10b07e395700cf5aa080871e42a75a4770562acb",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "6d4f8038f9f90f8d5a6b2afd72221f56d9961942",
+      "expected_raw_git_blob_sha1": "6844e206b9dacc6fdbfa0cd62d50f48fc2e323fb",
+      "remote_git_blob_sha1": "6d4f8038f9f90f8d5a6b2afd72221f56d9961942",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Encode_IDS.uasset",
+      "archive_size_bytes": 13448,
+      "archive_sha256": "602d5f86b350da1f4850da3162d1e6ad68c43c51b5fb67c961d2971109511b92",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "36ea9f5da42851a65f65eeb0837539a0d00ee1a7",
+      "expected_raw_git_blob_sha1": "918e50d9a0a86cfd64fc7b0fb3bcb75e3e0c4c16",
+      "remote_git_blob_sha1": "36ea9f5da42851a65f65eeb0837539a0d00ee1a7",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Extract_Parmsets.uasset",
+      "archive_size_bytes": 21828,
+      "archive_sha256": "cce52f8d882e1c246de7b87e22b0a349a4c07e41ab6cad8f7fdf144ec936decd",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "01557a24ec70eaa8e1203ec89d5692268695a9ac",
+      "expected_raw_git_blob_sha1": "1b82aa8ab28278ed3b982097671c57ab935c203e",
+      "remote_git_blob_sha1": "01557a24ec70eaa8e1203ec89d5692268695a9ac",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_ID_Unpack.uasset",
+      "archive_size_bytes": 18867,
+      "archive_sha256": "f90c4a3be095db84470a7ca02d8eab3978256cc5a646005cb733c959ce9b0e26",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "b6b9afb69b82a822c599303327d79e0baf090d5a",
+      "expected_raw_git_blob_sha1": "0b1e12430d5594280f0515c8d1792e5b183b94a2",
+      "remote_git_blob_sha1": "b6b9afb69b82a822c599303327d79e0baf090d5a",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Layer_Unpack.uasset",
+      "archive_size_bytes": 11387,
+      "archive_sha256": "0a420ccf33dcd4f4ac07c2fc0e841efdfef5216885e3afbe9c2880905cd31203",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "bb0073c21f05470ed3273e7c0715223e7d573809",
+      "expected_raw_git_blob_sha1": "91481433894ea7f5ade638cdbcc61b49aa8fab02",
+      "remote_git_blob_sha1": "bb0073c21f05470ed3273e7c0715223e7d573809",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Layerblend_IDMAP.uasset",
+      "archive_size_bytes": 29034,
+      "archive_sha256": "01e6eb44f4bd469c7df15b9d17e0a0694a8b4afa2037f89b8be2cfd4f80147e4",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "a0ee8a55f38d2f3661504d77fa678ad618b22c13",
+      "expected_raw_git_blob_sha1": "675b7a9c2e44e76093beec4a50e060ed4ce43c12",
+      "remote_git_blob_sha1": "a0ee8a55f38d2f3661504d77fa678ad618b22c13",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Material.uasset",
+      "archive_size_bytes": 13312,
+      "archive_sha256": "2fbd815bdd95f909336eea263ee393329603a03e352e01b3669559178436f71d",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "805d5a45b7dda525f833af416e2f2cffe2dbc4bf",
+      "expected_raw_git_blob_sha1": "1eadab2865e6e497f35602fa7834c8be8f63e126",
+      "remote_git_blob_sha1": "805d5a45b7dda525f833af416e2f2cffe2dbc4bf",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_Sample.uasset",
+      "archive_size_bytes": 20824,
+      "archive_sha256": "688e07e906f5c8273d3acaadedc46aa5251d984b54f2d50e002b6bd082c5c5b2",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "f22c2fb41ba16bf92fac3015ea80826915b11e84",
+      "expected_raw_git_blob_sha1": "42ad2f20f996056c38407af8472d529901c57b6a",
+      "remote_git_blob_sha1": "f22c2fb41ba16bf92fac3015ea80826915b11e84",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleMasks.uasset",
+      "archive_size_bytes": 22310,
+      "archive_sha256": "a5c39ede4f354fe42fbfedf5c07383b0362b651c8a60672679a54bdaf9eda282",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "23cb8dc4476aa95b9bbd2561f0fb27eed2188ddc",
+      "expected_raw_git_blob_sha1": "2ae7abd31e9347760a92568bf0545cce416c5b37",
+      "remote_git_blob_sha1": "23cb8dc4476aa95b9bbd2561f0fb27eed2188ddc",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleNormal.uasset",
+      "archive_size_bytes": 20948,
+      "archive_sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "685d889b2be6e0a0f5e5a338f77483c675a0ccdc",
+      "expected_raw_git_blob_sha1": "14e3b00a52cb85b86e4211f3c06bdf5d06cf6c0b",
+      "remote_git_blob_sha1": "685d889b2be6e0a0f5e5a338f77483c675a0ccdc",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Unpack_Parmset_A.uasset",
+      "archive_size_bytes": 27490,
+      "archive_sha256": "222a75d8c4367ec57b73f28e2cd0301ed4a1293eaa453b0212e489d66c54239c",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "a79dd686270e4aabf3332aacf1648906b2b096de",
+      "expected_raw_git_blob_sha1": "0ef3423b66c6bf72259ad3bd9f11f7f77ab29c6e",
+      "remote_git_blob_sha1": "a79dd686270e4aabf3332aacf1648906b2b096de",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Unpack_Parmset_B.uasset",
+      "archive_size_bytes": 28843,
+      "archive_sha256": "f5b6b34e4d55fb54468a76e363751e8ecd1529821ecd73aac9db5f2acd3f8294",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "c2decaaa9bcee796cdf1d877b76f70a1195017c6",
+      "expected_raw_git_blob_sha1": "c96e5ea86bdeec837c1fae1c0048834aad3b92b3",
+      "remote_git_blob_sha1": "c2decaaa9bcee796cdf1d877b76f70a1195017c6",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Grass.uasset",
+      "archive_size_bytes": 7020,
+      "archive_sha256": "39dd4be05268f7ae7f0a831cec9e8b9af2105a7c9a71928dc1f33be8ab93a8d0",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "e437ae565bc3e67baac9b4f73f454d760c9e7c42",
+      "expected_raw_git_blob_sha1": "39d815f5be46f5b13967521238c52c23a9d073a1",
+      "remote_git_blob_sha1": "e437ae565bc3e67baac9b4f73f454d760c9e7c42",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Heather.uasset",
+      "archive_size_bytes": 4236,
+      "archive_sha256": "7221ff899c85a9511f4daae2053db96894d9ed5c63f4678dac194ddf956fb7b6",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "fdc4ae06188c857d58bbc36c27759eb775bb29f6",
+      "expected_raw_git_blob_sha1": "b47425d00c504b488d500f8234b97f77305fed8b",
+      "remote_git_blob_sha1": "fdc4ae06188c857d58bbc36c27759eb775bb29f6",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Highland.uasset",
+      "archive_size_bytes": 7247,
+      "archive_sha256": "fe2a5435cfb83d0c89b380e79e8b4d8bfc45934398c028665fa0cdedd3a85c0a",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "a7c56aa7d47c8ca43cfc4c49d0ee63464f708636",
+      "expected_raw_git_blob_sha1": "be00f82aba1863d91e332b3de4161b1d28cbcd99",
+      "remote_git_blob_sha1": "a7c56aa7d47c8ca43cfc4c49d0ee63464f708636",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Wetland.uasset",
+      "archive_size_bytes": 5695,
+      "archive_sha256": "a335605528316ae952e66cf7d7a5d5d69d4c4a57c099c5940f5802adc2d47715",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "ee23d29242c7488f128bbcb413419a0973265e3b",
+      "expected_raw_git_blob_sha1": "5e13f9ee488786c960c0641044c5f8343cbb69b8",
+      "remote_git_blob_sha1": "ee23d29242c7488f128bbcb413419a0973265e3b",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.uasset",
+      "archive_size_bytes": 52771,
+      "archive_sha256": "3917fb91182f81f0fdf834216b61b8dbaafbff2065e8a20731274db212e37554",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "5f778b7f3def81cbb572fa2f626249d7d81ffb6c",
+      "expected_raw_git_blob_sha1": "8d3d9a302e2e4fee22f02d1a694a9ba2c4ab3557",
+      "remote_git_blob_sha1": "5f778b7f3def81cbb572fa2f626249d7d81ffb6c",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape_Backup.uasset",
+      "archive_size_bytes": 29897,
+      "archive_sha256": "b4456d07ae85d376c14146f398bcb32dc473e92d3311c55fdb3d15d3821e9a66",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "9dc26b9479a808ee1a5e0dce941f9d90de80d30a",
+      "expected_raw_git_blob_sha1": "99f756edbb9425ad42e701e5894f7c10729b29a4",
+      "remote_git_blob_sha1": "9dc26b9479a808ee1a5e0dce941f9d90de80d30a",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.uasset",
+      "archive_size_bytes": 19634,
+      "archive_sha256": "f62f276df481f46a93eba85ac815f82907b296770ddbea2dd1200e66d423aa5f",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "2c7dc33a000ae99b99517f4b20fb9fd3af4b87c7",
+      "expected_raw_git_blob_sha1": "73c2c88dfe0e153f398d4d703a966d65207f9fbf",
+      "remote_git_blob_sha1": "2c7dc33a000ae99b99517f4b20fb9fd3af4b87c7",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.uasset",
+      "archive_size_bytes": 20936,
+      "archive_sha256": "d5e15c4ed5b89d482fb0ca59c6dd11a3124130ddbe775642f4bdf233c50871d8",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "78fdc0932b153a9c3facb19fab469314978663b1",
+      "expected_raw_git_blob_sha1": "0c3163c6a21e7158c043ba70a615c6cf07d285a8",
+      "remote_git_blob_sha1": "78fdc0932b153a9c3facb19fab469314978663b1",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/MI_Landscape_Instance.uasset",
+      "archive_size_bytes": 38181,
+      "archive_sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7",
+      "expected_lfs_pointer_size_bytes": 130,
+      "expected_lfs_pointer_git_blob_sha1": "7f55724c765ee1030a3f20e5e7393fd4779b608f",
+      "expected_raw_git_blob_sha1": "1ca851b0f103f976ee96a2f861902072dca8d5e8",
+      "remote_git_blob_sha1": "7f55724c765ee1030a3f20e5e7393fd4779b608f",
+      "remote_git_blob_size_bytes": 130,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.uasset",
+      "archive_size_bytes": 211283,
+      "archive_sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171",
+      "expected_lfs_pointer_size_bytes": 131,
+      "expected_lfs_pointer_git_blob_sha1": "21edc7290df05ce0061d63a15f78e7d4bc0968be",
+      "expected_raw_git_blob_sha1": "beafe45935002dde5ff58b8596d3e8f881b4884d",
+      "remote_git_blob_sha1": "21edc7290df05ce0061d63a15f78e7d4bc0968be",
+      "remote_git_blob_size_bytes": 131,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_B.uasset",
+      "archive_size_bytes": 8245,
+      "archive_sha256": "a81a8a8258e4ef2104d1957da5b87eb466ac64f6956a4c410127e40d98d46117",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "11a5a021ca80aa6f8fed2e7c3dc84f1be28e1b51",
+      "expected_raw_git_blob_sha1": "660684b229a9e7fac4fdf4becce7c34fd2276f72",
+      "remote_git_blob_sha1": "11a5a021ca80aa6f8fed2e7c3dc84f1be28e1b51",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_G.uasset",
+      "archive_size_bytes": 8243,
+      "archive_sha256": "e6034470e0a5db0a550552f2f7af37cd38b501b90c2db07ddcb24a572a2568ff",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "4052ab2d0492030b75b701688320f5b3a01ea120",
+      "expected_raw_git_blob_sha1": "aa5fbeb3f031e77147629a6dcdf5891eea1ba728",
+      "remote_git_blob_sha1": "4052ab2d0492030b75b701688320f5b3a01ea120",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Null.uasset",
+      "archive_size_bytes": 8647,
+      "archive_sha256": "6f4d6b750e4a8ea4ab2ba867014a65266a6a9fdd55f6f6af60abe9464bae2eb3",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "138935cb66160be775b5cee437d7e3e2ffad923d",
+      "expected_raw_git_blob_sha1": "de3d4d464fc572ffd3deccdc2c914f773c4bd031",
+      "remote_git_blob_sha1": "138935cb66160be775b5cee437d7e3e2ffad923d",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_O.uasset",
+      "archive_size_bytes": 8246,
+      "archive_sha256": "d8f023fa92b987d397f26a845b25fe834303200ed166422c2fa9153e0d4ff1b8",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "dbdb1ad69ef0f233f7354127ec58a2565fe72cd5",
+      "expected_raw_git_blob_sha1": "c42ca75e9795e6f108f8afc5dba5d7666a90f7df",
+      "remote_git_blob_sha1": "dbdb1ad69ef0f233f7354127ec58a2565fe72cd5",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_P.uasset",
+      "archive_size_bytes": 8244,
+      "archive_sha256": "289f2d34861ed269668b746240d02f265dc00079771fa817c2ca1c0da2da03f6",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "8ee1d748b756c1631b2cd2bee085bc9143ce7448",
+      "expected_raw_git_blob_sha1": "bd0117ca3bf548752989b395ad27552f8e3f06ff",
+      "remote_git_blob_sha1": "8ee1d748b756c1631b2cd2bee085bc9143ce7448",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_R.uasset",
+      "archive_size_bytes": 8208,
+      "archive_sha256": "d5bd5c29d783ea26fcabecd0802e466aac70df2b3fd63154f62f57e67fe4b39c",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "818f8ba147396643896c06ea4875951524e08c9f",
+      "expected_raw_git_blob_sha1": "590ba173dab0b514a67c4f45bab55cbc4572aace",
+      "remote_git_blob_sha1": "818f8ba147396643896c06ea4875951524e08c9f",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_V.uasset",
+      "archive_size_bytes": 8244,
+      "archive_sha256": "5193ec018cc077dc95331b60ef66ad8b2a4d5d526df5f9e841f1f849d4527546",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "2f6b493e1711f88946ceb30e32252820c9809a84",
+      "expected_raw_git_blob_sha1": "4fc078f8465d0077c8e1c62bdb72412ddbf65fa8",
+      "remote_git_blob_sha1": "2f6b493e1711f88946ceb30e32252820c9809a84",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_W.uasset",
+      "archive_size_bytes": 8763,
+      "archive_sha256": "a9de4f3218d31a92b401ab148262b6e82d2196b29e61fcb685bd247c1dd3d2fc",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "dab2e60b54021137a92675df03c87d61ece2c8d7",
+      "expected_raw_git_blob_sha1": "83de49e78f960999990977137de755f122e3d4fa",
+      "remote_git_blob_sha1": "dab2e60b54021137a92675df03c87d61ece2c8d7",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Y.uasset",
+      "archive_size_bytes": 8247,
+      "archive_sha256": "11a2f673b9d9f3199248c8c5adb63580c5a0e7bb59fb14073fce7809ea0ed73f",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "227dbcf392d985ed1a508a5b7db69641ad5c16b6",
+      "expected_raw_git_blob_sha1": "48f1097c66bb6cafafab3c2967339cdc0929396b",
+      "remote_git_blob_sha1": "227dbcf392d985ed1a508a5b7db69641ad5c16b6",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/TA_Colour.uasset",
+      "archive_size_bytes": 5798,
+      "archive_sha256": "d5d9519bea5d295bb61cef38a9706ddf30a38e1a776d72217f04bae975c5487c",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "c1dd7595ba04102869a31fdf3ac3dcb0efa3631a",
+      "expected_raw_git_blob_sha1": "e4bb2af75de66971c2a6de1c60b6ae58f71bcc66",
+      "remote_git_blob_sha1": "c1dd7595ba04102869a31fdf3ac3dcb0efa3631a",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/TA_Masks.uasset",
+      "archive_size_bytes": 6102,
+      "archive_sha256": "9525568c0a980e9007a0ab418f5310b9383cdba1eedf958c12b8d98de5337b2d",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "1afbf94382c64b74eea19c18ada9937bf6657b83",
+      "expected_raw_git_blob_sha1": "4a2a6346af663672e92642b1238c2fc8cc4a1b8f",
+      "remote_git_blob_sha1": "1afbf94382c64b74eea19c18ada9937bf6657b83",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    },
+    {
+      "path": "Content/PegasusDemo/Materials/Landscape/Textures/TA_Normal.uasset",
+      "archive_size_bytes": 3763,
+      "archive_sha256": "b74b6b5b042b239d2e48b3230412245e0941e97bbf98c8220320d2778909d3f1",
+      "expected_lfs_pointer_size_bytes": 129,
+      "expected_lfs_pointer_git_blob_sha1": "da51d8af63bfc9c84f120df6149e7f0b125c8a46",
+      "expected_raw_git_blob_sha1": "ee2cf4777224701e82f7a6bfb9c2b1d1de5cd8ef",
+      "remote_git_blob_sha1": "da51d8af63bfc9c84f120df6149e7f0b125c8a46",
+      "remote_git_blob_size_bytes": 129,
+      "comparison": "CANONICAL_LFS_POINTER_MATCH"
+    }
+  ],
+  "github_contents_response": [
+    {
+      "name": "Landscape",
+      "path": "Content/PegasusDemo/Materials/Landscape",
+      "sha": "5af7bc19b068652abc9fac69525e9277011839c3",
+      "size": 0,
+      "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/contents/Content/PegasusDemo/Materials/Landscape?ref=5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "html_url": "https://github.com/karnalooch/YetAnotherCyclingSim/tree/5869953cc0924b5078e2067e55336d720f3e6ea7/Content/PegasusDemo/Materials/Landscape",
+      "git_url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/5af7bc19b068652abc9fac69525e9277011839c3",
+      "download_url": null,
+      "type": "dir",
+      "_links": {
+        "self": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/contents/Content/PegasusDemo/Materials/Landscape?ref=5869953cc0924b5078e2067e55336d720f3e6ea7",
+        "git": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/5af7bc19b068652abc9fac69525e9277011839c3",
+        "html": "https://github.com/karnalooch/YetAnotherCyclingSim/tree/5869953cc0924b5078e2067e55336d720f3e6ea7/Content/PegasusDemo/Materials/Landscape"
+      }
+    }
+  ],
+  "github_tree_response": {
+    "sha": "5af7bc19b068652abc9fac69525e9277011839c3",
+    "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/5af7bc19b068652abc9fac69525e9277011839c3",
+    "tree": [
+      {
+        "path": "Functions",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "fc70fe251c577dc4c4d35126fd135f0a1dee66ac",
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/fc70fe251c577dc4c4d35126fd135f0a1dee66ac"
+      },
+      {
+        "path": "Functions/MF_PE_BilinearBlend.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "793893ea10ac0b804b42716a1bcacfed012e6137",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/793893ea10ac0b804b42716a1bcacfed012e6137"
+      },
+      {
+        "path": "Functions/MF_PE_BitUnpack.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "5c6ca868a3af561eeeb36814bc34d7202fc6d299",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/5c6ca868a3af561eeeb36814bc34d7202fc6d299"
+      },
+      {
+        "path": "Functions/MF_PE_Bitpack.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c9a0903dc1d3cad6ecce902e47e6a51b479c114a",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/c9a0903dc1d3cad6ecce902e47e6a51b479c114a"
+      },
+      {
+        "path": "Functions/MF_PE_BlendLayers.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "6d4f8038f9f90f8d5a6b2afd72221f56d9961942",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/6d4f8038f9f90f8d5a6b2afd72221f56d9961942"
+      },
+      {
+        "path": "Functions/MF_PE_Encode_IDS.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "36ea9f5da42851a65f65eeb0837539a0d00ee1a7",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/36ea9f5da42851a65f65eeb0837539a0d00ee1a7"
+      },
+      {
+        "path": "Functions/MF_PE_Extract_Parmsets.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "01557a24ec70eaa8e1203ec89d5692268695a9ac",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/01557a24ec70eaa8e1203ec89d5692268695a9ac"
+      },
+      {
+        "path": "Functions/MF_PE_ID_Unpack.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "b6b9afb69b82a822c599303327d79e0baf090d5a",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/b6b9afb69b82a822c599303327d79e0baf090d5a"
+      },
+      {
+        "path": "Functions/MF_PE_Layer_Unpack.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "bb0073c21f05470ed3273e7c0715223e7d573809",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/bb0073c21f05470ed3273e7c0715223e7d573809"
+      },
+      {
+        "path": "Functions/MF_PE_Layerblend_IDMAP.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a0ee8a55f38d2f3661504d77fa678ad618b22c13",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/a0ee8a55f38d2f3661504d77fa678ad618b22c13"
+      },
+      {
+        "path": "Functions/MF_PE_Material.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "805d5a45b7dda525f833af416e2f2cffe2dbc4bf",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/805d5a45b7dda525f833af416e2f2cffe2dbc4bf"
+      },
+      {
+        "path": "Functions/MF_PE_TextureAtlas_Sample.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "f22c2fb41ba16bf92fac3015ea80826915b11e84",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/f22c2fb41ba16bf92fac3015ea80826915b11e84"
+      },
+      {
+        "path": "Functions/MF_PE_TextureAtlas_SampleMasks.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "23cb8dc4476aa95b9bbd2561f0fb27eed2188ddc",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/23cb8dc4476aa95b9bbd2561f0fb27eed2188ddc"
+      },
+      {
+        "path": "Functions/MF_PE_TextureAtlas_SampleNormal.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "685d889b2be6e0a0f5e5a338f77483c675a0ccdc",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/685d889b2be6e0a0f5e5a338f77483c675a0ccdc"
+      },
+      {
+        "path": "Functions/MF_PE_Unpack_Parmset_A.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a79dd686270e4aabf3332aacf1648906b2b096de",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/a79dd686270e4aabf3332aacf1648906b2b096de"
+      },
+      {
+        "path": "Functions/MF_PE_Unpack_Parmset_B.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c2decaaa9bcee796cdf1d877b76f70a1195017c6",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/c2decaaa9bcee796cdf1d877b76f70a1195017c6"
+      },
+      {
+        "path": "Grasstypes",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "4704149345440bd9f5549d1a1ab7445b7ba1eefd",
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/4704149345440bd9f5549d1a1ab7445b7ba1eefd"
+      },
+      {
+        "path": "Grasstypes/LGT_PE_Grass.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e437ae565bc3e67baac9b4f73f454d760c9e7c42",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/e437ae565bc3e67baac9b4f73f454d760c9e7c42"
+      },
+      {
+        "path": "Grasstypes/LGT_PE_Heather.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "fdc4ae06188c857d58bbc36c27759eb775bb29f6",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/fdc4ae06188c857d58bbc36c27759eb775bb29f6"
+      },
+      {
+        "path": "Grasstypes/LGT_PE_Highland.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a7c56aa7d47c8ca43cfc4c49d0ee63464f708636",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/a7c56aa7d47c8ca43cfc4c49d0ee63464f708636"
+      },
+      {
+        "path": "Grasstypes/LGT_PE_Wetland.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "ee23d29242c7488f128bbcb413419a0973265e3b",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/ee23d29242c7488f128bbcb413419a0973265e3b"
+      },
+      {
+        "path": "Layers",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "98c473691b649ec6d65cd97dde5152a2415f0b4c",
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/98c473691b649ec6d65cd97dde5152a2415f0b4c"
+      },
+      {
+        "path": "Layers/MLB_PE_Landscape.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "5f778b7f3def81cbb572fa2f626249d7d81ffb6c",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/5f778b7f3def81cbb572fa2f626249d7d81ffb6c"
+      },
+      {
+        "path": "Layers/MLB_PE_Landscape_Backup.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "9dc26b9479a808ee1a5e0dce941f9d90de80d30a",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/9dc26b9479a808ee1a5e0dce941f9d90de80d30a"
+      },
+      {
+        "path": "Layers/ML_PE_Landscape_Base.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "2c7dc33a000ae99b99517f4b20fb9fd3af4b87c7",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/2c7dc33a000ae99b99517f4b20fb9fd3af4b87c7"
+      },
+      {
+        "path": "Layers/ML_PE_Landscape_Layer.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "78fdc0932b153a9c3facb19fab469314978663b1",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/78fdc0932b153a9c3facb19fab469314978663b1"
+      },
+      {
+        "path": "MI_Landscape_Instance.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7f55724c765ee1030a3f20e5e7393fd4779b608f",
+        "size": 130,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/7f55724c765ee1030a3f20e5e7393fd4779b608f"
+      },
+      {
+        "path": "M_Pegasus_Landscape_Master.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "21edc7290df05ce0061d63a15f78e7d4bc0968be",
+        "size": 131,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/21edc7290df05ce0061d63a15f78e7d4bc0968be"
+      },
+      {
+        "path": "Textures",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "8c72f5372a4df57a185b722f2daeb9382da17755",
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/8c72f5372a4df57a185b722f2daeb9382da17755"
+      },
+      {
+        "path": "Textures/Debug",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "3bfd1bc8c2ed13272da9a6fff11cfa5310992090",
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/trees/3bfd1bc8c2ed13272da9a6fff11cfa5310992090"
+      },
+      {
+        "path": "Textures/Debug/T_B.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "11a5a021ca80aa6f8fed2e7c3dc84f1be28e1b51",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/11a5a021ca80aa6f8fed2e7c3dc84f1be28e1b51"
+      },
+      {
+        "path": "Textures/Debug/T_G.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4052ab2d0492030b75b701688320f5b3a01ea120",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/4052ab2d0492030b75b701688320f5b3a01ea120"
+      },
+      {
+        "path": "Textures/Debug/T_Null.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "138935cb66160be775b5cee437d7e3e2ffad923d",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/138935cb66160be775b5cee437d7e3e2ffad923d"
+      },
+      {
+        "path": "Textures/Debug/T_O.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "dbdb1ad69ef0f233f7354127ec58a2565fe72cd5",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/dbdb1ad69ef0f233f7354127ec58a2565fe72cd5"
+      },
+      {
+        "path": "Textures/Debug/T_P.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "8ee1d748b756c1631b2cd2bee085bc9143ce7448",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/8ee1d748b756c1631b2cd2bee085bc9143ce7448"
+      },
+      {
+        "path": "Textures/Debug/T_R.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "818f8ba147396643896c06ea4875951524e08c9f",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/818f8ba147396643896c06ea4875951524e08c9f"
+      },
+      {
+        "path": "Textures/Debug/T_V.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "2f6b493e1711f88946ceb30e32252820c9809a84",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/2f6b493e1711f88946ceb30e32252820c9809a84"
+      },
+      {
+        "path": "Textures/Debug/T_W.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "dab2e60b54021137a92675df03c87d61ece2c8d7",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/dab2e60b54021137a92675df03c87d61ece2c8d7"
+      },
+      {
+        "path": "Textures/Debug/T_Y.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "227dbcf392d985ed1a508a5b7db69641ad5c16b6",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/227dbcf392d985ed1a508a5b7db69641ad5c16b6"
+      },
+      {
+        "path": "Textures/TA_Colour.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c1dd7595ba04102869a31fdf3ac3dcb0efa3631a",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/c1dd7595ba04102869a31fdf3ac3dcb0efa3631a"
+      },
+      {
+        "path": "Textures/TA_Masks.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "1afbf94382c64b74eea19c18ada9937bf6657b83",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/1afbf94382c64b74eea19c18ada9937bf6657b83"
+      },
+      {
+        "path": "Textures/TA_Normal.uasset",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "da51d8af63bfc9c84f120df6149e7f0b125c8a46",
+        "size": 129,
+        "url": "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/da51d8af63bfc9c84f120df6149e7f0b125c8a46"
+      }
+    ],
+    "truncated": false
+  }
+}

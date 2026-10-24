@@ -1,0 +1,16 @@
+{
+  "actual_blender_version": "4.5.9",
+  "blend_input": null,
+  "blend_sha256": null,
+  "blender_executable": "tools/blender-4.5.9-windows-x64/blender.exe",
+  "duration_seconds": 17.25,
+  "expected_blender_version": "4.5.9",
+  "git_head": "3537456654a86742749bef90f74825b054435680",
+  "log": "work/pcg365/local-rock-pack02/host.log",
+  "process_exit_code": 0,
+  "python_exit_code": 20,
+  "schema_version": 1,
+  "script": "scripts/blender/prepare_pcg365_rock_variant_pack.py",
+  "script_sha256": "fcb349dac97e524a539f95a641531da25bf0f6fd0b79e19a50787eb574a7cfa0",
+  "status": "PASS"
+}

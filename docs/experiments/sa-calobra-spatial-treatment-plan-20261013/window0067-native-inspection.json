@@ -1,0 +1,657 @@
+{
+  "input": {
+    "bytes": 515,
+    "sha256": "18ef0cd57e5e3f8ec70c8e8c84a526c6504b74f5fe04a5f7ffe1c7d5579db203"
+  },
+  "map_saved": false,
+  "placement": false,
+  "readback": {
+    "intent": "preview",
+    "native_readback": {
+      "camera_before": {
+        "location_cm": [
+          56912.43746055451,
+          53090.5078449409,
+          46766.459277036185
+        ],
+        "rotation_deg": [
+          -11.256351610554871,
+          -24.97533718435621,
+          -3.776479229842062e-08
+        ]
+      },
+      "contact_job_status": "NO_CONTACT_JOB",
+      "dirty_packages_after": {
+        "content": [],
+        "maps": [
+          "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
+        ]
+      },
+      "dirty_packages_before": {
+        "content": [],
+        "maps": [
+          "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
+        ]
+      },
+      "map_saved": false,
+      "memory_import_manifests": [],
+      "native_contact_executed": false,
+      "observation_limit": "First blocking visibility-channel collision only; no hidden/noncolliding mesh exclusion, continuous support or planting polygon proof",
+      "operation_status": "REGION_OBSERVED_NOT_REGISTERED",
+      "owned_preview_actors": 0,
+      "performance_pass": false,
+      "placement": false,
+      "production_admitted": false,
+      "qualified_assets": [],
+      "region": {
+        "axis": "X east; Y south; native centimetres = metres * 100",
+        "frames_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+        "map_package": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+        "placement_allowed": false,
+        "plan_sha256": "99b7d4d67a14ee62ac3bb8dff392d4b9a3d330a74bc53d8e64fdd76e866ab684",
+        "schema_version": 1,
+        "scope": "INSPECTION_ONLY_NOT_PLACEMENT",
+        "surface_id": "window0067-search-v1",
+        "witness_xy_m": [
+          1129.5,
+          1164.5
+        ],
+        "xy_bounds_m": [
+          1128.5,
+          1162.0,
+          1135.5,
+          1173.5
+        ]
+      },
+      "region_manifest_sha256": "2d0079969b422374e5f9dfcd0e26da39a7087bc72bafae2133f76d09853d2e9c",
+      "samples": [
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.06830427706730217,
+            0.11406814270239356,
+            0.9911220835773663
+          ],
+          "position_cm": [
+            112850.0,
+            116200.0,
+            69176.76311451824
+          ],
+          "slope_deg": 7.6403804227987955,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1128.5,
+            1162.0
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.045479781799336504,
+            0.1145543376148723,
+            0.9923753791691442
+          ],
+          "position_cm": [
+            113025.0,
+            116200.0,
+            69158.35389903013
+          ],
+          "slope_deg": 7.0798341905627735,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1130.25,
+            1162.0
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.1135950915629672,
+            0.11359509156296944,
+            0.9870118086150753
+          ],
+          "position_cm": [
+            113200.0,
+            116200.0,
+            69150.29932884699
+          ],
+          "slope_deg": 9.24449414241231,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1132.0,
+            1162.0
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09159187599672262,
+            0.022983729182699197,
+            0.9955313538228003
+          ],
+          "position_cm": [
+            113375.0,
+            116200.0,
+            69139.93606902845
+          ],
+          "slope_deg": 5.41860474681315,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1133.75,
+            1162.0
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_594",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.0692357640968067,
+            0.06860057360050961,
+            0.9952388508652648
+          ],
+          "position_cm": [
+            113550.0,
+            116200.0,
+            69131.88601246403
+          ],
+          "slope_deg": 5.593272588109335,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1135.5,
+            1162.0
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09151938678258723,
+            0.04593107801073641,
+            0.9947434533163366
+          ],
+          "position_cm": [
+            112850.0,
+            116487.5,
+            69158.92245692541
+          ],
+          "slope_deg": 5.877306200122525,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1128.5,
+            1164.875
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09151938678258723,
+            0.045931078010738674,
+            0.9947434533163367
+          ],
+          "position_cm": [
+            113025.0,
+            116487.5,
+            69145.11339168093
+          ],
+          "slope_deg": 5.877306200122649,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1130.25,
+            1164.875
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09102027414316569,
+            0.11386056765474477,
+            0.989318493119502
+          ],
+          "position_cm": [
+            113200.0,
+            116487.5,
+            69132.16577779295
+          ],
+          "slope_deg": 8.381875937184821,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1132.0,
+            1164.875
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09159187599672487,
+            0.02298372918269693,
+            0.9955313538228002
+          ],
+          "position_cm": [
+            113375.0,
+            116487.5,
+            69118.36101980526
+          ],
+          "slope_deg": 5.418604746813352,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1133.75,
+            1164.875
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_594",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.022872506284326636,
+            0.09212537253409175,
+            0.995484688074974
+          ],
+          "position_cm": [
+            113550.0,
+            116487.5,
+            69114.59797898987
+          ],
+          "slope_deg": 5.446845529233864,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1135.5,
+            1164.875
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.13687629801753073,
+            0.0,
+            0.9905881480418672
+          ],
+          "position_cm": [
+            112850.0,
+            116775.0,
+            69121.52685354034
+          ],
+          "slope_deg": 7.867131137645708,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1128.5,
+            1167.75
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.04567305469065035,
+            0.06868128524909689,
+            0.9965926214515927
+          ],
+          "position_cm": [
+            113025.0,
+            116775.0,
+            69120.9496811315
+          ],
+          "slope_deg": 4.731199017004084,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1130.25,
+            1167.75
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.0,
+            0.11433516840984052,
+            0.9934422324748902
+          ],
+          "position_cm": [
+            113200.0,
+            116775.0,
+            69109.43207649529
+          ],
+          "slope_deg": 6.565280077231217,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1132.0,
+            1167.75
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.0,
+            0.04612464956955447,
+            0.9989356919752571
+          ],
+          "position_cm": [
+            113375.0,
+            116775.0,
+            69101.95467872097
+          ],
+          "slope_deg": 2.6436857170610013,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1133.75,
+            1167.75
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_594",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.022964131472209985,
+            0.022964131472209985,
+            0.9994725095426359
+          ],
+          "position_cm": [
+            113550.0,
+            116775.0,
+            69102.52746923149
+          ],
+          "slope_deg": 1.8610756472961656,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1135.5,
+            1167.75
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.023025614092414364,
+            -0.06907684227724083,
+            0.9973455825122366
+          ],
+          "position_cm": [
+            112850.0,
+            117062.5,
+            69112.02073782151
+          ],
+          "slope_deg": 4.175594900696665,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1128.5,
+            1170.625
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.04573325850000798,
+            -0.04573325850000798,
+            0.9979062772294515
+          ],
+          "position_cm": [
+            113025.0,
+            117062.5,
+            69104.82761899485
+          ],
+          "slope_deg": 3.708284294851576,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1130.25,
+            1170.625
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.06873534395491203,
+            -0.02268266350511979,
+            0.9973770346602701
+          ],
+          "position_cm": [
+            113200.0,
+            117062.5,
+            69097.63880742498
+          ],
+          "slope_deg": 4.150772015901646,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1132.0,
+            1170.625
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.022712609773271844,
+            0.04576934999765566,
+            0.9986937988983807
+          ],
+          "position_cm": [
+            113375.0,
+            117062.5,
+            69091.59572615923
+          ],
+          "slope_deg": 2.9288014939958793,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1133.75,
+            1170.625
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_594",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.11463694613924917,
+            -0.045601437138262355,
+            0.9923602569182183
+          ],
+          "position_cm": [
+            113550.0,
+            117062.5,
+            69091.0074321587
+          ],
+          "slope_deg": 7.086860544275254,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1135.5,
+            1170.625
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.13684051760864643,
+            0.022863627630373015,
+            0.9903292014639262
+          ],
+          "position_cm": [
+            112850.0,
+            117350.0,
+            69107.70917378229
+          ],
+          "slope_deg": 7.97479298828832,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1128.5,
+            1173.5
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.06902305967485144,
+            0.04567197480972731,
+            0.9965690582945577
+          ],
+          "position_cm": [
+            113025.0,
+            117350.0,
+            69100.22316149443
+          ],
+          "slope_deg": 4.747539074642312,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1130.25,
+            1173.5
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.11421506883501358,
+            0.04582281204757964,
+            0.9923987041240359
+          ],
+          "position_cm": [
+            113200.0,
+            117350.0,
+            69096.20018365965
+          ],
+          "slope_deg": 7.068982935026679,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1132.0,
+            1173.5
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.02292946777264844,
+            0.11430510800096212,
+            0.9931810418008146
+          ],
+          "position_cm": [
+            113375.0,
+            117350.0,
+            69089.86851618947
+          ],
+          "slope_deg": 6.694894532252163,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1133.75,
+            1173.5
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_594",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            -0.1364246385769432,
+            0.045474879525647736,
+            0.9896061607130779
+          ],
+          "position_cm": [
+            113550.0,
+            117350.0,
+            69083.54015051041
+          ],
+          "slope_deg": 8.268038939878707,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1135.5,
+            1173.5
+          ]
+        },
+        {
+          "actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+          "actor_class": "Landscape",
+          "component": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_593",
+          "label": "Sa Calobra native DTM Landscape",
+          "normal": [
+            0.09151938678258946,
+            0.04593107801073866,
+            0.9947434533163364
+          ],
+          "position_cm": [
+            112950.0,
+            116450.0,
+            69153.74513427293
+          ],
+          "slope_deg": 5.877306200122711,
+          "status": "COLLISION_OWNER_OBSERVED",
+          "xy_m": [
+            1129.5,
+            1164.5
+          ]
+        }
+      ],
+      "status": "APPLIED_PREVIEW",
+      "surface_registered": false
+    },
+    "performance_pass": false,
+    "placement": false,
+    "preexisting_assets": {},
+    "recipe": "rock_contact_scatter",
+    "recipe_revision": "8f5ec42d4a525cc986e53ce2f047ec6a61c0497f",
+    "recipe_source_sha256": "d0311a3768e98a51f6c2ceafe176b4beb397cfff7d0a57f9c294074c511e50c2",
+    "status": "APPLIED_PREVIEW",
+    "undo_backup": {}
+  },
+  "recorded_utc": "2026-10-13T15:24:14.807+00:00",
+  "request_id": "bdcbdb82cdd740c28fcf",
+  "sequence": 1,
+  "status": "COMPLETED_VISUAL_ONLY"
+}

@@ -1,0 +1,102 @@
+[
+  {
+    "file": "/workspace/scratch/f7568a2cf030/asset-research/official-sidefx-landscape-20261021/extracted/ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_IDMAP.png",
+    "png_width": 2016,
+    "png_height": 2016,
+    "png_bit_depth": 8,
+    "png_colour_type": 0,
+    "pillow_mode": "L",
+    "array_dtype": "uint8",
+    "array_shape": [
+      2016,
+      2016
+    ],
+    "image_metadata": {
+      "srgb": 1,
+      "Artist": "georg",
+      "Comment": "none"
+    },
+    "min": 0,
+    "max": 221,
+    "raw_value_counts": {
+      "0": 314662,
+      "17": 323109,
+      "34": 177025,
+      "51": 191232,
+      "68": 187376,
+      "85": 206106,
+      "102": 127698,
+      "119": 109484,
+      "136": 1832280,
+      "153": 111426,
+      "204": 221404,
+      "221": 262454
+    }
+  },
+  {
+    "file": "/workspace/scratch/f7568a2cf030/asset-research/official-sidefx-landscape-20261021/extracted/ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_Colour.png",
+    "png_width": 2048,
+    "png_height": 2048,
+    "png_bit_depth": 8,
+    "png_colour_type": 2,
+    "pillow_mode": "RGB",
+    "array_dtype": "uint8",
+    "array_shape": [
+      2048,
+      2048,
+      3
+    ],
+    "image_metadata": {
+      "srgb": 1,
+      "Artist": "georg",
+      "Comment": "none"
+    },
+    "min": 0,
+    "max": 255
+  },
+  {
+    "file": "/workspace/scratch/f7568a2cf030/asset-research/official-sidefx-landscape-20261021/extracted/ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_AO.png",
+    "png_width": 2048,
+    "png_height": 2048,
+    "png_bit_depth": 16,
+    "png_colour_type": 0,
+    "pillow_mode": "I;16",
+    "array_dtype": "uint16",
+    "array_shape": [
+      2048,
+      2048
+    ],
+    "image_metadata": {
+      "srgb": 1,
+      "Artist": "georg",
+      "Comment": "none"
+    },
+    "min": 5819,
+    "max": 65535
+  },
+  {
+    "file": "/workspace/scratch/f7568a2cf030/asset-research/official-sidefx-landscape-20261021/extracted/ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_wetness.png",
+    "png_width": 2016,
+    "png_height": 2016,
+    "png_bit_depth": 16,
+    "png_colour_type": 0,
+    "pillow_mode": "I;16",
+    "array_dtype": "uint16",
+    "array_shape": [
+      2016,
+      2016
+    ],
+    "image_metadata": {
+      "srgb": 1,
+      "gamma": 0.45455,
+      "dpi": [
+        95.9866,
+        95.9866
+      ],
+      "Artist": "georg",
+      "Comment": "none"
+    },
+    "min": 0,
+    "max": 65522
+  }
+]

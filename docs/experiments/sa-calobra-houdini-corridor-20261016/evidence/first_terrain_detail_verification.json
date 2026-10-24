@@ -1,0 +1,64 @@
+{
+  "candidate_project": "SaCalobra_Pegasus_Detail_v001.hiplc",
+  "subregion": {
+    "center_epsg25831_m": [
+      483409.75,
+      4409043.75
+    ],
+    "center_houdini_m": [
+      -240.25,
+      855.75
+    ],
+    "bounds_x_m": [
+      -390.25,
+      -90.25
+    ],
+    "bounds_z_m": [
+      705.75,
+      1005.75
+    ],
+    "size_m": [
+      300.0,
+      300.0
+    ],
+    "grid_resolution": [
+      601,
+      601,
+      1
+    ],
+    "spacing_m": 0.5,
+    "elevation_min_m": 356.2099914550781,
+    "elevation_max_m": 599.0499877929688
+  },
+  "materials": {
+    "material_1_rock": {
+      "source": "ProjectFiles_LandscapeWorkflow3/SourceContent/Pegasus/Textures/wepoeaw_4K_Displacement.exr",
+      "hda": "PE_heightfield_material::1.0",
+      "physical_scale_m": 20.0,
+      "height_scale_m": 0.35,
+      "mask": "Slope 28 to 90 deg (limestone crags and scree)"
+    },
+    "material_2_ground": {
+      "source": "ProjectFiles_LandscapeWorkflow3/SourceContent/Pegasus/Textures/tlonbisya_4K_Displacement.exr",
+      "hda": "PE_heightfield_material::1.0",
+      "physical_scale_m": 12.0,
+      "height_scale_m": 0.15,
+      "mask": "Slope 0 to 32 deg (soil/gravel transition)",
+      "blend_mode": "Heightblend (natural layer contact)"
+    }
+  },
+  "measurements": {
+    "subregion_max_absolute_delta_m": 0.483306884765625,
+    "subregion_mean_absolute_delta_in_mask_m": 0.047252196818590164,
+    "subregion_p95_absolute_delta_in_mask_m": 0.15740966796875,
+    "subregion_max_delta_outside_mask_m": 0.000244140625,
+    "full_landscape_max_absolute_delta_m": 0.483306884765625,
+    "full_landscape_modified_cells_count": 272882,
+    "outside_permitted_subregion_delta_m": 0.0,
+    "outside_permitted_subregion_modified_cells": 0,
+    "subregion_cells_count": 361201,
+    "subregion_detail_height_sha256": "69ec4d8859b2649f54c93ad78663c87bb4489df536400bc404ea5b20d3645807",
+    "full_working_detail_height_sha256": "b39214453a70c943a22f34039ea629b480be6a1aba03c9ebfa6104a43868f64e",
+    "base_source_height_sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757"
+  }
+}

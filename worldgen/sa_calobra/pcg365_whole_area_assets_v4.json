@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "catalog_source": "D:\\yacs\\work\\pcg365\\1a02ac21a7fb1dbc84364843e862b186a2ea0a18\\natural20-contact04\\rock-collection-catalog.json",
+  "catalog_sha256": "3160143d74ba3e2af8b7033bfeb689ca0d3c29b33abb50a4e68c512e560d15bc",
+  "assets": [
+    {
+      "id": "namaqualand_boulder_05_01",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\namaqualand_boulder_05_01.fbx",
+      "sha256": "11fb43ddc285ed16b9ea3c0175a879be243d442302edadc54cb02d1b58711718",
+      "bytes": 2852172,
+      "expected_lod0_triangles": 84424,
+      "expected_native_bounds_cm": {
+        "min": [
+          -63.50750923156738,
+          -39.795854687690735,
+          0.0
+        ],
+        "max": [
+          72.8955626487732,
+          35.00207960605621,
+          48.44895303249359
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "boulders",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_namaqualand_boulder_05_01",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_05_01",
+      "native_source_file": {
+        "bytes": 3093482,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_05_01.uasset",
+        "sha256": "f403822144f135d78f042ee6a41593ce41e2f76c24bbb9339052745e4b4ef202",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_namaqualand_boulder_05_01.uasset"
+      }
+    },
+    {
+      "id": "namaqualand_boulder_05_02",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\namaqualand_boulder_05_02.fbx",
+      "sha256": "a9388f1309a580ac3799685bc9df56f5a15564d17125dd41eb41b9fa20ec8afb",
+      "bytes": 2867420,
+      "expected_lod0_triangles": 84424,
+      "expected_native_bounds_cm": {
+        "min": [
+          -68.01415085792542,
+          -37.07832992076874,
+          0.0
+        ],
+        "max": [
+          79.2205810546875,
+          33.33962559700012,
+          43.604058027267456
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "boulders",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_namaqualand_boulder_05_02",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_05_02",
+      "native_source_file": {
+        "bytes": 3094549,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_05_02.uasset",
+        "sha256": "def5376aee361424c380b7ad6816b498f4285862ae29886c031de06d4c7641ac",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_namaqualand_boulder_05_02.uasset"
+      }
+    },
+    {
+      "id": "namaqualand_boulder_06_01",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\namaqualand_boulder_06_01.fbx",
+      "sha256": "4eec66c1e8c95d0d81f07e7ed693bc73ff567ca805bb5da47c9100e41a16663e",
+      "bytes": 3659884,
+      "expected_lod0_triangles": 103250,
+      "expected_native_bounds_cm": {
+        "min": [
+          -32.072713971138,
+          -66.08133912086487,
+          0.0
+        ],
+        "max": [
+          35.42558550834656,
+          55.1062285900116,
+          58.64683389663696
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "boulders",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_namaqualand_boulder_06_01",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_06_01",
+      "native_source_file": {
+        "bytes": 4081622,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_06_01.uasset",
+        "sha256": "2bfd0b23578369d0bbc2846ed13ad777b02d5d4a1f9e387c41f2c62291d8cbb4",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_namaqualand_boulder_06_01.uasset"
+      }
+    },
+    {
+      "id": "namaqualand_boulder_06_02",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\namaqualand_boulder_06_02.fbx",
+      "sha256": "8fa4ed1b50ea7025a5b517db2196031a224d92325e9743ad368ebf11d00aa7d3",
+      "bytes": 3661308,
+      "expected_lod0_triangles": 103250,
+      "expected_native_bounds_cm": {
+        "min": [
+          -33.6747020483017,
+          -61.57373785972595,
+          0.0
+        ],
+        "max": [
+          39.10869061946869,
+          52.117353677749634,
+          52.782148122787476
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "boulders",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_namaqualand_boulder_06_02",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_06_02",
+      "native_source_file": {
+        "bytes": 4078006,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_namaqualand_boulder_06_02.uasset",
+        "sha256": "74c86ce8ba52cf3d949a354bc66dacdb43d46b1d009093a00729f44410d43453",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_namaqualand_boulder_06_02.uasset"
+      }
+    },
+    {
+      "id": "rock_07_01",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\rock_07_01.fbx",
+      "sha256": "53097abfe0d262f48b6fa78f66a712891b0dee1d74b4ebe627cfe69d8a75765a",
+      "bytes": 398268,
+      "expected_lod0_triangles": 11256,
+      "expected_native_bounds_cm": {
+        "min": [
+          -8.7580107152462,
+          -17.797499895095825,
+          0.0
+        ],
+        "max": [
+          8.102940022945404,
+          14.21622633934021,
+          12.934812903404236
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "small",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_rock_07_01",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_rock_07_01",
+      "native_source_file": {
+        "bytes": 492543,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_rock_07_01.uasset",
+        "sha256": "f2d0395d69a488f08557cc52dd4d25f37842dab3c0895a228d2f0c9b89a7c80a",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_rock_07_01.uasset"
+      }
+    },
+    {
+      "id": "rock_07_02",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\rock_07_02.fbx",
+      "sha256": "62c81406ac44b1228c0752c64ac0b2369ea868a54b317c0bdd73749dcc9e4d54",
+      "bytes": 398540,
+      "expected_lod0_triangles": 11256,
+      "expected_native_bounds_cm": {
+        "min": [
+          -9.284893423318863,
+          -16.5766641497612,
+          0.0
+        ],
+        "max": [
+          8.751175552606583,
+          13.363252580165863,
+          11.641331017017365
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "small",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_rock_07_02",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_rock_07_02",
+      "native_source_file": {
+        "bytes": 492839,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_rock_07_02.uasset",
+        "sha256": "64b9a969d30b1b0b407418387b556afa7b167f15f4f7428342d5407afd071b4f",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_rock_07_02.uasset"
+      }
+    },
+    {
+      "id": "rock_09_01",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\rock_09_01.fbx",
+      "sha256": "2f8c492ba7e387fbbc17660eb06ba49ff628340c84a67efce9eec62a95793240",
+      "bytes": 402700,
+      "expected_lod0_triangles": 11178,
+      "expected_native_bounds_cm": {
+        "min": [
+          -3.673279285430908,
+          -6.106271967291832,
+          0.0
+        ],
+        "max": [
+          3.727707266807556,
+          8.355509489774704,
+          2.9582470655441284
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "small",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_rock_09_01",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_rock_09_01",
+      "native_source_file": {
+        "bytes": 510667,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_rock_09_01.uasset",
+        "sha256": "06c3c1699ea2f2192cd541ed521bddb12280a90f7253647f65a4cd92c64f7a60",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_rock_09_01.uasset"
+      }
+    },
+    {
+      "id": "rock_09_02",
+      "source": "D:\\yacs\\work\\pcg365\\natural-rock-collection03\\derived\\rock_09_02.fbx",
+      "sha256": "de44646f391171d7b259eadde94df3905f54994d79a048374c114b845cdd6744",
+      "bytes": 402892,
+      "expected_lod0_triangles": 11178,
+      "expected_native_bounds_cm": {
+        "min": [
+          -3.955535590648651,
+          -5.732207372784615,
+          0.0
+        ],
+        "max": [
+          4.075358062982559,
+          7.854338735342026,
+          2.6624223217368126
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "small",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_Natural_rock_09_02",
+      "native_source_package": "/Game/Generated/YACS/PCG365RockCollection20/SM_rock_09_02",
+      "native_source_file": {
+        "bytes": 510221,
+        "path": "Content/Generated/YACS/PCG365RockCollection20/SM_rock_09_02.uasset",
+        "sha256": "62cc3c8f4afbe10f27e80d5db7d6e034fc5f0d199ad88030616317105f5a9542",
+        "absolute_path": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\PCG365RockCollection20\\SM_rock_09_02.uasset"
+      }
+    },
+    {
+      "id": "rock_face_01",
+      "source": "D:\\yacs\\project\\ExternalAssets\\Stage3G\\PolyHaven\\rock_face_01\\rock_face_01_2k.fbx",
+      "sha256": "c459ad32e8a0253db5efcf21d292a5c8308e1d07637dbbeb701ae193d9b622ae",
+      "bytes": 764220,
+      "expected_lod0_triangles": 20174,
+      "expected_native_bounds_cm": {
+        "min": [
+          -345.3180847167969,
+          -472.80303955078125,
+          -5.868561267852783
+        ],
+        "max": [
+          365.505126953125,
+          89.62743377685547,
+          492.1751403808594
+        ]
+      },
+      "license": "CC0-1.0",
+      "lane": "cliffs",
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "mesh_package": "/Game/Generated/YACS/PCG365Ex/WholeAreaInputs/SM_rock_face_01",
+      "source_url": "https://polyhaven.com/a/rock_face_01"
+    }
+  ],
+  "native_source_receipt": "docs/assets/pcg365-natural20-20261012/rock-collection-receipt.json.gz"
+}

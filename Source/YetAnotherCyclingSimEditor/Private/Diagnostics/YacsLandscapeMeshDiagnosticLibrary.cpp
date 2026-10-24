@@ -1,7 +1,19 @@
 #include "Diagnostics/YacsLandscapeMeshDiagnosticLibrary.h"
 
 #include "LandscapeComponent.h"
+#include "Landscape.h"
+#include "LandscapeEditLayer.h"
+#include "LandscapeDataAccess.h"
+#include "LandscapeLayerInfoObject.h"
 #include "LandscapeProxy.h"
+#include "Engine/Texture2D.h"
+#include "Engine/World.h"
+#include "Editor.h"
+#include "EngineUtils.h"
+#include "Hash/Blake3.h"
+#include "Materials/MaterialInstance.h"
+#include "UObject/Package.h"
+#include "UObject/UnrealType.h"
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"
 #include "MeshDescriptionToDynamicMesh.h"
@@ -19,6 +31,477 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #endif
+
+namespace
+{
+constexpr const TCHAR* Lesson07WorldPackage = TEXT("/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07");
+
+FString SerializeLesson07Report(const TSharedRef<FJsonObject>& Report, const FString& Error = FString())
+{
+    Report->SetBoolField(TEXT("success"), Error.IsEmpty());
+    TArray<TSharedPtr<FJsonValue>> Errors;
+    if (!Error.IsEmpty()) { Errors.Add(MakeShared<FJsonValueString>(Error)); }
+    Report->SetArrayField(TEXT("errors"), Errors);
+    FString Json;
+    FJsonSerializer::Serialize(Report, TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&Json));
+    return Json;
+}
+
+// Validate the entire target set before either reporting hashes or refreshing any cache.
+FString GatherLesson07Components(UWorld* World, TArray<ALandscapeProxy*>& Actors,
+    TArray<ULandscapeComponent*>& Components)
+{
+    if (!IsInGameThread()) { return TEXT("game_thread_required"); }
+    if (!IsValid(World) || World->WorldType != EWorldType::Editor ||
+        World->GetOutermost()->GetName() != Lesson07WorldPackage)
+    { return TEXT("lesson07_editor_world_required"); }
+    TSet<FName> Remaining = {
+        TEXT("SaCalobra_Unified_0_0"), TEXT("SaCalobra_Unified_0_1"),
+        TEXT("SaCalobra_Unified_1_0"), TEXT("SaCalobra_Unified_1_1")
+    };
+    for (TActorIterator<ALandscapeProxy> It(World); It; ++It)
+    {
+        ALandscapeProxy* Actor = *It;
+        if (!Remaining.Remove(Actor->GetFName()) || Actor->LandscapeComponents.Num() != 1024)
+        { return TEXT("unexpected_lesson07_actor_or_component_count"); }
+        TSet<FIntPoint> Grid;
+        for (ULandscapeComponent* Component : Actor->LandscapeComponents)
+        {
+            if (!IsValid(Component) || Component->GetLandscapeProxy() != Actor ||
+                Component->GetWorld() != World || Component->ComponentSizeQuads != 254 ||
+                Component->SubsectionSizeQuads != 127 || Component->NumSubsections != 2)
+            { return TEXT("unexpected_lesson07_component"); }
+            const FIntPoint Base = Component->GetSectionBase();
+            if (Base.X < 0 || Base.Y < 0 || Base.X > 31 * 254 || Base.Y > 31 * 254 ||
+                Base.X % 254 || Base.Y % 254 || Grid.Contains(Base))
+            { return TEXT("unexpected_lesson07_component_grid"); }
+            Grid.Add(Base);
+            Components.Add(Component);
+        }
+        Actors.Add(Actor);
+    }
+    if (!Remaining.IsEmpty() || Actors.Num() != 4 || Components.Num() != 4096)
+    { return TEXT("incomplete_lesson07_actor_set"); }
+    Actors.Sort([](const ALandscapeProxy& A, const ALandscapeProxy& B) { return A.GetPathName() < B.GetPathName(); });
+    Components.Sort([](const ULandscapeComponent& A, const ULandscapeComponent& B) { return A.GetPathName() < B.GetPathName(); });
+    return FString();
+}
+
+TArray<TSharedPtr<FJsonValue>> Lesson07TransformValues(const FTransform& Transform)
+{
+    const FVector T = Transform.GetTranslation(), S = Transform.GetScale3D();
+    const FQuat Q = Transform.GetRotation();
+    TArray<TSharedPtr<FJsonValue>> Values;
+    for (const double Value : {T.X, T.Y, T.Z, Q.X, Q.Y, Q.Z, Q.W, S.X, S.Y, S.Z})
+    { Values.Add(MakeShared<FJsonValueNumber>(Value)); }
+    return Values;
+}
+
+FString HashLesson07TextureSource(FTextureSource& Source, const TSharedRef<FJsonObject>& Row)
+{
+    // This consumer uses ordinary BGRA8 2D heightmaps. Refuse an unsupported source instead of hashing only a subset.
+    if (!Source.IsValid() || Source.GetNumBlocks() != 1 || Source.GetNumLayers() != 1 ||
+        Source.GetNumSlices() != 1 || Source.GetFormat() != TSF_BGRA8 ||
+        Source.GetSizeX() < 1 || Source.GetSizeY() < 1 || Source.GetSizeX() > 8192 ||
+        Source.GetSizeY() > 8192 || Source.GetNumMips() < 1 || Source.GetNumMips() > 14)
+    { return TEXT("unsupported_composite_heightmap_source"); }
+    Row->SetNumberField(TEXT("size_x"), Source.GetSizeX());
+    Row->SetNumberField(TEXT("size_y"), Source.GetSizeY());
+    Row->SetNumberField(TEXT("source_format"), Source.GetFormat());
+    // Decompress each unique texture once; FMipData exposes read-only views of all of its mips.
+    const FTextureSource::FMipData Chain = Source.GetMipData(nullptr);
+    if (!Chain.IsValid()) { return TEXT("composite_heightmap_source_read_failed"); }
+    TArray<TSharedPtr<FJsonValue>> Mips;
+    for (int32 Mip = 0; Mip < Source.GetNumMips(); ++Mip)
+    {
+        const int64 ExpectedBytes = Source.CalcMipSize(0, 0, Mip);
+        if (ExpectedBytes <= 0 || ExpectedBytes > 256LL * 1024 * 1024)
+        { return TEXT("composite_heightmap_mip_size_out_of_bounds"); }
+        const FSharedBuffer Bytes = Chain.GetMipData(0, 0, Mip);
+        if (Bytes.IsNull() || Bytes.GetSize() != static_cast<uint64>(ExpectedBytes))
+        { return TEXT("composite_heightmap_mip_read_failed"); }
+        const TSharedRef<FJsonObject> MipRow = MakeShared<FJsonObject>();
+        MipRow->SetNumberField(TEXT("mip"), Mip);
+        MipRow->SetNumberField(TEXT("byte_count"), Bytes.GetSize());
+        MipRow->SetStringField(TEXT("blake3_256"), LexToString(FBlake3::HashBuffer(Bytes.GetData(), Bytes.GetSize())));
+        Mips.Add(MakeShared<FJsonValueObject>(MipRow));
+    }
+    Row->SetArrayField(TEXT("mips"), Mips);
+    return FString();
+}
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07HeightmapHashes()
+{
+    const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+    Report->SetNumberField(TEXT("schema_version"), 1);
+    if (!IsInGameThread()) { return SerializeLesson07Report(Report, TEXT("game_thread_required")); }
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    FString Error = GatherLesson07Components(World, Actors, Components);
+    if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error); }
+    TMap<ALandscapeProxy*, FGuid> LayerGuids;
+    for (ALandscapeProxy* Actor : Actors)
+    {
+        ALandscape* Landscape = Cast<ALandscape>(Actor);
+        if (!Landscape || !Landscape->IsUpToDate())
+        { return SerializeLesson07Report(Report, TEXT("landscape_composition_pending")); }
+        const auto Layers = Landscape->GetEditLayers();
+        if (Layers.Num() != 1 || !IsValid(Layers[0]) || Layers[0]->GetName() != TEXT("Houdini_Unified_Final"))
+        { return SerializeLesson07Report(Report, TEXT("unexpected_lesson07_edit_layer")); }
+        LayerGuids.Add(Actor, Layers[0]->GetGuid());
+    }
+    TArray<UTexture2D*> Textures;
+    TArray<TSharedPtr<FJsonValue>> Bindings, TextureRows;
+    for (ULandscapeComponent* Component : Components)
+    {
+        UTexture2D* Texture = Component->GetHeightmap(false);
+        const FGuid LayerGuid = LayerGuids.FindChecked(Component->GetLandscapeProxy());
+        const FLandscapeLayerComponentData* LayerData = Component->GetLayerData(LayerGuid);
+        UTexture2D* LayerTexture = LayerData ? LayerData->HeightmapData.Texture.Get() : nullptr;
+        if (!IsValid(Texture) || Texture->GetOutermost() != World->GetOutermost() ||
+            !IsValid(LayerTexture) || LayerTexture->GetOutermost() != World->GetOutermost() ||
+            Component->GetComponentTransform().ContainsNaN() || Component->GetOwner()->GetActorTransform().ContainsNaN())
+        { return SerializeLesson07Report(Report, TEXT("invalid_composite_heightmap_binding")); }
+        Textures.AddUnique(Texture);
+        Textures.AddUnique(LayerTexture);
+        const TSharedRef<FJsonObject> Binding = MakeShared<FJsonObject>();
+        Binding->SetStringField(TEXT("component_path"), Component->GetPathName());
+        Binding->SetStringField(TEXT("texture_path"), Texture->GetPathName());
+        Binding->SetStringField(TEXT("edit_layer_guid"), LayerGuid.ToString());
+        Binding->SetStringField(TEXT("edit_layer_texture_path"), LayerTexture->GetPathName());
+        Binding->SetArrayField(TEXT("component_transform"), Lesson07TransformValues(Component->GetComponentTransform()));
+        Binding->SetArrayField(TEXT("actor_transform"), Lesson07TransformValues(Component->GetOwner()->GetActorTransform()));
+        Binding->SetNumberField(TEXT("section_base_x"), Component->SectionBaseX);
+        Binding->SetNumberField(TEXT("section_base_y"), Component->SectionBaseY);
+        const FVector4 Bias = Component->HeightmapScaleBias;
+        if (Bias.ContainsNaN()) { return SerializeLesson07Report(Report, TEXT("invalid_heightmap_scale_bias")); }
+        TArray<TSharedPtr<FJsonValue>> BiasValues;
+        for (const double Value : {Bias.X, Bias.Y, Bias.Z, Bias.W})
+        { BiasValues.Add(MakeShared<FJsonValueNumber>(Value)); }
+        Binding->SetArrayField(TEXT("heightmap_scale_bias"), BiasValues);
+        Bindings.Add(MakeShared<FJsonValueObject>(Binding));
+    }
+    Textures.Sort([](const UTexture2D& A, const UTexture2D& B) { return A.GetPathName() < B.GetPathName(); });
+    for (UTexture2D* Texture : Textures)
+    {
+        const TSharedRef<FJsonObject> Row = MakeShared<FJsonObject>();
+        Row->SetStringField(TEXT("texture_path"), Texture->GetPathName());
+        Error = HashLesson07TextureSource(Texture->Source, Row);
+        if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error + TEXT(":") + Texture->GetPathName()); }
+        TextureRows.Add(MakeShared<FJsonValueObject>(Row));
+    }
+    Report->SetStringField(TEXT("world_package"), Lesson07WorldPackage);
+    Report->SetStringField(TEXT("hash_algorithm"), TEXT("BLAKE3-256"));
+    Report->SetStringField(TEXT("height_source_scope"), TEXT("composite_and_existing_edit_layer_all_mips"));
+    Report->SetNumberField(TEXT("actor_count"), Actors.Num());
+    Report->SetNumberField(TEXT("component_count"), Components.Num());
+    Report->SetArrayField(TEXT("component_bindings"), Bindings);
+    Report->SetArrayField(TEXT("textures"), TextureRows);
+    return SerializeLesson07Report(Report);
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07LayerUpdateState()
+{
+    const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+    Report->SetNumberField(TEXT("schema_version"), 1);
+    if (!IsInGameThread()) { return SerializeLesson07Report(Report, TEXT("game_thread_required")); }
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    const FString Error = GatherLesson07Components(World, Actors, Components);
+    if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error); }
+    bool bAllUpToDate = true;
+    TArray<TSharedPtr<FJsonValue>> Rows;
+    for (ALandscapeProxy* Actor : Actors)
+    {
+        ALandscape* Landscape = Cast<ALandscape>(Actor);
+        if (!Landscape) { return SerializeLesson07Report(Report, TEXT("original_landscape_actor_required")); }
+        const auto Layers = Landscape->GetEditLayers();
+        if (Layers.Num() != 1 || !IsValid(Layers[0]) || Layers[0]->GetName() != TEXT("Houdini_Unified_Final"))
+        { return SerializeLesson07Report(Report, TEXT("unexpected_lesson07_edit_layer")); }
+        const TSharedRef<FJsonObject> Row = MakeShared<FJsonObject>();
+        Row->SetStringField(TEXT("actor"), Actor->GetName());
+        Row->SetStringField(TEXT("landscape_guid"), Landscape->GetLandscapeGuid().ToString());
+        Row->SetStringField(TEXT("edit_layer_guid"), Layers[0]->GetGuid().ToString());
+        Row->SetBoolField(TEXT("edit_layer_locked"), Layers[0]->IsLocked());
+        Row->SetBoolField(TEXT("edit_layer_visible"), Layers[0]->IsVisible());
+        Row->SetBoolField(TEXT("up_to_date"), Landscape->IsUpToDate());
+        bAllUpToDate &= Landscape->IsUpToDate();
+        Rows.Add(MakeShared<FJsonValueObject>(Row));
+    }
+    Report->SetStringField(TEXT("world_package"), Lesson07WorldPackage);
+    Report->SetArrayField(TEXT("actors"), Rows);
+    Report->SetBoolField(TEXT("all_up_to_date"), bAllUpToDate);
+    return SerializeLesson07Report(Report);
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07CookableState(UObject* Cookable)
+{
+    const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+    Report->SetNumberField(TEXT("schema_version"), 1);
+    if (!IsInGameThread()) { return SerializeLesson07Report(Report, TEXT("game_thread_required")); }
+    if (!IsValid(Cookable) || Cookable->GetClass()->GetPathName() != TEXT("/Script/HoudiniEngineRuntime.HoudiniCookable") ||
+        Cookable->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+    { return SerializeLesson07Report(Report, TEXT("exact_houdini_cookable_instance_required")); }
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    const FString Error = GatherLesson07Components(World, Actors, Components);
+    if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error); }
+    const AActor* Owner = Cookable->GetTypedOuter<AActor>();
+    if (!IsValid(Owner) || Owner->GetWorld() != World ||
+        Owner->GetClass()->GetPathName() != TEXT("/Script/HoudiniEngineRuntime.HoudiniAssetActor"))
+    { return SerializeLesson07Report(Report, TEXT("lesson07_houdini_actor_required")); }
+    // H22.0.466 exposes these UPROPERTY fields to native reflection but deliberately
+    // not to Python. Read this exact allowlist without linking the optional plugin.
+    const FBoolProperty* Modification = FindFProperty<FBoolProperty>(Cookable->GetClass(), TEXT("bIsLandscapeModification"));
+    const FObjectPropertyBase* OutputProperty = FindFProperty<FObjectPropertyBase>(Cookable->GetClass(), TEXT("OutputData"));
+    UObject* OutputData = OutputProperty ? OutputProperty->GetObjectPropertyValue_InContainer(Cookable) : nullptr;
+    if (!Modification || !IsValid(OutputData) ||
+        OutputData->GetClass()->GetPathName() != TEXT("/Script/HoudiniEngineRuntime.CookableOutputData") ||
+        OutputData->GetOuter() != Cookable)
+    { return SerializeLesson07Report(Report, TEXT("houdini_cookable_properties_unavailable")); }
+    const FBoolProperty* TempLayers = FindFProperty<FBoolProperty>(OutputData->GetClass(), TEXT("bLandscapeUseTempLayers"));
+    if (!TempLayers) { return SerializeLesson07Report(Report, TEXT("houdini_temp_layer_property_unavailable")); }
+    const bool bModification = Modification->GetPropertyValue_InContainer(Cookable);
+    const bool bTempLayers = TempLayers->GetPropertyValue_InContainer(OutputData);
+    Report->SetStringField(TEXT("world_package"), Lesson07WorldPackage);
+    Report->SetStringField(TEXT("cookable_path"), Cookable->GetPathName());
+    Report->SetStringField(TEXT("owner_path"), Owner->GetPathName());
+    Report->SetBoolField(TEXT("is_landscape_modification"), bModification);
+    Report->SetBoolField(TEXT("landscape_use_temp_layers"), bTempLayers);
+    return SerializeLesson07Report(Report, bModification && !bTempLayers ? FString() : TEXT("unsafe_houdini_landscape_configuration"));
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07OutputState(UObject* Output)
+{
+    const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+    Report->SetNumberField(TEXT("schema_version"), 1);
+    if (!IsInGameThread()) { return SerializeLesson07Report(Report, TEXT("game_thread_required")); }
+    if (!IsValid(Output) || Output->GetClass()->GetPathName() != TEXT("/Script/HoudiniEngineRuntime.HoudiniLandscapeTargetLayerOutput") ||
+        Output->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+    { return SerializeLesson07Report(Report, TEXT("exact_houdini_landscape_output_instance_required")); }
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    const FString Error = GatherLesson07Components(World, Actors, Components);
+    if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error); }
+    const FObjectPropertyBase* LandscapeProperty = FindFProperty<FObjectPropertyBase>(Output->GetClass(), TEXT("Landscape"));
+    const FObjectPropertyBase* ProxyProperty = FindFProperty<FObjectPropertyBase>(Output->GetClass(), TEXT("LandscapeProxy"));
+    ALandscape* Landscape = LandscapeProperty ? Cast<ALandscape>(LandscapeProperty->GetObjectPropertyValue_InContainer(Output)) : nullptr;
+    UObject* Proxy = ProxyProperty ? ProxyProperty->GetObjectPropertyValue_InContainer(Output) : nullptr;
+    if (!IsValid(Landscape) || Landscape != Proxy || Landscape->GetWorld() != World || !Actors.Contains(Landscape))
+    { return SerializeLesson07Report(Report, TEXT("original_lesson07_output_target_required")); }
+    Report->SetStringField(TEXT("world_package"), Lesson07WorldPackage);
+    Report->SetStringField(TEXT("output_path"), Output->GetPathName());
+    Report->SetStringField(TEXT("actor"), Landscape->GetName());
+    Report->SetStringField(TEXT("landscape_path"), Landscape->GetPathName());
+    Report->SetStringField(TEXT("landscape_proxy_path"), Proxy->GetPathName());
+    for (const auto& Field : {
+        TPair<const TCHAR*, const TCHAR*>(TEXT("BakedEditLayer"), TEXT("baked_edit_layer")),
+        TPair<const TCHAR*, const TCHAR*>(TEXT("CookedEditLayer"), TEXT("cooked_edit_layer")),
+        TPair<const TCHAR*, const TCHAR*>(TEXT("TargetLayer"), TEXT("target_layer"))})
+    {
+        const FStrProperty* Property = FindFProperty<FStrProperty>(Output->GetClass(), Field.Key);
+        if (!Property) { return SerializeLesson07Report(Report, TEXT("houdini_output_string_unavailable")); }
+        Report->SetStringField(Field.Value, Property->GetPropertyValue_InContainer(Output));
+    }
+    for (const auto& Field : {
+        TPair<const TCHAR*, const TCHAR*>(TEXT("bClearLayer"), TEXT("clear_layer")),
+        TPair<const TCHAR*, const TCHAR*>(TEXT("bCreatedLandscape"), TEXT("created_landscape")),
+        TPair<const TCHAR*, const TCHAR*>(TEXT("bLayerWasCreated"), TEXT("layer_was_created")),
+        TPair<const TCHAR*, const TCHAR*>(TEXT("bCookedLayerRequiresBaking"), TEXT("cooked_layer_requires_baking"))})
+    {
+        const FBoolProperty* Property = FindFProperty<FBoolProperty>(Output->GetClass(), Field.Key);
+        if (!Property) { return SerializeLesson07Report(Report, TEXT("houdini_output_flag_unavailable")); }
+        Report->SetBoolField(Field.Value, Property->GetPropertyValue_InContainer(Output));
+    }
+    const FStructProperty* Extents = FindFProperty<FStructProperty>(Output->GetClass(), TEXT("Extents"));
+    if (!Extents || Extents->Struct->GetPathName() != TEXT("/Script/HoudiniEngineRuntime.HoudiniExtents"))
+    { return SerializeLesson07Report(Report, TEXT("houdini_output_extents_unavailable")); }
+    const FStructProperty* Min = FindFProperty<FStructProperty>(Extents->Struct, TEXT("Min"));
+    const FStructProperty* Max = FindFProperty<FStructProperty>(Extents->Struct, TEXT("Max"));
+    if (!Min || !Max || Min->Struct != TBaseStructure<FIntPoint>::Get() || Max->Struct != TBaseStructure<FIntPoint>::Get())
+    { return SerializeLesson07Report(Report, TEXT("houdini_output_extents_type_mismatch")); }
+    const void* ExtentsValue = Extents->ContainerPtrToValuePtr<void>(Output);
+    const FIntPoint Lower = *Min->ContainerPtrToValuePtr<FIntPoint>(ExtentsValue);
+    const FIntPoint Upper = *Max->ContainerPtrToValuePtr<FIntPoint>(ExtentsValue);
+    TArray<TSharedPtr<FJsonValue>> Bounds;
+    for (const int32 Value : {Lower.X, Lower.Y, Upper.X, Upper.Y})
+    { Bounds.Add(MakeShared<FJsonValueNumber>(Value)); }
+    Report->SetArrayField(TEXT("extents"), Bounds);
+    return SerializeLesson07Report(Report);
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::RefreshLesson07GrassCaches()
+{
+    const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+    Report->SetNumberField(TEXT("schema_version"), 1);
+    if (!IsInGameThread()) { return SerializeLesson07Report(Report, TEXT("game_thread_required")); }
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    const FString Error = GatherLesson07Components(World, Actors, Components);
+    if (!Error.IsEmpty()) { return SerializeLesson07Report(Report, Error); }
+    constexpr const TCHAR* InstancePath = TEXT("/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS");
+    constexpr const TCHAR* ParentPath = TEXT("/Game/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.M_Landscape_YACS");
+    for (ALandscapeProxy* Actor : Actors)
+    {
+        const UMaterialInstance* Material = Cast<UMaterialInstance>(Actor->LandscapeMaterial);
+        if (!IsValid(Material) || Material->GetPathName() != InstancePath ||
+            !IsValid(Material->Parent) || Material->Parent->GetPathName() != ParentPath)
+        { return SerializeLesson07Report(Report, TEXT("repaired_lesson07_material_required")); }
+    }
+    for (ULandscapeComponent* Component : Components)
+    {
+        if (Component->OverrideMaterial || Component->OverrideHoleMaterial || !Component->GetPerLODOverrideMaterials().IsEmpty())
+        { return SerializeLesson07Report(Report, TEXT("unexpected_component_material_override")); }
+    }
+    // UHT may preserve the original property name for the deprecated serialized field.
+    // Inspect it, but never clear private legacy data to hide a failed native migration.
+    FArrayProperty* Legacy = FindFProperty<FArrayProperty>(ULandscapeComponent::StaticClass(), TEXT("GrassTypes"));
+    if (!Legacy) { Legacy = FindFProperty<FArrayProperty>(ULandscapeComponent::StaticClass(), TEXT("GrassTypes_DEPRECATED")); }
+    if (!Legacy || !CastField<FObjectPropertyBase>(Legacy->Inner))
+    { return SerializeLesson07Report(Report, TEXT("legacy_grass_reference_observation_unavailable")); }
+    const auto CountLegacy = [Legacy, &Components]()
+    {
+        int32 Count = 0;
+        for (ULandscapeComponent* Component : Components)
+        { Count += FScriptArrayHelper(Legacy, Legacy->ContainerPtrToValuePtr<void>(Component)).Num(); }
+        return Count;
+    };
+    int32 Before = 0, After = 0, Updated = 0;
+    for (const ULandscapeComponent* Component : Components) { Before += Component->GetNamedGrassTypes().Num(); }
+    const int32 LegacyBefore = CountLegacy();
+    for (ULandscapeComponent* Component : Components)
+    {
+        Component->Modify();
+        Updated += Component->UpdateGrassTypes(true) ? 1 : 0;
+        After += Component->GetNamedGrassTypes().Num();
+    }
+    // UpdateGrassTypeSummary is not exported by this MinimalAPI class. Its normal engine path
+    // will recompute the transient summary after this public inline invalidation.
+    for (ALandscapeProxy* Actor : Actors) { Actor->InvalidateGrassTypeSummary(); }
+    const int32 LegacyAfter = CountLegacy();
+    Report->SetStringField(TEXT("world_package"), Lesson07WorldPackage);
+    Report->SetNumberField(TEXT("actor_count"), Actors.Num());
+    Report->SetNumberField(TEXT("component_count"), Components.Num());
+    Report->SetNumberField(TEXT("updated_component_count"), Updated);
+    Report->SetNumberField(TEXT("grass_type_reference_count_before"), Before + LegacyBefore);
+    Report->SetNumberField(TEXT("grass_type_reference_count_after"), After + LegacyAfter);
+    Report->SetNumberField(TEXT("legacy_grass_reference_count_before"), LegacyBefore);
+    Report->SetNumberField(TEXT("legacy_grass_reference_count_after"), LegacyAfter);
+    Report->SetBoolField(TEXT("saved"), false);
+    return SerializeLesson07Report(Report, After + LegacyAfter == 0 ? FString() : TEXT("native_grass_references_remain"));
+}
+
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07ComponentSamples(
+    ULandscapeComponent* Component, const TArray<int32>& LocalVertexIndices)
+{
+    const TSharedRef<FJsonObject> Result = MakeShared<FJsonObject>();
+    Result->SetNumberField(TEXT("schema_version"), 1);
+    Result->SetBoolField(TEXT("observed"), false);
+    const auto Serialize = [&Result]() -> FString
+    {
+        FString Json;
+        FJsonSerializer::Serialize(Result, TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&Json));
+        return Json;
+    };
+    const auto Refuse = [&Result, &Serialize](const TCHAR* Error) -> FString
+    {
+        Result->SetStringField(TEXT("error"), Error);
+        return Serialize();
+    };
+    if (!IsInGameThread()) { return Refuse(TEXT("game_thread_required")); }
+    if (!IsValid(Component)) { return Refuse(TEXT("invalid_component")); }
+    const UWorld* World = Component->GetWorld();
+    if (!IsValid(World) || World->WorldType != EWorldType::Editor ||
+        World->GetOutermost()->GetName() != TEXT("/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"))
+    {
+        return Refuse(TEXT("lesson07_editor_world_required"));
+    }
+    const ALandscapeProxy* Proxy = Component->GetLandscapeProxy();
+    const TSet<FName> ActorNames = {
+        TEXT("SaCalobra_Unified_0_0"), TEXT("SaCalobra_Unified_0_1"),
+        TEXT("SaCalobra_Unified_1_0"), TEXT("SaCalobra_Unified_1_1")
+    };
+    if (!IsValid(Proxy) || !ActorNames.Contains(Proxy->GetFName()) ||
+        Component->ComponentSizeQuads != 254 || Component->SubsectionSizeQuads != 127 ||
+        Component->NumSubsections != 2)
+    {
+        return Refuse(TEXT("unsupported_lesson07_component"));
+    }
+    constexpr int32 Size = 255;
+    if (LocalVertexIndices.IsEmpty() || LocalVertexIndices.Num() > 1024)
+    {
+        return Refuse(TEXT("sample_count_out_of_bounds"));
+    }
+    TSet<int32> Unique;
+    for (const int32 Index : LocalVertexIndices)
+    {
+        if (Index < 0 || Index >= Size * Size || Unique.Contains(Index))
+        {
+            return Refuse(TEXT("invalid_or_duplicate_vertex_index"));
+        }
+        Unique.Add(Index);
+    }
+    const UTexture2D* Heightmap = Component->GetHeightmap(false);
+    if (!IsValid(Heightmap) || !Heightmap->Source.IsValid())
+    {
+        return Refuse(TEXT("native_heightmap_source_unavailable"));
+    }
+    // false reads the saved composite, never the currently selected edit layer.
+    FLandscapeComponentDataInterface Data(Component, 0, false);
+    if (!Data.GetRawHeightData() || Data.GetComponentSizeVerts() != Size)
+    {
+        return Refuse(TEXT("native_heightmap_data_unavailable"));
+    }
+    bool bVisibilityAllocated = false;
+    for (const FWeightmapLayerAllocationInfo& Allocation : Component->GetWeightmapLayerAllocations(false))
+    {
+        if (IsValid(ALandscapeProxy::VisibilityLayer) && Allocation.LayerInfo == ALandscapeProxy::VisibilityLayer)
+        {
+            bVisibilityAllocated = true;
+            break;
+        }
+    }
+    TArray<uint8> Visibility;
+    const bool bVisibilityObserved = bVisibilityAllocated &&
+        Data.GetWeightmapTextureData(ALandscapeProxy::VisibilityLayer, Visibility, false, true) &&
+        Visibility.Num() == Size * Size;
+    Result->SetStringField(TEXT("visibility_status"), bVisibilityObserved ? TEXT("ALLOCATED_READ") :
+        (bVisibilityAllocated ? TEXT("READ_FAILED") : TEXT("NOT_ALLOCATED")));
+    Result->SetBoolField(TEXT("visibility_observed"), bVisibilityObserved);
+    TArray<TSharedPtr<FJsonValue>> Indices, Samples;
+    for (const int32 Index : LocalVertexIndices)
+    {
+        const int32 X = Index % Size, Y = Index / Size;
+        const FVector Position = Data.GetWorldVertex(X, Y);
+        if (!FMath::IsFinite(Position.X) || !FMath::IsFinite(Position.Y) || !FMath::IsFinite(Position.Z))
+        {
+            return Refuse(TEXT("nonfinite_native_vertex"));
+        }
+        Indices.Add(MakeShared<FJsonValueNumber>(Index));
+        TArray<TSharedPtr<FJsonValue>> Row = {
+            MakeShared<FJsonValueNumber>(Data.GetHeight(X, Y)),
+            MakeShared<FJsonValueNumber>(Position.X),
+            MakeShared<FJsonValueNumber>(Position.Y),
+            MakeShared<FJsonValueNumber>(Position.Z)
+        };
+        if (bVisibilityObserved) { Row.Add(MakeShared<FJsonValueNumber>(Visibility[Index])); }
+        else { Row.Add(MakeShared<FJsonValueNull>()); }
+        Samples.Add(MakeShared<FJsonValueArray>(Row));
+    }
+    Result->SetStringField(TEXT("world_package"), World->GetOutermost()->GetName());
+    Result->SetStringField(TEXT("component_path"), Component->GetPathName());
+    Result->SetStringField(TEXT("actor_name"), Proxy->GetName());
+    Result->SetArrayField(TEXT("vertex_indices"), Indices);
+    Result->SetArrayField(TEXT("samples"), Samples);
+    Result->SetBoolField(TEXT("observed"), true);
+    return Serialize();
+}
 
 namespace
 {
@@ -1153,6 +1636,76 @@ FString UYacsLandscapeMeshDiagnosticLibrary::CopyComponent230(
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FYacsLesson07HeightmapPreservationTest,
+    "YACS.Lesson07.NativeHeightmapPreservation",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FYacsLesson07HeightmapPreservationTest::RunTest(const FString& Parameters)
+{
+    const auto RejectsClass = [this](const FString& Json, const FString& Expected)
+    {
+        TSharedPtr<FJsonObject> State;
+        if (!TestTrue(TEXT("Native rejection is readable JSON"), FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), State)))
+        { return; }
+        TestFalse(TEXT("A missing/wrong HAPI object is never admitted"), State->GetBoolField(TEXT("success")));
+        TestEqual(TEXT("Rejection occurs at the exact-class boundary"), State->GetArrayField(TEXT("errors"))[0]->AsString(), Expected);
+    };
+    UObject* WrongClass = NewObject<UTexture2D>();
+    for (UObject* Object : {static_cast<UObject*>(nullptr), WrongClass})
+    {
+        RejectsClass(UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07CookableState(Object),
+            TEXT("exact_houdini_cookable_instance_required"));
+        RejectsClass(UYacsLandscapeMeshDiagnosticLibrary::ReadLesson07OutputState(Object),
+            TEXT("exact_houdini_landscape_output_instance_required"));
+    }
+    TArray<ALandscapeProxy*> Actors;
+    TArray<ULandscapeComponent*> Components;
+    TestEqual(TEXT("A missing world cannot enter the refresh/hash scope"),
+        GatherLesson07Components(nullptr, Actors, Components), FString(TEXT("lesson07_editor_world_required")));
+    UWorld* OtherWorld = NewObject<UWorld>();
+    OtherWorld->WorldType = EWorldType::Editor;
+    TestEqual(TEXT("An unrelated editor world cannot enter the scope"),
+        GatherLesson07Components(OtherWorld, Actors, Components), FString(TEXT("lesson07_editor_world_required")));
+    FArrayProperty* Legacy = FindFProperty<FArrayProperty>(ULandscapeComponent::StaticClass(), TEXT("GrassTypes"));
+    if (!Legacy) { Legacy = FindFProperty<FArrayProperty>(ULandscapeComponent::StaticClass(), TEXT("GrassTypes_DEPRECATED")); }
+    TestTrue(TEXT("Residual legacy grass references can be observed"),
+        Legacy && CastField<FObjectPropertyBase>(Legacy->Inner));
+
+    // A source fixture contains 2x2 mip 0 and 1x1 mip 1. Changing only the latter must be detected.
+    uint8 Pixels[20] = {};
+    UTexture2D* FixtureTexture = NewObject<UTexture2D>();
+    FTextureSource& Source = FixtureTexture->Source;
+    // UE 5.8 source initialization queries its owner's texture class.
+    // A standalone default FTextureSource has neither an owner nor a torn-off class.
+    Source.SetOwner(FixtureTexture);
+    Source.Init(2, 2, 1, 2, TSF_BGRA8, Pixels);
+    const FGuid IdBefore = Source.GetId();
+    const TSharedRef<FJsonObject> Before = MakeShared<FJsonObject>(), Repeat = MakeShared<FJsonObject>();
+    TestTrue(TEXT("All native source mips can be read"), HashLesson07TextureSource(Source, Before).IsEmpty());
+    TestTrue(TEXT("Repeated read succeeds"), HashLesson07TextureSource(Source, Repeat).IsEmpty());
+    TestTrue(TEXT("Read preserves source identity"), Source.GetId() == IdBefore);
+    TestEqual(TEXT("Repeated hash report is deterministic"), SerializeLesson07Report(Before), SerializeLesson07Report(Repeat));
+    const auto BeforeMips = Before->GetArrayField(TEXT("mips"));
+    if (!TestEqual(TEXT("All source mips are included"), BeforeMips.Num(), 2)) { return false; }
+    TestEqual(TEXT("Full 256-bit hash width"),
+        BeforeMips[0]->AsObject()->GetStringField(TEXT("blake3_256")).Len(), 64);
+    Pixels[19] = 1;
+    Source.Init(2, 2, 1, 2, TSF_BGRA8, Pixels);
+    const TSharedRef<FJsonObject> Changed = MakeShared<FJsonObject>();
+    TestTrue(TEXT("Modified fixture can be read"), HashLesson07TextureSource(Source, Changed).IsEmpty());
+    const auto ChangedMips = Changed->GetArrayField(TEXT("mips"));
+    TestEqual(TEXT("Unmodified mip is identical"),
+        BeforeMips[0]->AsObject()->GetStringField(TEXT("blake3_256")),
+        ChangedMips[0]->AsObject()->GetStringField(TEXT("blake3_256")));
+    TestNotEqual(TEXT("Change in a lower mip is detected"),
+        BeforeMips[1]->AsObject()->GetStringField(TEXT("blake3_256")),
+        ChangedMips[1]->AsObject()->GetStringField(TEXT("blake3_256")));
+    FTextureSource EmptySource;
+    TestFalse(TEXT("Missing source is never an empty-hash success"),
+        HashLesson07TextureSource(EmptySource, MakeShared<FJsonObject>()).IsEmpty());
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FYacsWindow0112ReadOnlyTriangleTest,
     "YACS.ShoulderContactNative.ReadOnlyTriangles",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)

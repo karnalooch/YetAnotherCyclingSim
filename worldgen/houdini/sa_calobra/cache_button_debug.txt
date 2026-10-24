@@ -1,0 +1,120 @@
+=== EXECUTE CALLBACK CALLED ===
+Node: /obj/PE_Cache_Landscape/PE_Cache_Landscape1
+file_path: D:/yacs/project/worldgen/houdini/sa_calobra/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_2_Manual_Edits.SCULPT.bgeo.sc
+UNREAL_INPUTS node: UNREAL_INPUTS
+UNREAL_INPUTS errors: ()
+UNREAL_INPUTS warnings: ()
+UNREAL_INPUTS geo: <hou.Geometry in /obj/PE_Cache_Landscape/PE_Cache_Landscape1/UNREAL_INPUTS read-only>
+UNREAL_INPUTS prims count: 6
+  Prim: type=Volume, num=0
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: -0.685997724533081
+    intrinsic volumemaxvalue: 576.3612060546875
+    intrinsic volumeavgvalue: 242.4591144490676
+    intrinsic volumevisualmode: heightfield
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: height
+  Prim: type=Volume, num=1
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: 0.0
+    intrinsic volumemaxvalue: 0.0
+    intrinsic volumeavgvalue: 0.0
+    intrinsic volumevisualmode: smoke
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: mask
+  Prim: type=Volume, num=2
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: 0.0
+    intrinsic volumemaxvalue: 0.0
+    intrinsic volumeavgvalue: 0.0
+    intrinsic volumevisualmode: smoke
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: visibility
+  Prim: type=Volume, num=3
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: -0.685997724533081
+    intrinsic volumemaxvalue: 576.3787841796875
+    intrinsic volumeavgvalue: 242.46376367274328
+    intrinsic volumevisualmode: heightfield
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: landscapelayer_Houdini_Source_Pegasus_Gentle
+  Prim: type=Volume, num=4
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: -0.15830716490745544
+    intrinsic volumemaxvalue: 0.17589685320854187
+    intrinsic volumeavgvalue: 0.012940463497018292
+    intrinsic volumevisualmode: heightfield
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: landscapelayer_Layer2_Procedural
+  Prim: type=Volume, num=5
+    intrinsic typename: Volume
+    intrinsic measuredvolume: 4840923.0
+    intrinsic volumebordertype: streak
+    intrinsic volumebordervalue: 0.0
+    intrinsic volumecompressiontol: 0.0
+    intrinsic volumecomponents: 1
+    intrinsic volumetypeid: 1
+    intrinsic volumeminvalue: 0.017589684575796127
+    intrinsic volumemaxvalue: 4.5205488204956055
+    intrinsic volumeavgvalue: 0.018979161048417847
+    intrinsic volumevisualmode: heightfield
+    intrinsic volumevisualdensity: 1.0
+    intrinsic volumevisualiso: 0.0
+    intrinsic volumevisualtiles: 1.0
+    intrinsic volumetypeinfo: none
+    volume name: landscapelayer_Layer1_Manual
+blast1 errors: ()
+blast1 prims count: 3
+  blast1 prim name: height
+  blast1 prim name: landscapelayer_Layer2_Procedural
+  blast1 prim name: landscapelayer_Layer1_Manual
+Layer1_Manual node: Layer1_Manual
+Layer1_Manual errors: ('Destination height does not exist and cannot find required source volume landscapelayer_Layer1_Manual.',)
+Layer1_Manual warnings: ()
+Layer1_Manual Prims count: 3
+SUCCESS: saved to D:/yacs/project/worldgen/houdini/sa_calobra/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_2_Manual_Edits.SCULPT.bgeo.sc

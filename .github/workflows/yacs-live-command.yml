@@ -1,0 +1,113 @@
+name: YACS Live Host — submit one reviewed editor recipe
+
+on:
+  push:
+    branches: [codex/365-world-graph, codex/476-yacs-live-host]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  await_ci:
+    name: Admit exact-source live preview without native rebuild
+    if: >-
+      github.event_name == 'push' &&
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      contains(github.event.head_commit.message, '[yacs-live-command]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact live-preview source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Validate bounded preview request and exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.live_host.editor_recipes import verify_parameters
+
+          path = Path("worldgen/live_host/current_command.json")
+          if path.is_symlink() or not 0 < path.stat().st_size <= 4096:
+              raise ValueError("Unsafe typed request file")
+          request = json.loads(path.read_text(encoding="utf-8"))
+          if set(request) != {"schema_version", "target_issue", "recipe", "intent", "parameters"}:
+              raise ValueError("Typed request schema differs")
+          if (type(request["schema_version"]) is not int or request["schema_version"] != 1
+                  or type(request["target_issue"]) is not int or request["target_issue"] != 476
+                  or request["intent"] != "preview"
+                  or request["recipe"] not in {"rock_contact_scatter", "rock_asset_audit"}):
+              raise ValueError("Focused admission allows only bounded live previews; authoring requires separate full proof")
+          catalog = json.loads(Path("scripts/live_host/recipes/catalog.json").read_text(encoding="utf-8"))
+          if catalog["schema_version"] != 1 or catalog["review_issue"] != 476 or catalog["policy"] != "SOURCE_REVIEWED_RECIPES_ONLY":
+              raise ValueError("Reviewed recipe catalog differs")
+          rows = [row for row in catalog["recipes"] if row["id"] == request["recipe"]]
+          if len(rows) != 1 or rows[0]["intents"] != ["preview"] or rows[0]["asset_scope"] != []:
+              raise ValueError("Live preview must have no saved asset scope")
+          verify_parameters(rows[0]["parameters"], request["parameters"])
+          source = Path("scripts/live_host/recipes") / (request["recipe"] + ".py")
+          if source.is_symlink() or not 0 < source.stat().st_size <= 512 * 1024:
+              raise ValueError("Unsafe reviewed recipe source")
+          print("Exact-source bounded preview admitted; native runtime readback remains required")
+          PY
+      - name: Run Live Host CPU contract tests
+        run: python -m unittest discover -s scripts/live_host -p 'test_*.py' -q
+      - name: Run read-only progress HUD CPU checks
+        run: node scripts/live_host/test_remote_progress.cjs
+
+  request:
+    name: Stage one versioned trusted code recipe in the already open Editor
+    needs: await_ci
+    if: ${{ needs.await_ci.result == 'success' }}
+    concurrency:
+      group: yacs-live-host-management-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 8
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_LIVE_ADMITTED_SHA: ${{ github.sha }}
+    steps:
+      - name: Checkout exact owner-approved revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: request-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Authenticate one typed request and publish reviewed recipe
+        shell: pwsh
+        working-directory: request-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $path='worldgen/live_host/current_command.json'
+          if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw 'No typed request file in exact commit' }
+          $meta=Get-Item -LiteralPath $path -Force
+          if ($meta.Length -gt 4096 -or $meta.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Unsafe request file' }
+          $request=Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+          if (@($request.PSObject.Properties.Name | Sort-Object) -join ',' -cne
+              'intent,parameters,recipe,schema_version,target_issue') { throw 'Request schema differs' }
+          if ($request.schema_version -ne 1 -or $request.target_issue -ne 476 -or
+              $request.recipe -cnotmatch '^[a-z][a-z0-9_]{2,47}$' -or
+              $request.intent -cnotin @('preview','author')) { throw 'Unapproved request target or intent' }
+          $args=($request.parameters | ConvertTo-Json -Depth 10 -Compress)
+          if ([Text.Encoding]::UTF8.GetByteCount($args) -gt 2048) { throw 'Unsafe request body length' }
+          ./scripts/live_host/Publish-YacsLiveRecipe.ps1 -ExpectedHead $env:GITHUB_SHA -Recipe $request.recipe -Apply
+          ./scripts/live_host/Send-YacsLiveHostCommand.ps1 -Action run_recipe -Recipe $request.recipe -RecipeRevision $env:GITHUB_SHA -Intent $request.intent -ParametersJson $args
+          Write-Host 'Submitted to the SAME interactive Editor without restarting Unreal; native readback required separately'

@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "scope": "LOCAL_ROCK_VARIANT_ASSET_LIBRARY_ONLY",
+  "variants": [
+    {
+      "id": "namaqualand_boulder_02_s75",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s75.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_02_s75.fbx",
+      "sha256": "1514a16a3d1bbced06148d66d7b478c521c7ba79dbdd018075bb5a4dbcbefe9f",
+      "bytes": 2936748,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "art_scale": 0.75,
+      "expected_native_bounds_cm": {
+        "min": [
+          -22.826021909713745,
+          -49.188232421875,
+          0.0
+        ],
+        "max": [
+          23.331403732299805,
+          44.40024495124817,
+          29.12704646587372
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_02_s100",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s100.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_02_s100.fbx",
+      "sha256": "1cf2045bb157b722e743365436f6309c48fa459b1cd6a6f2528b88ae848e5621",
+      "bytes": 2934844,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "art_scale": 1.0,
+      "expected_native_bounds_cm": {
+        "min": [
+          -30.43469488620758,
+          -65.58430790901184,
+          0.0
+        ],
+        "max": [
+          31.108537316322327,
+          59.20032858848572,
+          38.83606195449829
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_02_s125",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s125.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_02_s125.fbx",
+      "sha256": "4ef19c5377a7b503f8032a0d80d5d0292514b1b3e7a3e56c0916c11a738e4001",
+      "bytes": 2938316,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "art_scale": 1.25,
+      "expected_native_bounds_cm": {
+        "min": [
+          -38.043367862701416,
+          -81.98038339614868,
+          0.0
+        ],
+        "max": [
+          38.88567090034485,
+          74.00041222572327,
+          48.545077443122864
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_06_s75",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s75.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_06_s75.fbx",
+      "sha256": "0598e61b029696e000d79f6f3484502d3aa550e7b35cdb0ed0c172b70c086e71",
+      "bytes": 3656892,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "art_scale": 0.75,
+      "expected_native_bounds_cm": {
+        "min": [
+          -24.05453324317932,
+          -49.56100583076477,
+          0.0
+        ],
+        "max": [
+          26.5691876411438,
+          41.32966995239258,
+          43.98512542247772
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_06_s100",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s100.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_06_s100.fbx",
+      "sha256": "d9ebe5fd71ed003cb8cb4d7fbe9e179ee82c793a0f8c1dbf9c1b48b973dd18d0",
+      "bytes": 3658524,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "art_scale": 1.0,
+      "expected_native_bounds_cm": {
+        "min": [
+          -32.07271099090576,
+          -66.08133912086487,
+          0.0
+        ],
+        "max": [
+          35.42558550834656,
+          55.1062285900116,
+          58.64683389663696
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_06_s125",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s125.fbx",
+      "source_relative": "rock-variants/namaqualand_boulder_06_s125.fbx",
+      "sha256": "992232870bb6b00bf6883c388e4f7b75b5e89921a240b344df0b9a099608890a",
+      "bytes": 3658012,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "art_scale": 1.25,
+      "expected_native_bounds_cm": {
+        "min": [
+          -40.0908887386322,
+          -82.60167241096497,
+          0.0
+        ],
+        "max": [
+          44.281983375549316,
+          68.88278722763062,
+          73.30853939056396
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    }
+  ],
+  "preparation_receipt": {
+    "path": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\rock-variant-pack.json",
+    "sha256": "39e7422fe8dbf241001c73ad5dac50777585d3d352bf2200ef017eb6a5451d78"
+  },
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "terrain_modified": false,
+  "material_recipe": "ROCK_APPEARANCE_V2",
+  "owner_appearance_feedback": "skały są super; positive appearance feedback for prior base renders, not contact or whole-M3 admission"
+}

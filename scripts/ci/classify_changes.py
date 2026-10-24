@@ -57,6 +57,7 @@ UE_CRITICAL_CONFIG = {
 }
 
 UE_CODE_TOOLING_EXACT = {
+    "scripts/ci/classify_changes.py",
     "scripts/ci/materialize_unreal_cache_inputs.py",
     # Line-ending policies can change raw build inputs even when Git blobs do not.
     ".gitattributes",
@@ -473,6 +474,7 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
 UNREAL_COMPILE_EXTENSIONS = {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
 
 UNREAL_PROOF_EXACT = {
+    "scripts/ci/classify_changes.py",
     "scripts/ci/materialize_unreal_cache_inputs.py",
     ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
@@ -532,16 +534,28 @@ def _unreal_binary_fingerprint(repo_root: str | Path = ".") -> str:
     ):
         if not source_root.exists():
             continue
-        # A warm UE worktree intentionally retains Plugins/*/Binaries and
-        # Plugins/*/Intermediate. Neither DLLs nor generated build intermediates
-        # may become hash inputs for their own binary fingerprint.
+        # UE discovers .uplugin descriptors recursively below Plugins, including
+        # Plugins/Runtime/HoudiniEngine. Build outputs directly below a discovered
+        # plugin must not become inputs for their own binary fingerprint. Do not
+        # exclude similarly named authored directories elsewhere in that plugin.
+        plugin_roots: list[Path] = []
         for directory, subdirs, filenames in os.walk(source_root):
             folder = Path(directory)
+            is_plugin_root = (
+                source_root == root / "Plugins"
+                and not any(folder.is_relative_to(plugin) for plugin in plugin_roots)
+                and any(name.lower().endswith(".uplugin") for name in filenames)
+            )
+            if is_plugin_root:
+                plugin_roots.append(folder)
             subdirs[:] = [
                 child
                 for child in subdirs
                 if not _is_generated_unreal_plugin_output(
                     (folder / child).relative_to(root).as_posix()
+                )
+                and not (
+                    is_plugin_root and child.lower() in {"binaries", "intermediate"}
                 )
             ]
             for filename in filenames:

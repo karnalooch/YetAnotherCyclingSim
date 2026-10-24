@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+import io
+from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from pathlib import Path
 
 from scripts.ci import materialize_unreal_cache_inputs as gate
+from scripts.ci import unreal_ci_workspace as workspace_gate
 
 
 class UnrealCacheMaterializationTests(unittest.TestCase):
@@ -17,6 +20,14 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        # Temporary repositories must finish their Git work before cleanup.
+        # Detached maintenance can recreate .git/objects while rmtree runs.
+        for key in ("maintenance.autoDetach", "gc.autoDetach"):
+            subprocess.run(
+                ["git", "config", "--local", key, "false"],
+                cwd=self.root,
+                check=True,
+            )
         subprocess.run(
             ["git", "config", "core.autocrlf", "true"], cwd=self.root, check=True
         )
@@ -53,6 +64,111 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.state = self.root / "Saved/BuildCache/UnrealCi/state.json"
         self.state.parent.mkdir(parents=True)
         self.state.write_bytes(b"immutable green proof state")
+
+    def track_inventory(self, total):
+        """Build a real committed inventory, including an optional plugin's inputs."""
+        existing = set(gate.fingerprint_paths(self.root))
+        self.assertGreater(total, len(existing))
+        self.attr.write_bytes(self.attr.read_bytes() + b"*.cpp text eol=lf\n")
+        added = set()
+        for index in range(total - len(existing)):
+            folder = (
+                "Plugins/Runtime/HoudiniEngine/Source/Fixture/Private"
+                if index % 2 == 0
+                else "Source/Fixture"
+            )
+            relative = f"{folder}/Input{index:04d}.cpp"
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(f"// native input {index}\n".encode("ascii"))
+            added.add(relative)
+        subprocess.run(
+            ["git", "add", "--", ".gitattributes", "Source", "Plugins"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.email=yacs@example.invalid",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-qm",
+                "large tracked inventory",
+            ],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        return existing | added
+
+    def test_large_tracked_inventory_checks_all_inputs_and_detects_late_drift(self):
+        expected = self.track_inventory(670)
+        actual = gate.fingerprint_paths(self.root)
+        self.assertEqual(len(actual), 670)
+        self.assertEqual(set(actual), expected)
+        self.assertIsNone(gate.raw_fingerprint_source_drift(self.root))
+
+        # Raw drift beyond the old limit must be detected even when Git's text
+        # conversion reports a clean checkout.
+        relative = max(name for name in expected if name.endswith(".cpp"))
+        self.assertGreater(actual.index(relative), 512)
+        path = self.root / relative
+        changed = path.read_bytes().replace(b"\n", b"\r\n")
+        head = gate.git(self.root, "rev-parse", "HEAD")
+        path.write_bytes(changed)
+        self.assertEqual(gate.git(self.root, "diff", "--name-only", "-z", "HEAD"), b"")
+        self.assertEqual(gate.raw_fingerprint_source_drift(self.root), relative)
+        self.assertEqual(path.read_bytes(), changed)
+        self.assertEqual(gate.git(self.root, "rev-parse", "HEAD"), head)
+        self.assertEqual(self.dll.read_bytes(), b"immutable binary")
+        self.assertEqual(self.state.read_bytes(), b"immutable green proof state")
+
+    def test_inventory_bound_remains_finite_and_workspace_preserves_error_detail(self):
+        expected = self.track_inventory(gate.MAX_FINGERPRINT_INPUTS)
+        self.assertEqual(set(gate.fingerprint_paths(self.root)), expected)
+        extra = self.root / "Source/Overflow.cpp"
+        extra.write_bytes(b"// one input over the supported inventory\n")
+        subprocess.run(
+            ["git", "add", "--", "Source/Overflow.cpp"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.email=yacs@example.invalid",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-qm",
+                "overflow tracked inventory",
+            ],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        message = (
+            "Fingerprint input inventory is out of bounds: "
+            f"count={gate.MAX_FINGERPRINT_INPUTS + 1}; "
+            f"allowed=1..{gate.MAX_FINGERPRINT_INPUTS}"
+        )
+        with self.assertRaises(ValueError) as raised:
+            gate.raw_fingerprint_source_drift(self.root)
+        self.assertEqual(str(raised.exception), message)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertTrue(workspace_gate.has_untrusted_source_checkout(self.root))
+        self.assertIn(
+            "preserve active cache: ValueError: " + message, output.getvalue()
+        )
+        self.assertEqual(self.dll.read_bytes(), b"immutable binary")
+        self.assertEqual(self.state.read_bytes(), b"immutable green proof state")
 
     def test_noncritical_config_raw_drift_is_detected(self):
         config = self.root / "Config/DefaultGame.ini"

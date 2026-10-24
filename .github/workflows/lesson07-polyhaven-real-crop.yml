@@ -1,0 +1,662 @@
+name: YACS Lesson07 real 16K source crop for CC0 material proof
+
+# Extract only the accepted original L06 cached HEIGHT / Alpha / source masks.
+# Two sequential fresh hython invocations keep original 3- and 4-volume loads
+# in separate OS processes. No UE or Landscape writes and no material cook.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-real-crop.yml
+      - .gumball/workflow-lifecycle.json
+      - scripts/houdini/extract_l07_real_crop.py
+      - scripts/houdini/test_extract_l07_real_crop.py
+      - scripts/houdini/verify_l07_real_crop.py
+      - scripts/houdini/audit_l07_mask_cache.py
+      - scripts/houdini/verify_l07_scree_crop.py
+      - scripts/houdini/test_verify_l07_scree_crop.py
+      - scripts/houdini/l07_sand_source_audit.py
+      - scripts/houdini/test_l07_sand_source_audit.py
+      - scripts/houdini/l07_scan_real_sand_sites.py
+      - scripts/houdini/test_l07_scan_real_sand_sites.py
+      - scripts/houdini/l07_sand_height_alpha_site.py
+      - scripts/houdini/test_l07_sand_height_alpha_site.py
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Pin historic accepted 16K source hashes and exact crop bounds
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-real-crop]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Run fail-closed bounded source checks
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_extract_l07_real_crop -v
+          python -B -m py_compile scripts/houdini/verify_l07_real_crop.py scripts/houdini/extract_l07_real_crop.py
+
+  extract:
+    name: Capture 256x256 real Sa Calobra HEIGHT and source-mask data
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout only bounded source-reader scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Pin exact event and verify allowed preexisting source caches
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          $base='D:\yacs\work\lesson06-unified-20261019'
+          foreach ($name in @('stage1_base.bgeo.sc', 'stage2_masks.bgeo.sc')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $base $name))) {
+              throw "Accepted original L06 cache missing: $name"
+            }
+          }
+          $scratch='D:\yacs\work\lesson07-cc0-real-crops'
+          if (-not (Test-Path -LiteralPath 'D:\yacs\work')) { throw 'Canonical D work root missing.' }
+          New-Item -Path $scratch -ItemType Directory -Force | Out-Null
+      - name: Extract real height, mask and Alpha in fresh native process
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage base --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Accepted L06 base real-crop extraction failed; sources unchanged.' }
+      - name: Extract original four semantic source masks in SECOND native process
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage masks --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Accepted L06 mask real-crop extraction failed; sources unchanged.' }
+      - name: Independently verify native source-crop bytes and coordinates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/verify_l07_real_crop.py --root 'D:\yacs\work\lesson07-cc0-real-crops\${{ github.run_id }}-${{ github.run_attempt }}' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Source extraction geometry/identity readback failed.' }
+      - name: Retain only tiny native crops and manifests (not original giant caches)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-real-cc0-source-window-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/*-real-crop.json
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/*-real-crop.npz
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/real-source-verified.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+
+  mask_source_audit:
+    name: Read-only producer/source hash audit for changed Stage2 masks
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-mask-audit]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout only bound read-only auditing sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source SHA and audit Stage2 bytes without any mutation
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned audit Python unavailable.' }
+          & $python -B scripts/houdini/audit_l07_mask_cache.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only mask cache/source audit failed.' }
+      - name: Retain identity comparison, not original source bytes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-cc0-stage2-mask-lineage-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-cc0-mask-audits/${{ github.run_id }}-${{ github.run_attempt }}/mask-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  scree_preflight:
+    name: Verify historical Stage3 source-crop diagnostic pins without native work
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-stage3-crop]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Check full digest, georeferenced window, and forbidden promotion
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_verify_l07_scree_crop -v
+          python -B -m unittest scripts.houdini.test_extract_l07_real_crop -v
+          python -B -m py_compile scripts/houdini/verify_l07_scree_crop.py scripts/houdini/extract_l07_real_crop.py
+
+  scree_extract:
+    name: Extract only real historical Stage3 scree-mask voxels on 256x256 Sa Calobra site
+    needs: scree_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 30
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout fixed read-only Stage3 probe source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check exact event and historical cache presence without mutation
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Source revision differs from the exact workflow event.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned hython executable is absent.' }
+          $stage3='D:\yacs\work\lesson06-unified-20261019\stage3_scree.bgeo.sc'
+          if (-not (Test-Path -LiteralPath $stage3)) { throw 'The original Stage3 source scree file is missing.' }
+          $baseline='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          if (-not (Test-Path -LiteralPath $baseline)) { throw 'Original accepted Stage1/2 seven-layer source readback is absent.' }
+      - name: Extract source-fingerprinted Stage3 scree values using fresh hython
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage scree --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Historical Stage3 read refused; source remains intact.' }
+      - name: Independently reopen and verify Stage3 pixels against accepted site coordinates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/verify_l07_scree_crop.py --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Historical Stage3 georeferencing/hash validation failed.' }
+      - name: Retain bounded diagnostic-only Stage3 data, never full source cache
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-stage3-scree-real-window-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-real-crop.json
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-real-crop.npz
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-diagnostic-verified.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+
+  sand_source_preflight:
+    name: Verify 16K accepted Sand Stage2 producer contract without geometry
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-producer]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source Hash, Stage2 Mask statistics and empty-sand distinction
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_sand_source_audit -v
+          python -B -m py_compile scripts/houdini/l07_sand_source_audit.py
+
+  sand_source_audit:
+    name: Audit accepted full-16K sand producer range before coastal-site selection
+    needs: sand_source_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 10
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact read-only source audit code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Verify original source byte identity, producer stats and sand data range
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Expected bounded source audit Python missing.' }
+          & $python -B scripts/houdini/l07_sand_source_audit.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Full 16K producer stats not verified.' }
+          $file='D:\yacs\work\lesson07-sand-mask-audit\${{ github.run_id }}-${{ github.run_attempt }}\sand-source-audit.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'No original sand producer receipt.' }
+          $result=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($result.full_16k_height_or_masks_mutated -ne $false -or
+              $result.sand_coastline_location_verified -ne $false -or
+              $result.native_cook -ne $false) {
+            throw 'A producer metadata check wrongly claims complete coastal geo/render proof.'
+          }
+          Write-Host "Original Stage2 sand source audit status: $($result.status)"
+      - name: Retain verified source producer statistics, no material or UE output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-full-domain-sand-producer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-sand-mask-audit/${{ github.run_id }}-${{ github.run_attempt }}/sand-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  sand_site_scan_preflight:
+    name: Validate real Stage2 sand site scan source hashes and deterministic selection
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-site-scan]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Exact Stage2 hash and source-owned sand window selection
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_scan_real_sand_sites scripts.houdini.test_l07_sand_source_audit -v
+          python -B -m py_compile scripts/houdini/l07_scan_real_sand_sites.py
+
+  sand_site_scan:
+    name: Scan pinned original 16K sand mask and find independent geographic candidates
+    needs: sand_site_scan_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout bounded 16K native sand-mask inspection sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original pinned 16K mask and find real sand-positive sites only
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Not this source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini missing.' }
+          $receipt='D:\yacs\work\lesson07-sand-mask-audit\39812334921-1\sand-source-audit.json'
+          if (-not (Test-Path -LiteralPath $receipt)) { throw 'Full source sand range identity was not audited.' }
+          & $hython -B scripts/houdini/l07_scan_real_sand_sites.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Native original sand site scan failed; no terrain modified.' }
+          $file='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'Source scan evidence not written.' }
+          $proof=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'SAND_POSITIVE_STAGE2_WORLD_COORDINATE_CANDIDATES_NOT_CROPPED' -or
+              $proof.site_alpha_and_height_verified -ne $false -or
+              $proof.coastline_landmark_verified -ne $false -or
+              $proof.native_material_cook -ne $false -or
+              $proof.canonical_height_or_masks_changed -ne $false -or
+              @($proof.chosen).Count -lt 1) {
+            throw 'Real Stage2 sand coordinates were incorrectly promoted to a full coastal proof.'
+          }
+          Write-Host "REAL_SAND_POSITIVE_SITE_CANDIDATES_DISCOVERED: $(@($proof.chosen).Count)"
+      - name: Retain only geographic native source candidate coordinates
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-native-sand-positive-sites-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-sand-candidates/${{ github.run_id }}-${{ github.run_attempt }}/real-sand-site-candidates.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  sand_height_alpha_preflight:
+    name: Validate full-16K Stage1 Alpha/height identity at real sand-positive sites
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-height-alpha]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Check selection prioritizes authoritative real Stage1 Alpha and height
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_sand_height_alpha_site -v
+          python -B -m py_compile scripts/houdini/l07_sand_height_alpha_site.py
+
+  sand_height_alpha_native:
+    name: Independently verify exact 16K source height and Alpha at sand-positive sites
+    needs: sand_height_alpha_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 24
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout Stage1 source inspection code at exact event SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original full-16K Stage1 and rank candidate sand sites using actual Alpha/height
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Source SHA not this reviewed commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          $candidates='D:\yacs\work\lesson07-sand-candidates\39813029959-1\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $candidates)) { throw 'No independently verified Stage2 source candidate evidence.' }
+          & $hython -B scripts/houdini/l07_sand_height_alpha_site.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Original real Stage1 Alpha/height was not verified; canonical files remain.' }
+          $report='D:\yacs\work\lesson07-valid-sand-sites\${{ github.run_id }}-${{ github.run_attempt }}\sand-height-alpha-site.json'
+          if (-not (Test-Path -LiteralPath $report)) { throw 'Native sand-height source receipt absent.' }
+          $proof=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if ($proof.original_stage1_height_alpha_unchanged -ne $true -and
+              $proof.status -cne 'NO_ACCEPTABLE_REAL_STAGE1_ALPHA_AND_LOW_HEIGHT_SAND_SITE') {
+            throw 'Source Stage1 authoritative height/Alpha was not preserved.'
+          }
+          if ($proof.unreal_import -ne $false -or $proof.coastline_landmark_verified -ne $false) {
+            throw 'A 16K source metadata check cannot claim coast image/UE acceptance.'
+          }
+          Write-Host "REAL_STAGE1_SAND_SITE_SOURCE_VERIFICATION=$($proof.status)"
+      - name: Retain georeferenced real source Alpha/height/sand site without full BGEO
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-real-sand-source-height-alpha-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/sand-height-alpha-site.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/selected-sand-stage1.npz
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  sand_alpha_overlay_preflight:
+    name: Validate sand-intensity-band candidates and exact Stage1 land overlap logic
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-alpha-overlay]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Reject offshore Alpha=0 sand sites at both source stages
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_scan_real_sand_sites scripts.houdini.test_l07_sand_height_alpha_site -v
+          python -B -m py_compile scripts/houdini/l07_scan_real_sand_sites.py scripts/houdini/l07_sand_height_alpha_site.py
+
+  sand_alpha_overlay_native:
+    name: Native full16k sand candidates intersected with Stage1 Alpha in separate processes
+    needs: sand_alpha_overlay_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact authored original native source readers
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Admission exact source pins and available memory before full-domain read
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Reviewed exact source SHA mismatch.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini 22 missing.' }
+          foreach ($file in @('stage1_base.bgeo.sc','stage2_masks.bgeo.sc')) {
+            $p=Join-Path 'D:\yacs\work\lesson06-unified-20261019' $file
+            if (-not (Test-Path -LiteralPath $p)) { throw "Missing accepted source $file" }
+          }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned memory-guard Python missing.' }
+          $state=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(30)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Physical memory guard failed.' }
+          $health=$state | ConvertFrom-Json
+          if ([int64]$health.available_physical_bytes -lt 12GB) { throw 'Insufficient real memory for isolated 16k source audit.' }
+          Write-Host "Alpha-sand intersection admission $state"
+      - name: Isolated Stage2 16k band-stratified sand candidate scan
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/l07_scan_real_sand_sites.py --token '${{ github.run_id }}-${{ github.run_attempt }}' --alpha-aware
+          if ($LASTEXITCODE -ne 0) { throw 'Stage2 original 16k sand-intensity candidate scan failed, source unchanged.' }
+          $p='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $p)) { throw 'No native source candidate manifest.' }
+          $m=Get-Content -LiteralPath $p -Raw | ConvertFrom-Json
+          if ($m.status -cne 'SAND_POSITIVE_STAGE2_WORLD_COORDINATE_CANDIDATES_NOT_CROPPED' -or
+              $m.alpha_aware_grid_step -ne 16 -or
+              $m.alpha_aware_pool_count -lt 10 -or
+              $m.site_alpha_and_height_verified -ne $false) {
+            throw 'Sand source candidate scan wrongly classified land without Stage1.'
+          }
+          Write-Host "ALPHA_AWARE_STAGE2_CANDIDATE_POOL=$($m.alpha_aware_pool_count)"
+      - name: Separate fresh hython reads only original Stage1 Alpha+height for all candidates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          $candidate='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          & $hython -B scripts/houdini/l07_sand_height_alpha_site.py --token '${{ github.run_id }}-${{ github.run_attempt }}' --candidate-file $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Alpha/height verification failed; no accepted source was changed.' }
+          $p='D:\yacs\work\lesson07-valid-sand-sites\${{ github.run_id }}-${{ github.run_attempt }}\sand-height-alpha-site.json'
+          if (-not (Test-Path -LiteralPath $p)) { throw 'No independent Stage1 source analysis receipt.' }
+          $m=Get-Content -LiteralPath $p -Raw | ConvertFrom-Json
+          if ($m.original_stage1_height_alpha_unchanged -ne $true -or
+              $m.unreal_import -ne $false -or
+              $m.coastline_landmark_verified -ne $false) { throw 'Native sand site claimed mutation or an unproven coastline.' }
+          if ($m.status -ceq 'NO_ACCEPTABLE_REAL_STAGE1_ALPHA_AND_LOW_HEIGHT_SAND_SITE') {
+            if ($m.alpha_aware_source_overlap_evaluated -ne $true -or
+                $m.sand_positive_land_verified -ne $false -or
+                @($m.candidates).Count -lt 10) {
+              throw 'No-site report omitted source authority or the complete candidate pool.'
+            }
+            Write-Host 'ALPHA_AWARE_SAND_SITE_ABSENT_DIAGNOSTIC_ONLY_NO_MATERIAL_PASS'
+          } elseif ($m.status -ceq 'REAL_SAND_POSITIVE_SITE_STAGE1_HEIGHT_ALPHA_VERIFIED_STAGE2_CROP_PENDING') {
+            if ($m.sand_positive_land_verified -ne $true -or
+                $m.sand_low_elevation_intersection_coarse_count -lt 4 -or
+                $m.source_stage2_mask_not_yet_cropped -ne $true) {
+              throw 'Coast land Alpha and real Stage2 sand overlay was not proven.'
+            }
+            Write-Host "ALPHA_OVERLAY_SAND_LAND_SITE_FOUND_DEFER_PRECISE_STAGE2=$($m.sand_low_elevation_intersection_coarse_count)"
+          } else {
+            throw "Unrecognized native Stage1/Stage2 intersection status $($m.status)"
+          }
+      - name: Retain only source identity and bounded real-site crop if found
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-alpha-aware-sand-land-intersection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-sand-candidates/${{ github.run_id }}-${{ github.run_attempt }}/real-sand-site-candidates.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/sand-height-alpha-site.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/selected-sand-stage1.npz
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30

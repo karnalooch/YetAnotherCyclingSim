@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — Dokumentacja i decyzje"
+  short_description: "Aktualizacja źródeł prawdy, decyzji i dokumentacji"
+  default_prompt: "Użyj $yacs-docs-governance, aby wykonać zadanie YACS na podstawie aktualnych źródeł i zweryfikować wynik."

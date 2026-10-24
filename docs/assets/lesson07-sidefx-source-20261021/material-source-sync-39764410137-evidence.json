@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "status": "ONE_REVIEWED_RECIPE_SOURCE_INSTALLED_WITH_VERIFIED_PREVIOUS_COPY",
+  "run_id": 39764410137,
+  "job_id": 119776172576,
+  "source_commit": "9d857ed783640d293a3854e88b8f6a76e95180be",
+  "workflow_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39764410137",
+  "workflow_file": ".github/workflows/yacs-lesson07-remote-editor.yml",
+  "workflow_file_sha256": "5efdefb4f36834afbff1798e133dd1a7d633b7f189e71edffbe1b333f53f95ae",
+  "workflow_result": "success",
+  "source_sync_job_result": "success",
+  "other_editor_jobs": "3_SKIPPED",
+  "artifact": {
+    "id": 12419701595,
+    "name": "lesson07-material-source-sync-39764410137-1",
+    "zip_bytes": 779,
+    "zip_sha256": "3b6e3bab185fb224d17fb2250168b7a49447158923676fee6a4b48dc772a6f3c",
+    "member": "lesson07-material-source-sync-39764410137-1.json",
+    "member_bytes": 1463,
+    "member_sha256": "4e670f0d6d10e97662fd8e3d9fce082ce7c6681a0331c301df1482bc902d8708"
+  },
+  "retention_note": "The complete parsed native receipt is retained below without field omissions. The original member byte identity is recorded above; envelope formatting differs. Repeated path separators in the receipt are preserved.",
+  "verified": {
+    "exact_reviewed_source_installed": true,
+    "canonical_target_size_and_sha_match": true,
+    "retained_previous_size_and_sha_match": true,
+    "receipt_has_complete_phase_and_no_error": true,
+    "source_change_receipt": "graph-source-correction-20261022.json"
+  },
+  "limits": [
+    "This operation installed only scripts/houdini/lesson06_unified_pipeline.py. It did not synchronize the separate canary script or other repository files.",
+    "No Houdini import, hython execution, material cook, HIP save, cache rewrite, Unreal mutation or running-process reload was performed by the SOURCE_SYNC step. Existing runner maintenance hooks remain outside that step.",
+    "Source installation is not native execution, a saved graph readback, visual acceptance, or confirmation that an existing application process has loaded the new source.",
+    "Original texture bytes and complete final authored mask/ramp settings remain unresolved. The installed recipe rejects material-dependent execution before cache reuse or authoring.",
+    "File.Replace is not an atomic compare-and-swap; the receipt explicitly records that limitation. This successful run verifies both resulting file identities.",
+    "The earlier resource audit and source-review receipts are historical observations and remain unchanged."
+  ],
+  "native_report": {
+    "profile": "SOURCE_SYNC",
+    "source_sha": "9d857ed783640d293a3854e88b8f6a76e95180be",
+    "status": "SOURCE_INSTALLED",
+    "phase": "COMPLETE",
+    "source_installed": true,
+    "replacement_attempted": true,
+    "replacement_completed": true,
+    "atomic_compare_and_swap": false,
+    "hou_imported": false,
+    "hython_executed": false,
+    "cook_executed": false,
+    "ue_changed": false,
+    "runtime_reloaded": false,
+    "source": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\l07-source-sync-39764410137-1\\scripts\\houdini\\lesson06_unified_pipeline.py",
+      "bytes": 37392,
+      "sha256": "9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf",
+      "modified_utc": "2026-10-22T10:37:18.6381022Z"
+    },
+    "before": {
+      "path": "D:\\yacs\\project\\scripts\\houdini\\lesson06_unified_pipeline.py",
+      "bytes": 34868,
+      "sha256": "6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e",
+      "modified_utc": "2026-10-19T14:00:32.9661835Z"
+    },
+    "after": {
+      "path": "D:\\yacs\\project\\scripts\\houdini\\lesson06_unified_pipeline.py",
+      "bytes": 37392,
+      "sha256": "9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf",
+      "modified_utc": "2026-10-22T10:37:18.6381022Z"
+    },
+    "backup": {
+      "path": "D:\\yacs\\work\\l07-material-source-sync-39764410137-1\\lesson06_unified_pipeline.previous.py",
+      "bytes": 34868,
+      "sha256": "6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e",
+      "modified_utc": "2026-10-19T14:00:32.9661835Z"
+    },
+    "retained_directory": "D:\\yacs\\work\\l07-material-source-sync-39764410137-1",
+    "error_type": null,
+    "error_code": null
+  },
+  "native_canary_run": false,
+  "material_cook_run": false,
+  "cache_mutated": false,
+  "hip_saved": false,
+  "unreal_mutated": false,
+  "lesson07_technical_pass": false,
+  "one_to_one_material_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

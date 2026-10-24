@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "OWNER_CLOSED_SESSION_AND_UNCHANGED_SAVED_CHECKPOINT_VERIFIED",
+  "source_commit": "d07ef0fc907b1a473a997cb8e05b65c1db68dc31",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39629865244",
+  "job_id": 119324891844,
+  "artifact": {
+    "id": 12357484372,
+    "bytes": 4487,
+    "sha256": "ff96b895f1cf7aef933cca3e0e0fc147c52e2e1cc2d9738467e415ebff1cab80"
+  },
+  "reports": [
+    {
+      "path": "closed-session-39629865244.json",
+      "artifact_entry": "lesson07-prior-session-diagnostic.json",
+      "bytes": 9282,
+      "sha256": "3fb728c06a4c856bd22f2f7e639305e4c5d852299013b864ef5120f5bd0c4577"
+    },
+    {
+      "path": "closed-session-modules-39629865244.json",
+      "artifact_entry": "lesson07-editor-module-diagnostic.json",
+      "bytes": 1876,
+      "sha256": "77123aad41adc160346a795283d8102760635006b6d806910b573e5b27dd82c3"
+    },
+    {
+      "path": "closed-session-bridge-39629865244.json",
+      "artifact_entry": "lesson07-editor-bridge-discovery.json",
+      "bytes": 1814,
+      "sha256": "7606edfe97aa027f73e6e8532f89f88e2de15e476eff371baea475b665a7a7cb"
+    }
+  ],
+  "observed_utc": "2026-10-21T15:54:44.9512293Z",
+  "prior_source_commit": "de903a85e67540f451ea86743ea981fb7eb79f18",
+  "prior_run_token": "39625318792-1",
+  "prior_installation": {
+    "status": "HASHED",
+    "bytes": 930,
+    "modified_utc": "2026-10-21T15:31:55.6412124Z",
+    "sha256": "48c0a9a2548888a375baf3eda9db6541936900da453d3e052225ab66071e5c44",
+    "stable_across_read": true
+  },
+  "prior_session": {
+    "status": "HASHED",
+    "bytes": 6732,
+    "modified_utc": "2026-10-21T15:44:07.6696334Z",
+    "sha256": "cc69b0b48a54b5ebeeef6cad95d66b17096a13337a3bbad8cb2b072e735a940e",
+    "stable_across_read": true
+  },
+  "prior_session_status": "EDITOR_EXITED_NO_AUTORESTART",
+  "prior_session_checked_at_utc": "2026-10-21T15:44:07.6634944Z",
+  "same_six_checkpoint_files": true,
+  "live_editors": 0,
+  "native_tool_calls": 0,
+  "startup_admitted_by_diagnostic": false,
+  "prior_ue_clean_exit_verified": false,
+  "owner_context": "Owner reported accidental closure; task result zero means the supervisor completed and does not by itself prove a clean Unreal exit.",
+  "next_operation": "One fresh owner-authorized start using only the exact observed closed de903 session, normal CI and host checks. Preserve prior release/state and all original package pins.",
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "restart_candidate": {
+    "kind": "CLOSED_DE903",
+    "installer_sha256": "e104537753a2a822315a949617c6cb6da70fe9cb4209bf21230e4609440dd0e9",
+    "test_sha256": "e79d245dbc3eff51fdfa81a63265cf4bb652a3dde65312b363c9020adba023c6",
+    "unchanged_launcher_sha256": "8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91",
+    "production_validator_cases_passed": 146,
+    "independent_review": "ACCEPT",
+    "native_host_actions": false,
+    "native_start_result": "EDITOR_STARTED_LISTENER_VERIFIED_AUTHENTICATED_DISCOVERY_TIMEOUT",
+    "source_commit": "007c5c0737bc36e0dc482b66f4b326e363104621",
+    "native_evidence": "restart-39630648547-evidence.json"
+  }
+}

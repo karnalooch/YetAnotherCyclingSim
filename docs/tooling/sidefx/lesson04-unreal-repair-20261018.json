@@ -1,0 +1,1209 @@
+{
+  "recipe": "SA-CALOBRA-L04-UE-REPAIR-20261018",
+  "base_revision": "aee7a3dfdc6e6082139a75bdf94bc0544a12d8f7",
+  "versions": {
+    "unreal": "5.8.2 CL56702186",
+    "houdini_engine": "22.0.466"
+  },
+  "transfer_manifest": {
+    "schema_version": 1,
+    "houdini_version": "22.0.466",
+    "target_map": "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test",
+    "scale_z": 585.9375,
+    "origin_z_cm": 0,
+    "output_mode": 1,
+    "base_layer": "Source_Manual_Lesson04",
+    "delta_layer": "Lesson04_Procedural_Delta",
+    "quantization_step_m": 0.0457763671875,
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.7467375993728638,
+        "max_m": 576.3699951171875,
+        "expected_codes_sha256": "525a283dcc5dadff641b64366e3b74b04b521567c91ea119b02fd9d977756d04",
+        "files": {
+          "Source_Manual_Lesson04": "SaCalobra_Detail_0_0_Source_Manual_Lesson04.bgeo.sc",
+          "Lesson04_Procedural_Delta": "SaCalobra_Detail_0_0_Lesson04_Procedural_Delta.bgeo.sc"
+        },
+        "file_sha256": {
+          "Source_Manual_Lesson04": "5f8cb4d81d2516a46eafc5fbceac2f1b47ae8402659433fa2579113fe131e95e",
+          "Lesson04_Procedural_Delta": "b754ff15ae389e41de2a2fb05305e07b6b9b1e9fce482a57127aac96197353ce"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.028533488512039185,
+        "max_m": 751.6400146484375,
+        "expected_codes_sha256": "65aafabe20e0ea65539c03f78bec45fbb18a3706625f0e490a6ea6309a7320f6",
+        "files": {
+          "Source_Manual_Lesson04": "SaCalobra_Detail_1_0_Source_Manual_Lesson04.bgeo.sc",
+          "Lesson04_Procedural_Delta": "SaCalobra_Detail_1_0_Lesson04_Procedural_Delta.bgeo.sc"
+        },
+        "file_sha256": {
+          "Source_Manual_Lesson04": "e1c12b0055633e72c0075e197107212766d8db39611806ae43553f5bd1c154df",
+          "Lesson04_Procedural_Delta": "e6a62a1d5c1ab9792476c2f13a69628f3502cc228b1dabf92c4a94e25ab5ed3d"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 325.010009765625,
+        "max_m": 1414.9599609375,
+        "expected_codes_sha256": "3e4da3913557df6d45e85e052f1181da06107c45e23e036c1d394ab0fe135d5f",
+        "files": {
+          "Source_Manual_Lesson04": "SaCalobra_Detail_0_1_Source_Manual_Lesson04.bgeo.sc",
+          "Lesson04_Procedural_Delta": "SaCalobra_Detail_0_1_Lesson04_Procedural_Delta.bgeo.sc"
+        },
+        "file_sha256": {
+          "Source_Manual_Lesson04": "7f830d5ededcad71bdff65eb1c8e43a525b80c9e5268df0469d3d65150ef5c00",
+          "Lesson04_Procedural_Delta": "d4f7497846c5c5de54fd52b9da68abc304f56f5649432184b47a2d6e46c65274"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 300.8800048828125,
+        "max_m": 906.1655883789062,
+        "expected_codes_sha256": "6af0586221d37be52cefc2983fce2cd3b4a55f0f47f5057a4dca01fa72a5f8ba",
+        "files": {
+          "Source_Manual_Lesson04": "SaCalobra_Detail_1_1_Source_Manual_Lesson04.bgeo.sc",
+          "Lesson04_Procedural_Delta": "SaCalobra_Detail_1_1_Lesson04_Procedural_Delta.bgeo.sc"
+        },
+        "file_sha256": {
+          "Source_Manual_Lesson04": "e2686184215951c26e5044b52c19e2b410a304cefea45d1cd2dbd15d4c517b17",
+          "Lesson04_Procedural_Delta": "65cbf56c7e68471c2843c0d7e2a76d27266555cc4a927b4ac45897910563ba35"
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "resolution": [
+          2017,
+          2017,
+          1
+        ],
+        "index0": [
+          -3935.546875,
+          0.0,
+          3939.453125
+        ],
+        "spacing_m": 3.90625,
+        "uv_origin_cm": [
+          -393750.0,
+          394140.625,
+          0
+        ],
+        "uv_inverse_cm": [
+          1.2692117005453644e-06,
+          -1.2692117005453644e-06,
+          0
+        ],
+        "min_m": -0.8825892806053162,
+        "max_m": 1436.796142578125,
+        "expected_codes_sha256": "d8264e91de708e562e466077fd1a207a6f8754a94c512d1961c3182fe45c737e",
+        "files": {
+          "Source_Manual_Lesson04": "SaCalobra_Context_Valid_Source_Manual_Lesson04.bgeo.sc",
+          "Lesson04_Procedural_Delta": "SaCalobra_Context_Valid_Lesson04_Procedural_Delta.bgeo.sc"
+        },
+        "file_sha256": {
+          "Source_Manual_Lesson04": "0c19f8d50546fe869ad27cdc72e8b541626868894ee11622275ab8631e597344",
+          "Lesson04_Procedural_Delta": "eda7a54a984a12f21d42c1da345ba24c96e8c758bc856c6bf572cf29f1276fb4"
+        }
+      }
+    ],
+    "input_sha256": {
+      "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\source_working_05m.bgeo.sc": "01dd245efdcedde5352b9142905bc53aa43c2794231039ab8bca0893d18690c0",
+      "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\Pegasus\\Landscape\\Landscape Heightfield Layers\\Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc": "de46c2f2d0ea12c7ca937edafdc70f70b1b0504e1d4015092a7c72bcf1adccd2",
+      "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_working_material_05m.bgeo.sc": "afe0dbf675b3bf81066b7cdffbf1fae6867c57e1ff7cea751f32d4701640a300",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_0.bgeo.sc": "c3493cd71fdab4372c59ea78e16cfcd47da92852604e5630b4ab026e6d0dc351",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_0.bgeo.sc": "dd98506eaf50e515bdff2a2859827fac1c0ac834bf3c790042b456bc057ec576",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_1.bgeo.sc": "060b7395d52267f504756363a3b182a54326335657ad868a36b17b136f1f1d67",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_1.bgeo.sc": "063cf62e6da1943c7c38560e4f0c58bc5e492704dd2a42f57a57012347de3964",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Context_Valid.bgeo.sc": "7d9d17ee60c58542e0599e12ec7d26032ecc6513b8dac10fb130cfb03fa6ec89",
+      "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\context_source.bgeo.sc": "cbab49ef798a91891602a085d2a8347de69e07344e5232c85190d9ad59377ae5",
+      "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_context_material.bgeo.sc": "54e8d16351083d8b96933ff4801d64bdd9cb779ef83bfdb976222a20d45577a7"
+    },
+    "native_reopen": "NOT_RUN",
+    "visual_acceptance": false,
+    "performance_pass": false,
+    "full_edge_max_error_m": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "source_audit": {
+    "source_samples": 70316666,
+    "manual": {
+      "samples": 70316666,
+      "min_m": 0.0,
+      "max_m": 0.0,
+      "max_abs_m": 0.0,
+      "mean_abs_m": 0.0,
+      "p95_abs_m": 0.0,
+      "nonzero": 0
+    },
+    "lesson04_delta": {
+      "samples": 70316666,
+      "min_m": -0.34796908497810364,
+      "max_m": 0.5093994140625,
+      "max_abs_m": 0.5093994140625,
+      "mean_abs_m": 0.03733218900376235,
+      "p95_abs_m": 0.160675048828125,
+      "nonzero": 39223702
+    },
+    "composition_residual": {
+      "samples": 70316666,
+      "min_m": 0.0,
+      "max_m": 0.0,
+      "max_abs_m": 0.0,
+      "mean_abs_m": 0.0,
+      "p95_abs_m": 0.0,
+      "nonzero": 0
+    },
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "overlap_samples": 17836060,
+        "old_minus_source": {
+          "samples": 17836060,
+          "min_m": -0.158538818359375,
+          "max_m": 0.1743316650390625,
+          "max_abs_m": 0.1743316650390625,
+          "mean_abs_m": 0.02044253242335156,
+          "p95_abs_m": 0.0738372802734375,
+          "nonzero": 12083590
+        },
+        "old_minus_lesson04": {
+          "samples": 17836060,
+          "min_m": -0.5224761962890625,
+          "max_m": 0.5059661865234375,
+          "max_abs_m": 0.5224761962890625,
+          "mean_abs_m": 0.04534153481179416,
+          "p95_abs_m": 0.1595001220703125,
+          "nonzero": 15734988
+        },
+        "attrs": {
+          "unreal_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_landscape_editlayer_name": [
+            "Houdini_Source_Pegasus_Gentle"
+          ],
+          "unreal_landscape_layer_max": [
+            1500.0
+          ],
+          "unreal_landscape_sections_per_component": [
+            2
+          ],
+          "unreal_landscape_section_size": [
+            127
+          ],
+          "unreal_uproperty_tag_source": [
+            "SaCalobra_DTM_Pegasus_Gentle_20261016"
+          ],
+          "unreal_output_name": [
+            "SaCalobra_Detail_0_0"
+          ],
+          "unreal_bake_folder": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Baked"
+          ],
+          "unreal_hole_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_bake_name": [
+            "SaCalobra_Detail_0_0"
+          ],
+          "unreal_landscape_layer_min": [
+            -5.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "overlap_samples": 18082040,
+        "old_minus_source": {
+          "samples": 18082040,
+          "min_m": -0.0604248046875,
+          "max_m": 0.12127685546875,
+          "max_abs_m": 0.12127685546875,
+          "mean_abs_m": 0.0025481562599451776,
+          "p95_abs_m": 0.019775390625,
+          "nonzero": 2235585
+        },
+        "old_minus_lesson04": {
+          "samples": 18082040,
+          "min_m": -0.5089111328125,
+          "max_m": 0.45526123046875,
+          "max_abs_m": 0.5089111328125,
+          "mean_abs_m": 0.04791552343301674,
+          "p95_abs_m": 0.175079345703125,
+          "nonzero": 12579927
+        },
+        "attrs": {
+          "unreal_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_landscape_editlayer_name": [
+            "Houdini_Source_Pegasus_Gentle"
+          ],
+          "unreal_landscape_layer_max": [
+            1500.0
+          ],
+          "unreal_landscape_sections_per_component": [
+            2
+          ],
+          "unreal_landscape_section_size": [
+            127
+          ],
+          "unreal_uproperty_tag_source": [
+            "SaCalobra_DTM_Pegasus_Gentle_20261016"
+          ],
+          "unreal_output_name": [
+            "SaCalobra_Detail_1_0"
+          ],
+          "unreal_bake_folder": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Baked"
+          ],
+          "unreal_hole_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_bake_name": [
+            "SaCalobra_Detail_1_0"
+          ],
+          "unreal_landscape_layer_min": [
+            -5.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "overlap_samples": 17089930,
+        "old_minus_source": {
+          "samples": 17089930,
+          "min_m": -0.17791748046875,
+          "max_m": 0.1461181640625,
+          "max_abs_m": 0.17791748046875,
+          "mean_abs_m": 0.005579470485852382,
+          "p95_abs_m": 0.04461669921875,
+          "nonzero": 2414671
+        },
+        "old_minus_lesson04": {
+          "samples": 17089930,
+          "min_m": -0.4566650390625,
+          "max_m": 0.48284912109375,
+          "max_abs_m": 0.48284912109375,
+          "mean_abs_m": 0.04543880420898927,
+          "p95_abs_m": 0.170166015625,
+          "nonzero": 11627060
+        },
+        "attrs": {
+          "unreal_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_landscape_editlayer_name": [
+            "Houdini_Source_Pegasus_Gentle"
+          ],
+          "unreal_landscape_layer_max": [
+            1500.0
+          ],
+          "unreal_landscape_sections_per_component": [
+            2
+          ],
+          "unreal_landscape_section_size": [
+            127
+          ],
+          "unreal_uproperty_tag_source": [
+            "SaCalobra_DTM_Pegasus_Gentle_20261016"
+          ],
+          "unreal_output_name": [
+            "SaCalobra_Detail_0_1"
+          ],
+          "unreal_bake_folder": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Baked"
+          ],
+          "unreal_hole_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_bake_name": [
+            "SaCalobra_Detail_0_1"
+          ],
+          "unreal_landscape_layer_min": [
+            -5.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "overlap_samples": 17325620,
+        "old_minus_source": {
+          "samples": 17325620,
+          "min_m": -0.11480712890625,
+          "max_m": 0.135986328125,
+          "max_abs_m": 0.135986328125,
+          "mean_abs_m": 0.01419514166714344,
+          "p95_abs_m": 0.05419921875,
+          "nonzero": 10083190
+        },
+        "old_minus_lesson04": {
+          "samples": 17325620,
+          "min_m": -0.50921630859375,
+          "max_m": 0.46875,
+          "max_abs_m": 0.50921630859375,
+          "mean_abs_m": 0.035000666031599466,
+          "p95_abs_m": 0.141357421875,
+          "nonzero": 13476294
+        },
+        "attrs": {
+          "unreal_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_landscape_editlayer_name": [
+            "Houdini_Source_Pegasus_Gentle"
+          ],
+          "unreal_landscape_layer_max": [
+            1500.0
+          ],
+          "unreal_landscape_sections_per_component": [
+            2
+          ],
+          "unreal_landscape_section_size": [
+            127
+          ],
+          "unreal_uproperty_tag_source": [
+            "SaCalobra_DTM_Pegasus_Gentle_20261016"
+          ],
+          "unreal_output_name": [
+            "SaCalobra_Detail_1_1"
+          ],
+          "unreal_bake_folder": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Baked"
+          ],
+          "unreal_hole_material": [
+            "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+          ],
+          "unreal_bake_name": [
+            "SaCalobra_Detail_1_1"
+          ],
+          "unreal_landscape_layer_min": [
+            -5.0
+          ]
+        }
+      }
+    ],
+    "old_transfer_shared_edges": [
+      {
+        "samples": 5081,
+        "min_m": 0.0,
+        "max_m": 0.0,
+        "max_abs_m": 0.0,
+        "mean_abs_m": 0.0,
+        "p95_abs_m": 0.0,
+        "nonzero": 0
+      },
+      {
+        "samples": 5081,
+        "min_m": 0.0,
+        "max_m": 0.0,
+        "max_abs_m": 0.0,
+        "mean_abs_m": 0.0,
+        "p95_abs_m": 0.0,
+        "nonzero": 0
+      },
+      {
+        "samples": 3811,
+        "min_m": 0.0,
+        "max_m": 0.0,
+        "max_abs_m": 0.0,
+        "mean_abs_m": 0.0,
+        "p95_abs_m": 0.0,
+        "nonzero": 0
+      },
+      {
+        "samples": 3811,
+        "min_m": 0.0,
+        "max_m": 0.0,
+        "max_abs_m": 0.0,
+        "mean_abs_m": 0.0,
+        "p95_abs_m": 0.0,
+        "nonzero": 0
+      }
+    ],
+    "SaCalobra_Context": {
+      "visibility_layer": "MISSING"
+    },
+    "SaCalobra_Context_Valid": {
+      "visibility_min": 0.0,
+      "max": 1.0,
+      "interior_samples": 1256150,
+      "interior_hidden": 1256150,
+      "interior_visible": 0
+    }
+  },
+  "before_native": {
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "samples": 19363691,
+        "minimum_m": -0.70357666015625,
+        "maximum_m": 576.3348211669922,
+        "error_min_m": -0.6572048950195324,
+        "error_max_m": 0.630620422363279,
+        "error_max_abs_m": 0.6572048950195324,
+        "error_mean_abs_m": 0.06551447784440877,
+        "error_p95_abs_m": 0.19988800048827216,
+        "native_uint16_sha256": "05870b591ac626be50a4843c5f4ee5b130f53d297d9abb246d48c8f3354a72dd",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "samples": 19363691,
+        "minimum_m": 0.022937932014465333,
+        "maximum_m": 751.6072183179855,
+        "error_min_m": -0.5269091367721614,
+        "error_max_m": 0.4247566843032473,
+        "error_max_abs_m": 0.5269091367721614,
+        "error_mean_abs_m": 0.06396905796623852,
+        "error_p95_abs_m": 0.18519515275957588,
+        "native_uint16_sha256": "ae7b151b80bdd71f7cbddb6a57c2b2f148285c91967f69a13d9f5ed55b5489d1",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "samples": 19363691,
+        "minimum_m": 324.9813525390625,
+        "maximum_m": 1414.9168188476563,
+        "error_min_m": -0.5233398437500227,
+        "error_max_m": 0.4474975585937955,
+        "error_max_abs_m": 0.5233398437500227,
+        "error_mean_abs_m": 0.08048427319128088,
+        "error_p95_abs_m": 0.19985839843752728,
+        "native_uint16_sha256": "cbd697e88b5377d73480f9fc8ea1e0f151f1a6cba5d75afb07d7bc88791b2e4e",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "samples": 19363691,
+        "minimum_m": 300.84910369873046,
+        "maximum_m": 906.1423458862305,
+        "error_min_m": -0.5491595458984193,
+        "error_max_m": 0.4451058959961074,
+        "error_max_abs_m": 0.5491595458984193,
+        "error_mean_abs_m": 0.05068768959835278,
+        "error_p95_abs_m": 0.15702087402348752,
+        "native_uint16_sha256": "ae7788e519f3b3f5d36743567c11dc166ae9b471958410f4b1b2d3e09b1ca725",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "samples": 4068289,
+        "minimum_m": -0.9207982778549194,
+        "maximum_m": 1436.7522462129593,
+        "error_min_m": -0.45371868610379806,
+        "error_max_m": 0.43361032009124756,
+        "error_max_abs_m": 0.45371868610379806,
+        "error_mean_abs_m": 0.06772140668972342,
+        "error_p95_abs_m": 0.17693320274354374,
+        "native_uint16_sha256": "6f460c156c49a49685643b3665fb3b7f5063c55a4841c88b98fe967ef6b98f88",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 1.0,
+          "hidden_vertices": 1353604
+        }
+      }
+    ],
+    "complete_shared_edges": [
+      {
+        "tiles": [
+          "0_0",
+          "1_0"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.07497136116029424
+      },
+      {
+        "tiles": [
+          "0_1",
+          "1_1"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.05036254882804769
+      },
+      {
+        "tiles": [
+          "0_1",
+          "0_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.07066101074218523
+      },
+      {
+        "tiles": [
+          "1_1",
+          "1_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.02946884632109459
+      }
+    ],
+    "total_samples_including_duplicate_edges": 81523053,
+    "visual_acceptance": false,
+    "performance_pass": false
+  },
+  "fresh_reopen_native": {
+    "status": "MATCH",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "samples": 19363691,
+        "minimum_m": -0.732421875,
+        "maximum_m": 576.3702392578125,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445844489582285,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "525a283dcc5dadff641b64366e3b74b04b521567c91ea119b02fd9d977756d04",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "samples": 19363691,
+        "minimum_m": -0.0457763671875,
+        "maximum_m": 751.64794921875,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.01144331902372963,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "65aafabe20e0ea65539c03f78bec45fbb18a3706625f0e490a6ea6309a7320f6",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "samples": 19363691,
+        "minimum_m": 325.01220703125,
+        "maximum_m": 1414.947509765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011443480825652675,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "3e4da3913557df6d45e85e052f1181da06107c45e23e036c1d394ab0fe135d5f",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "samples": 19363691,
+        "minimum_m": 300.8880615234375,
+        "maximum_m": 906.1431884765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445280538867278,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "6af0586221d37be52cefc2983fce2cd3b4a55f0f47f5057a4dca01fa72a5f8ba",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "samples": 4068289,
+        "minimum_m": -0.8697509765625,
+        "maximum_m": 1436.7828369140625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.009740024906252488,
+        "error_p95_abs_m": 0.02154541015625,
+        "native_uint16_sha256": "d8264e91de708e562e466077fd1a207a6f8754a94c512d1961c3182fe45c737e",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 1.0,
+          "hidden_vertices": 1353604
+        }
+      }
+    ],
+    "complete_shared_edges": [
+      {
+        "tiles": [
+          "0_0",
+          "1_0"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "1_1"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "0_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "1_1",
+          "1_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      }
+    ],
+    "total_samples_including_duplicate_edges": 81523053,
+    "visual_acceptance": false,
+    "performance_pass": false
+  },
+  "fresh_reopen_inventory": [
+    {
+      "name": "SaCalobra_Detail_0_0",
+      "location_cm": [
+        -190025.0,
+        73975.0,
+        0.0
+      ],
+      "scale": [
+        50.0,
+        50.0,
+        585.9375
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "bytes": 47201324,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Layer2_Procedural",
+        "Layer1_Manual",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ]
+    },
+    {
+      "name": "SaCalobra_Detail_1_0",
+      "location_cm": [
+        475.0,
+        73975.0,
+        0.0
+      ],
+      "scale": [
+        50.0,
+        50.0,
+        585.9375
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "bytes": 47841393,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ]
+    },
+    {
+      "name": "SaCalobra_Detail_0_1",
+      "location_cm": [
+        -190025.0,
+        327975.0,
+        0.0
+      ],
+      "scale": [
+        50.0,
+        50.0,
+        585.9375
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "bytes": 43806707,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ]
+    },
+    {
+      "name": "SaCalobra_Detail_1_1",
+      "location_cm": [
+        475.0,
+        327975.0,
+        0.0
+      ],
+      "scale": [
+        50.0,
+        50.0,
+        585.9375
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "bytes": 42687778,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ]
+    },
+    {
+      "name": "SaCalobra_Context_Valid",
+      "location_cm": [
+        -393554.6875,
+        393945.3125,
+        0.0
+      ],
+      "scale": [
+        390.625,
+        390.625,
+        585.9375
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        1.961151042451094e-06
+      ],
+      "bytes": 9170290,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ]
+    }
+  ],
+  "protected_files": [
+    {
+      "Path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson03.hiplc",
+      "Hash": "3BEE48C5D6371D3EF65A584329A5BDA081D456849790DB3F42BCCBF964282667",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson04.hiplc",
+      "Hash": "6D5419191083ED32A79E4FB1668A1476CDF49B38BDC27D3B869424959793D098",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Review\\L_SaCalobra_Lesson04_Review.umap",
+      "Hash": "AD6469D87A9B0E9F8C812B975555FE5DE46B43A2857F8D4ACF7CBB96F023F685",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\yacs\\project\\Content\\Worlds\\SaCalobra_Houdini_20261016\\L_SaCalobra_LandscapeOnly.umap",
+      "Hash": "BD53A82FC55240B10751CBBBA1BA1BA50CF051710A8A3308280983CB186E94F1",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\yacs\\project\\Config\\DefaultEngine.ini",
+      "Hash": "D94045CBB0C78E0FDE92D17F37651A11A94CC7C2B4BBD4A46382AC91EE5ADB4B",
+      "Unchanged": true
+    }
+  ],
+  "visibility": {
+    "unchanged": true,
+    "working_interior_vertices": 1151070,
+    "working_interior_hidden": 1151070
+  },
+  "runtime_collision": {
+    "mode": "SIMULATE_IN_EDITOR",
+    "samples": 605,
+    "detail_samples": 484,
+    "detail_target_hits": 484,
+    "detail_context_first_hits": 0,
+    "working_interior_context_samples": 35,
+    "working_interior_context_hits": 0,
+    "detail_max_abs_height_error_m": 0.023943105201851722
+  },
+  "materials": [
+    {
+      "name": "SaCalobra_Detail_0_0",
+      "components": 300,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Layer2_Procedural",
+        "Layer1_Manual",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ],
+      "material": "/Game/Generated/YACS/Lesson04Repair_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_0.MI_Lesson04_SaCalobra_Detail_0_0",
+      "OriginCm": [
+        -190050.0,
+        74000.0,
+        0.0,
+        0.0
+      ],
+      "InvSizeCm": [
+        5.2479663281701505e-06,
+        -3.936233042622916e-06,
+        0.0,
+        0.0
+      ],
+      "albedo": {
+        "path": "/Game/Generated/YACS/Review/Textures/T_Lesson04_SaCalobra_Detail_0_0.T_Lesson04_SaCalobra_Detail_0_0",
+        "srgb": true
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_1_0",
+      "components": 300,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ],
+      "material": "/Game/Generated/YACS/Lesson04Repair_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_0.MI_Lesson04_SaCalobra_Detail_1_0",
+      "OriginCm": [
+        450.0,
+        74000.0,
+        0.0,
+        0.0
+      ],
+      "InvSizeCm": [
+        5.2479663281701505e-06,
+        -3.936233042622916e-06,
+        0.0,
+        0.0
+      ],
+      "albedo": {
+        "path": "/Game/Generated/YACS/Review/Textures/T_Lesson04_SaCalobra_Detail_1_0.T_Lesson04_SaCalobra_Detail_1_0",
+        "srgb": true
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_0_1",
+      "components": 300,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ],
+      "material": "/Game/Generated/YACS/Lesson04Repair_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_1.MI_Lesson04_SaCalobra_Detail_0_1",
+      "OriginCm": [
+        -190050.0,
+        328000.0,
+        0.0,
+        0.0
+      ],
+      "InvSizeCm": [
+        5.2479663281701505e-06,
+        -3.936233042622916e-06,
+        0.0,
+        0.0
+      ],
+      "albedo": {
+        "path": "/Game/Generated/YACS/Review/Textures/T_Lesson04_SaCalobra_Detail_0_1.T_Lesson04_SaCalobra_Detail_0_1",
+        "srgb": true
+      }
+    },
+    {
+      "name": "SaCalobra_Detail_1_1",
+      "components": 300,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ],
+      "material": "/Game/Generated/YACS/Lesson04Repair_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_1.MI_Lesson04_SaCalobra_Detail_1_1",
+      "OriginCm": [
+        450.0,
+        328000.0,
+        0.0,
+        0.0
+      ],
+      "InvSizeCm": [
+        5.2479663281701505e-06,
+        -3.936233042622916e-06,
+        0.0,
+        0.0
+      ],
+      "albedo": {
+        "path": "/Game/Generated/YACS/Review/Textures/T_Lesson04_SaCalobra_Detail_1_1.T_Lesson04_SaCalobra_Detail_1_1",
+        "srgb": true
+      }
+    },
+    {
+      "name": "SaCalobra_Context_Valid",
+      "components": 256,
+      "layers": [
+        "Houdini_Source_Pegasus_Gentle",
+        "Source_Manual_Lesson04",
+        "Lesson04_Procedural_Delta"
+      ],
+      "material": "/Game/Generated/YACS/Lesson04Repair_20261018/Materials/MI_Lesson04_SaCalobra_Context_Valid.MI_Lesson04_SaCalobra_Context_Valid",
+      "OriginCm": [
+        -393750.0,
+        394140.625,
+        0.0,
+        0.0
+      ],
+      "InvSizeCm": [
+        1.2692116797552444e-06,
+        -1.2692116797552444e-06,
+        0.0,
+        0.0
+      ],
+      "albedo": {
+        "path": "/Game/Generated/YACS/Review/Textures/T_Lesson04_SaCalobra_Context_Valid.T_Lesson04_SaCalobra_Context_Valid",
+        "srgb": true
+      }
+    }
+  ],
+  "stream": {
+    "status": "RECEIVED_BROWSER_FRAMES",
+    "received_browser_frame": true,
+    "viewer_url": "http://127.0.0.1/",
+    "frame_samples": [
+      {
+        "observed_at_utc": "2026-10-18T00:02:17.0295578Z",
+        "video": {
+          "element_token": 1,
+          "id": "streamingVideo",
+          "video_width": 1912,
+          "video_height": 910,
+          "ready_state": 4,
+          "paused": false,
+          "current_time": 0.731795,
+          "total_video_frames": 22,
+          "dropped_video_frames": 2,
+          "live_media_stream": true,
+          "media_error": null
+        },
+        "elapsed_ms": 10082
+      },
+      {
+        "observed_at_utc": "2026-10-18T00:02:18.3785643Z",
+        "video": {
+          "element_token": 1,
+          "id": "streamingVideo",
+          "video_width": 1912,
+          "video_height": 910,
+          "ready_state": 4,
+          "paused": false,
+          "current_time": 2.084061,
+          "total_video_frames": 54,
+          "dropped_video_frames": 2,
+          "live_media_stream": true,
+          "media_error": null
+        },
+        "elapsed_ms": 11431
+      }
+    ],
+    "cleanup_complete": true
+  },
+  "encoder_observation": {
+    "editor_pid": 17400,
+    "session_id": 150,
+    "codec": "H.264",
+    "encoder": "NVIDIA NVENC",
+    "width": 1912,
+    "height": 910
+  },
+  "code_sha256": {
+    "scripts/houdini/lesson04_height_encoding.py": "2b205d7707a8f57c00b7fa3b2102b653c682b68a1bfda67673bbd6e146da8241",
+    "scripts/houdini/test_lesson04_height_encoding.py": "cacec9f0b10629adc2d82672eb8e5530d60598945244e20ee0fc1bea7eaba492",
+    "scripts/houdini/prepare_lesson04_ue_repair.py": "db6499ead1dee403ca4d164e43ab2c05e10c5b40252cb35817985fa7fd935a64",
+    "scripts/houdini/create_lesson04_readback_hda.py": "ea7a58ba0ae8dd8bc82e560dadd5113031b7f0c48f980fc64380f6d70ea4da47",
+    "scripts/houdini/verify_lesson04_ue_readback.py": "21891aa7f961c9cba03556c5503bb415447e69d0ac32e94169c619f9ab5b06c2",
+    "scripts/ue/apply_lesson04_ue_repair.py": "d94bd5dcf25a8f3c064a9ed5eeff4ccc8c67090a9594a2815cd7f9bc578aff9b",
+    "scripts/ue/export_lesson04_ue_readback.py": "e366b5c5888a6e031d7aeeb1a8523186a821c982a6c24f8759457688e088fc83"
+  },
+  "screenshots": {
+    "FULL_WORKING": {
+      "sha256": "8266d633bbe6ee16a5287c334a41c9d2ecaa894e8a710659bc59e0094a9bcfc1",
+      "camera": {
+        "done": true,
+        "image_exists": true,
+        "camera_actor_location": [
+          -598300,
+          -277680,
+          470600
+        ],
+        "camera_actor_target": [
+          1700,
+          68730,
+          35000
+        ],
+        "field_of_view": 80.0
+      }
+    },
+    "FULL_CONTEXT": {
+      "sha256": "8b6052eb8926b3afb7a514772292a1e1b81609a8fc5fcbb318fe5e6cfbc357cc",
+      "camera": {
+        "done": true,
+        "image_exists": true,
+        "camera_actor_location": [
+          -1177330,
+          -679730,
+          705670
+        ],
+        "camera_actor_target": [
+          0,
+          0,
+          30000
+        ],
+        "field_of_view": 80.0
+      }
+    },
+    "CLIFF_CLOSEUP": {
+      "sha256": "df94f30e4d3b7e6963d2802cf4a0f26c84d6e9fd973355c56f81da5e88e632e2",
+      "camera": {
+        "done": true,
+        "image_exists": true,
+        "camera_actor_location": [
+          14900,
+          -78600,
+          40220
+        ],
+        "camera_actor_target": [
+          22400,
+          -71100,
+          35720
+        ],
+        "field_of_view": 80.0
+      }
+    }
+  },
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "colorimetric_equivalence": "NOT_VERIFIED; retained sRGB interpretation; corrected UV V only",
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "native_proof_scope": "Local candidate on base revision with recorded script identities; not remote CI or merge acceptance",
+  "generated_assets": "Saved locally under the isolated map path; heavy binaries and raw evidence excluded from Git"
+}

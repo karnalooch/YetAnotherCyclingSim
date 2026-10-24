@@ -86,6 +86,35 @@ Runs for draft and ready PRs as applicable:
 
 Draft PRs are the normal iteration mode for world-building work.
 
+### Script-test batching: 4 isolated workers and a Draft-only scoped tier
+
+Hosted Python tests are still discovered dynamically under `scripts/**/test_*.py`,
+run once each in independent subprocesses, and retain per-module stdout and
+receipts plus the machine-readable `plan.json` and `summary.json`. The runner
+uses up to **four concurrent isolated subprocesses**. No suites are silenced,
+tests are never marked PASS without a non-empty test execution, and any module
+failure rejects the workflow.
+
+On **the `synchronize` event of an existing same-repository Draft PR only**,
+`scripts/ci/plan_script_tests.py` may narrow the hosted suite if the GitHub
+webhook's previous PR SHA exactly matches the checkout's first parent (one
+verified commit), the diff is nonempty/small and every changed path maps to a
+conservative tested integration domain or ordinary documentation. Each scoped
+run includes the required architecture, governance/aggregate and test-discovery
+checks. CI/workflow/security/unknown paths, changed data inputs, multiple commits,
+rebases, missing history or missing SHA all **fall back to FULL**, without any
+operator bypass. Draft scope is labelled `DRAFT_SCOPED`, has
+`full_suite_passed=false`, and cannot serve as full-suite evidence.
+
+Opening/reopening a PR, converting to Draft, `ready_for_review`, a ready PR
+`synchronize`, push to main, scheduled and manually dispatched workflows all
+run the **entire discovered suite**. The existing `python-reference` and
+caller-local `Aggregate CI gate` statuses remain required, and the ready event
+revalidates the exact requested commit before any merge. This scheduling
+optimization does not replace Gumball Proof Broker evidence, native UE tests,
+source/asset checks or whole-M3 visual acceptance.
+
+
 ### Gumball CI Cost Governor routing
 
 The classifier emits a machine-readable `ci_cost_class`:
@@ -308,6 +337,27 @@ requiring ordinary successful Unreal build/Automation before any green cache
 can be published. This is not permission to rewrite, delete or ignore existing
 DLLs, weaken CI proof or change physics/world geometry.
 
+The 2026-10-20 nested-plugin correction also recognizes `.uplugin` roots
+recursively below `Plugins`, including `Plugins/Runtime/HoudiniEngine`.
+It excludes only their direct `Binaries` and `Intermediate` output directories;
+authored `Source`, `Build`, `Resources` and unknown inputs remain fingerprinted.
+Run `39420698136` exposed 333 generated nested-plugin inputs in the retained
+Windows cache. Removing those inputs reproduces the hosted and recorded compile
+fingerprint without deleting or rewriting binaries or cache state. The existing
+`yacs-unreal-binary-v2` identity is retained. `classify_changes.py` now participates
+in the proof fingerprint and Unreal RUNTIME routing, requiring fresh normal
+Automation before read-only cache reuse. This cache repair does not establish
+Lesson 7 map, material, geometry or visual acceptance.
+
+The first follow-up run `39433080045` stopped in a synthetic checkout test's
+temporary-directory cleanup (`Directory not empty: .../.git/objects`), after
+its inventory assertions. These disposable Git fixtures now set
+`maintenance.autoDetach=false` and `gc.autoDetach=false` locally so automatic
+maintenance finishes before cleanup, using the supported
+[Git configuration](https://git-scm.com/docs/git-config/2.55.0#Documentation/git-config.txt-maintenanceautoDetach).
+All inventory bounds, drift assertions and cleanup failures remain enforced;
+the production repository and cache configuration are unchanged.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
@@ -332,17 +382,29 @@ compile/proof fingerprints and expected DLLs. The pointer never authorizes
 For migration without a pointer, selection recovers the newest complete green
 schema-3 warm/isolated state. Invalidated states remain invalidated; malformed
 pointers or missing active worktrees stop cleanup. Interrupted pointer publication
-leaves the old pointer intact. Cleanup excludes the active worktree, moves and
-hash-verifies materialized LFS assets through the existing retention helper before
-removing stale build worktrees. Private standalone Git LFS object bytes are also
-archived and hash-verified before deletion; shared linked Git stores are never
-moved or pruned. Active-worktree materialized assets are retained before entering
-`actions/checkout`, not only before the later sanitization step. Cleanup does not
-remove region capture worktrees or shared LFS storage. Linked `.git` metadata is converted to an independent local
+leaves the old pointer intact. The 2026-10-20 correction to
+[`unreal_ci_workspace.py`](../scripts/ci/unreal_ci_workspace.py) keeps the existing
+`select` entrypoint but restricts retirement to direct `Intermediate` and
+`DerivedDataCache` directories in inactive, valid `_unreal-build-<run>-<attempt>`
+checkouts. It preserves each root, source, Git metadata/objects, Binaries, Saved
+and proof files, Content and LFS; a root without `.git` is preserved. The selected
+cache is excluded and its pointer is rechecked before deletion. Logical removed
+bytes and measured free space are separate results. Follow the
+[workspace retention policy](ci/RUNNER_WORKSPACE_RETENTION.md); native execution
+of this correction remains `NOT_RUN`, so no reclaimed space is claimed.
+Active-worktree materialized assets are still retained before entering
+`actions/checkout`, not only before its separate sanitization step. Linked `.git` metadata is converted to an independent local
 repository before checkout, without moving assets or build outputs: the pinned
 `actions/checkout` implementation expects a `.git` directory and can discard a
 linked-worktree checkout. Local Git objects are copied without alternates so
-retiring an older build cannot break the active repository.
+the active repository does not depend on an older build's Git store.
+
+The complete read-only fingerprint inventory in
+[`materialize_unreal_cache_inputs.py`](../scripts/ci/materialize_unreal_cache_inputs.py)
+now admits up to 1024 entries instead of 512, covering the observed 670 current
+compile/proof inputs while checking every file's bytes. The separate 256 repair
+targets and 2 MiB per-file bounds are unchanged. This is a bounded enumeration
+repair, not a fingerprint exemption; its new native run remains `NOT_RUN`.
 
 The compile fingerprint covers the project descriptor, compiled project/plugin
 inputs and the build/engine-selection orchestration used by the normal Unreal lane.

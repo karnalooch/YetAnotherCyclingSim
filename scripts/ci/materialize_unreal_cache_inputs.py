@@ -34,6 +34,7 @@ from scripts.ci.classify_changes import (
 SHA40 = re.compile(r"[0-9a-f]{40}\Z")
 SHA64 = re.compile(r"[0-9a-f]{64}\Z")
 MAX_TARGETS = 256
+MAX_FINGERPRINT_INPUTS = 1024
 MAX_FILE_BYTES = 2 * 1024 * 1024
 
 
@@ -91,7 +92,11 @@ def fingerprint_paths(root: Path) -> list[str]:
         if _is_unreal_compile_input(name) or _is_unknown_runtime_compile_input(name):
             result.add(name)
     require(result.issubset(names), "Fingerprint input not tracked by Git")
-    require(1 <= len(result) <= 512, "Fingerprint input inventory is out of bounds")
+    require(
+        1 <= len(result) <= MAX_FINGERPRINT_INPUTS,
+        "Fingerprint input inventory is out of bounds: "
+        f"count={len(result)}; allowed=1..{MAX_FINGERPRINT_INPUTS}",
+    )
     return sorted(result)
 
 

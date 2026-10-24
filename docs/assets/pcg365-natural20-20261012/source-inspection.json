@@ -1,0 +1,942 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "status": "ROCK_COMPONENT_SOURCE_INSPECTION_ONLY",
+  "request_sha256": "cca6cb185f48f586903f1285a2bba19b378873c14494cec89d8f09b548f44ea0",
+  "script_sha256_lf": "470943fdfd8ecafb9b5c78a368f1806b903821e40edade43b7ccdd999f9392dc",
+  "blender_version": "4.5.9 LTS",
+  "assets": [
+    {
+      "id": "namaqualand_boulder_02",
+      "source": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_02\\namaqualand_boulder_02_2k.fbx",
+      "source_sha256_before": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "source_sha256_after": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "source_bytes": 3095484,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "namaqualand_boulder_02_LOD0",
+          "type": "MESH",
+          "mesh": "boulder_02_5m",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 97964,
+          "vertices": 49173,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "namaqualand_boulder_02"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 97964,
+              "vertex_count": 49173,
+              "triangle_indices_sha256": "1269bb908d1bcfaf695da5d625192ad797b3af24a0224b0e3eafd04e3357c771",
+              "triangle_index_min": 0,
+              "triangle_index_max": 97963,
+              "world_bounds_m": {
+                "min": [
+                  -1.1840065717697144,
+                  -0.6255689859390259,
+                  -0.05947322025895119
+                ],
+                "max": [
+                  1.3481357097625732,
+                  0.6086939573287964,
+                  0.8231645822525024
+                ]
+              },
+              "vertex_mean_world_m": [
+                0.026894910261034966,
+                -0.013529408723115921,
+                0.2955213189125061
+              ],
+              "surface_area_m2": 8.469455464659234,
+              "boundary_edges": 396,
+              "boundary_world_bounds_m": {
+                "min": [
+                  -1.106857180595398,
+                  -0.6255689859390259,
+                  -0.05947322025895119
+                ],
+                "max": [
+                  1.3481357097625732,
+                  0.5880960822105408,
+                  0.04504789784550667
+                ]
+              },
+              "nonmanifold_edge_count": 396,
+              "closed": false,
+              "consistent_winding": null,
+              "signed_volume_m3": null,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "source": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_06\\namaqualand_boulder_06_2k.fbx",
+      "source_sha256_before": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "source_sha256_after": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "source_bytes": 3421948,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "namaqualand_boulder_06_LOD0",
+          "type": "MESH",
+          "mesh": "mesh_boulder_01_5m",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 109114,
+          "vertices": 54559,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "namaqualand_boulder_06"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 109114,
+              "vertex_count": 54559,
+              "triangle_indices_sha256": "c37ded28258cb7cf25c68eaa14b83d5a68d21507e3c4f50d09631ee2114dab31",
+              "triangle_index_min": 0,
+              "triangle_index_max": 109113,
+              "world_bounds_m": {
+                "min": [
+                  -0.32072713971138,
+                  -0.551062285900116,
+                  -0.01845235377550125
+                ],
+                "max": [
+                  0.3542558550834656,
+                  0.6608133912086487,
+                  0.6331791281700134
+                ]
+              },
+              "vertex_mean_world_m": [
+                0.01841902546584606,
+                0.10186228901147842,
+                0.33109739422798157
+              ],
+              "surface_area_m2": 2.5356338005505052,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.2555043037731609,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "rock_07",
+      "source": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_07_lod0.fbx",
+      "source_sha256_before": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+      "source_sha256_after": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+      "source_bytes": 514860,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "rock_07_LOD0",
+          "type": "MESH",
+          "mesh": "realCap_Model_3",
+          "matrix_world": [
+            [
+              1.0,
+              -8.742277657347586e-08,
+              -3.82137093032941e-15,
+              0.0
+            ],
+            [
+              8.742277657347586e-08,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              -7.89264802004485e-25,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 14844,
+          "vertices": 7424,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "rock_07"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 14844,
+              "vertex_count": 7424,
+              "triangle_indices_sha256": "7870fb74de61340a2926818bd86d7209fa9bdf9a3a0cfe9303ed6cd5d1785e60",
+              "triangle_index_min": 0,
+              "triangle_index_max": 14843,
+              "world_bounds_m": {
+                "min": [
+                  -0.087580107152462,
+                  -0.14230197668075562,
+                  -0.0019071493297815323
+                ],
+                "max": [
+                  0.08130180090665817,
+                  0.17797499895095825,
+                  0.1418129950761795
+                ]
+              },
+              "vertex_mean_world_m": [
+                0.0038553732447326183,
+                0.025180362164974213,
+                0.056375253945589066
+              ],
+              "surface_area_m2": 0.15903947631000967,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.004008748504791611,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "rock_09",
+      "source": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_09_lod0.fbx",
+      "source_sha256_before": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+      "source_sha256_after": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+      "source_bytes": 442236,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "rock_09_LOD0",
+          "type": "MESH",
+          "mesh": "realCap_Model_1",
+          "matrix_world": [
+            [
+              1.0,
+              -8.742277657347586e-08,
+              -3.82137093032941e-15,
+              0.0
+            ],
+            [
+              8.742277657347586e-08,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              -7.89264802004485e-25,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 12416,
+          "vertices": 6210,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "rock_09"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 12416,
+              "vertex_count": 6210,
+              "triangle_indices_sha256": "df13ae665fdefadca010cabe609c1d88ae82d6941cde1c2d327f290795d9ba9b",
+              "triangle_index_min": 0,
+              "triangle_index_max": 12415,
+              "world_bounds_m": {
+                "min": [
+                  -0.03673279285430908,
+                  -0.08356179296970367,
+                  -0.0005740947090089321
+                ],
+                "max": [
+                  0.03727707266807556,
+                  0.06106271967291832,
+                  0.03229531645774841
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.0001396982406731695,
+                -0.0036898748949170113,
+                0.013793664053082466
+              ],
+              "surface_area_m2": 0.0219187293277481,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.00013537728450763287,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "boulder_01",
+      "source": "D:\\yacs\\data\\assets\\pcg365-boulder-source\\boulder_01\\boulder_01_2k.fbx",
+      "source_sha256_before": "b1125cd1e08a425fa89bc62b96279b40e9a921618e12bfbbe0d575cb78f53c95",
+      "source_sha256_after": "b1125cd1e08a425fa89bc62b96279b40e9a921618e12bfbbe0d575cb78f53c95",
+      "source_bytes": 6482860,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "boulder_01_LOD0",
+          "type": "MESH",
+          "mesh": "rock_PROXY_5m.002",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 66122,
+          "vertices": 33063,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "boulder_01"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 66122,
+              "vertex_count": 33063,
+              "triangle_indices_sha256": "eda8d1524ba309572fb6a3c017f0effc1fa370d9a3360f0c111496534d22ead9",
+              "triangle_index_min": 0,
+              "triangle_index_max": 66121,
+              "world_bounds_m": {
+                "min": [
+                  -0.7481597065925598,
+                  -0.8818937540054321,
+                  -0.07364300638437271
+                ],
+                "max": [
+                  0.5239759087562561,
+                  0.9484404921531677,
+                  0.9301872253417969
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.028606485575437546,
+                -0.0418182834982872,
+                0.4932616949081421
+              ],
+              "surface_area_m2": 6.53672569773192,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.7343847003259,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        },
+        {
+          "name": "boulder_01_LOD1",
+          "type": "MESH",
+          "mesh": "rock_PROXY_5m.005",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 33060,
+          "vertices": 16532,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "boulder_01"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 33060,
+              "vertex_count": 16532,
+              "triangle_indices_sha256": "639a190cc8879360fde8f297324361289359b5ae1c1ab1ef1eb078d365953faf",
+              "triangle_index_min": 0,
+              "triangle_index_max": 33059,
+              "world_bounds_m": {
+                "min": [
+                  -0.748157799243927,
+                  -0.8822934031486511,
+                  -0.07324521988630295
+                ],
+                "max": [
+                  0.5242701172828674,
+                  0.9481315612792969,
+                  0.9299140572547913
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.03267962858080864,
+                -0.042810287326574326,
+                0.5023823380470276
+              ],
+              "surface_area_m2": 6.5305195398952485,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.7343430599754304,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        },
+        {
+          "name": "boulder_01_LOD2",
+          "type": "MESH",
+          "mesh": "rock_PROXY_5m.006",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 16530,
+          "vertices": 8267,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "boulder_01"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 16530,
+              "vertex_count": 8267,
+              "triangle_indices_sha256": "ff5209890a475dfe1549452c11bf58a107640c3d3143d9b15f7c16a1da885daa",
+              "triangle_index_min": 0,
+              "triangle_index_max": 16529,
+              "world_bounds_m": {
+                "min": [
+                  -0.7484129667282104,
+                  -0.8807294368743896,
+                  -0.07326821982860565
+                ],
+                "max": [
+                  0.5242701172828674,
+                  0.9470295906066895,
+                  0.9302488565444946
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.032705679535865784,
+                -0.039908841252326965,
+                0.5017216205596924
+              ],
+              "surface_area_m2": 6.49662074319134,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.7341804512057506,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        },
+        {
+          "name": "boulder_01_LOD3",
+          "type": "MESH",
+          "mesh": "rock_PROXY_5m.007",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 8264,
+          "vertices": 4134,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "boulder_01"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 8264,
+              "vertex_count": 4134,
+              "triangle_indices_sha256": "c797ebc09b9c8932ef960f3857fe2e51796b864c13f165e65ff6ea3c5825dcaa",
+              "triangle_index_min": 0,
+              "triangle_index_max": 8263,
+              "world_bounds_m": {
+                "min": [
+                  -0.7481110692024231,
+                  -0.8819288611412048,
+                  -0.0716821551322937
+                ],
+                "max": [
+                  0.5223388671875,
+                  0.9470295906066895,
+                  0.9302488565444946
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.030939225107431412,
+                -0.03995739296078682,
+                0.49570292234420776
+              ],
+              "surface_area_m2": 6.427020925116915,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.7338691082716482,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "namaqualand_boulder_03",
+      "source": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_03_2k.fbx",
+      "source_sha256_before": "5890e368f33ed9807966f2ff6daf57ef76d1e5c045947e906bb437bbed90a181",
+      "source_sha256_after": "5890e368f33ed9807966f2ff6daf57ef76d1e5c045947e906bb437bbed90a181",
+      "source_bytes": 2281932,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "namaqualand_boulder_03_LOD0",
+          "type": "MESH",
+          "mesh": "realCap_Model_2",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 64826,
+          "vertices": 32415,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "namaqualand_boulder_03"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 64826,
+              "vertex_count": 32415,
+              "triangle_indices_sha256": "33e587898201792270bab66155bb0d68285685bda19bf21b680fa04d853972d4",
+              "triangle_index_min": 0,
+              "triangle_index_max": 64825,
+              "world_bounds_m": {
+                "min": [
+                  -1.054810881614685,
+                  -1.6758253574371338,
+                  -0.01470343116670847
+                ],
+                "max": [
+                  1.3522862195968628,
+                  1.3895807266235352,
+                  1.4584896564483643
+                ]
+              },
+              "vertex_mean_world_m": [
+                0.1706240177154541,
+                -0.14497637748718262,
+                0.644388735294342
+              ],
+              "surface_area_m2": 16.79782361041912,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 4.38694985108052,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "namaqualand_boulder_04",
+      "source": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_04_2k.fbx",
+      "source_sha256_before": "72c573fa43e787a24f6bf98f96c24e2062e62c115d1937f45c20625d9af0856e",
+      "source_sha256_after": "72c573fa43e787a24f6bf98f96c24e2062e62c115d1937f45c20625d9af0856e",
+      "source_bytes": 2058860,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "namaqualand_boulder_04_LOD0",
+          "type": "MESH",
+          "mesh": "realCap_Model_2.001",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 59066,
+          "vertices": 29535,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "namaqualand_boulder_04"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 59066,
+              "vertex_count": 29535,
+              "triangle_indices_sha256": "46a3117321878de836f6db5e48ceae3238338ebf73585981782305c5b54c8d19",
+              "triangle_index_min": 0,
+              "triangle_index_max": 59065,
+              "world_bounds_m": {
+                "min": [
+                  -1.3402929306030273,
+                  -1.4653747081756592,
+                  -0.029385603964328766
+                ],
+                "max": [
+                  1.1818602085113525,
+                  1.0310475826263428,
+                  1.8710765838623047
+                ]
+              },
+              "vertex_mean_world_m": [
+                0.005171042401343584,
+                -0.17355380952358246,
+                0.8122062683105469
+              ],
+              "surface_area_m2": 17.679039341347973,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 4.987445866806016,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    },
+    {
+      "id": "namaqualand_boulder_05",
+      "source": "D:\\yacs\\work\\pcg365\\natural-palette-sources\\namaqualand_boulder_05_2k.fbx",
+      "source_sha256_before": "20bec082d679d510dd840243dc78b251e2ce1ebeb36ff13d7c4b626fbf96e77b",
+      "source_sha256_after": "20bec082d679d510dd840243dc78b251e2ce1ebeb36ff13d7c4b626fbf96e77b",
+      "source_bytes": 3036268,
+      "license": "CC0-1.0",
+      "objects": [
+        {
+          "name": "namaqualand_boulder_05_LOD0",
+          "type": "MESH",
+          "mesh": "Boulder",
+          "matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "triangles": 89618,
+          "vertices": 44811,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "material_slots": [
+            "namaqualand_boulder_05"
+          ],
+          "components": [
+            {
+              "component_index": 0,
+              "triangle_count": 89618,
+              "vertex_count": 44811,
+              "triangle_indices_sha256": "4eca426297c2f836d9aae73051a0f4d92435db5274b150a4cde703042b970854",
+              "triangle_index_min": 0,
+              "triangle_index_max": 89617,
+              "world_bounds_m": {
+                "min": [
+                  -0.6350750923156738,
+                  -0.35002079606056213,
+                  -0.00982174463570118
+                ],
+                "max": [
+                  0.7289556264877319,
+                  0.39795854687690735,
+                  0.528499960899353
+                ]
+              },
+              "vertex_mean_world_m": [
+                -0.0010175034403800964,
+                0.002502227434888482,
+                0.2688218951225281
+              ],
+              "surface_area_m2": 2.548192405374886,
+              "boundary_edges": 0,
+              "boundary_world_bounds_m": null,
+              "nonmanifold_edge_count": 0,
+              "closed": true,
+              "consistent_winding": true,
+              "signed_volume_m3": 0.2292682861947847,
+              "source_self_intersection": "UNKNOWN_NOT_TESTED"
+            }
+          ],
+          "component_count": 1,
+          "selection": "NOT_SELECTED_NO_INFERRED_LOD"
+        }
+      ]
+    }
+  ],
+  "source_modified": false,
+  "terrain_modified": false,
+  "placement": false,
+  "qualified_assets": [],
+  "native_unreal_execution": "NOT_RUN"
+}

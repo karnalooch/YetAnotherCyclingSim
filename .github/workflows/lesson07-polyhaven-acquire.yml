@@ -1,0 +1,109 @@
+name: YACS Lesson07 Poly Haven CC0 source acquisition
+
+# Explicit owner approval: CC0 material substitutions on 2026-10-22.
+# Source-only workflow; never starts Houdini, Unreal, or changes terrain.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-acquire.yml
+      - scripts/assets/acquire_l07_polyhaven.py
+      - scripts/assets/test_acquire_l07_polyhaven.py
+      - scripts/assets/lesson07_polyhaven_sources.json
+      - scripts/assets/build_l07_polyhaven_bindings.py
+      - scripts/assets/test_build_l07_polyhaven_bindings.py
+      - scripts/assets/probe_l07_polyhaven_hython.py
+      - scripts/assets/test_probe_l07_polyhaven_hython.py
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Validate exact 8-source selection and downloader offline
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-polyhaven-acquire]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/assets
+          lfs: false
+          persist-credentials: false
+      - name: Validate source identity, URL allowlist, package roles and tamper guards
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest discover -s scripts/assets -p 'test_*l07_polyhaven*.py' -v
+          python -B -m json.tool scripts/assets/lesson07_polyhaven_sources.json >/dev/null
+
+  acquire:
+    name: Download and hash-verify 45 vendor PBR maps into isolated D workdir
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 90
+    concurrency:
+      group: yacs-polyhaven-source-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout source-only Python files at exact event SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/assets
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Acquire eight approved publisher assets without Houdini/UE changes
+        id: download
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Source checkout SHA mismatch.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw "Pinned Python missing: $python" }
+          $manifest='scripts/assets/lesson07_polyhaven_sources.json'
+          $output='D:\yacs\work\lesson07-polyhaven-cc0-v1'
+          if (-not (Test-Path -LiteralPath 'D:\yacs\work')) { throw 'Canonical isolated work root missing.' }
+          & $python -B scripts/assets/acquire_l07_polyhaven.py plan --selection $manifest --destination $output
+          if ($LASTEXITCODE -ne 0) { throw 'Official publisher plan check failed.' }
+          & $python -B scripts/assets/acquire_l07_polyhaven.py acquire --selection $manifest --destination $output
+          if ($LASTEXITCODE -ne 0) { throw 'Official source acquisition failed.' }
+          & $python -B scripts/assets/acquire_l07_polyhaven.py verify --selection $manifest --destination $output
+          if ($LASTEXITCODE -ne 0) { throw 'Independent source readback failed.' }
+          & $python -B scripts/assets/build_l07_polyhaven_bindings.py --selection $manifest --source-root $output
+          if ($LASTEXITCODE -ne 0) { throw 'Verified PBR source binding failed.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw "Canonical hython missing: $hython" }
+          & $hython -B scripts/assets/probe_l07_polyhaven_hython.py --root $output
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only Houdini OpenImageIO image header check failed.' }
+          "verification_path=$output\source-verification.json" >> $env:GITHUB_OUTPUT
+      - name: Retain verification receipt, never copied PBR binaries
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-polyhaven-verified-sources-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/source-verification.json
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/bindings-v1.json
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/hython-image-inspection.json
+          if-no-files-found: warn
+          retention-days: 30

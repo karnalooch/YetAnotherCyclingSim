@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "ISOLATED_ROCK_QUALIFICATION_ONLY",
+  "assets": [
+    {
+      "id": "rock_07",
+      "source": "D:\\yacs\\data\\assets\\pcg365-rock-qualification01\\rock_07\\rock_07_2k.fbx",
+      "source_relative": "rock-source/rock_07.fbx",
+      "sha256": "a49a0fce3da2a976013aac8be3899817b0fe03a1f19628ea0677820df3bdbae1",
+      "bytes": 1160220,
+      "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/rock_07/rock_07_2k.fbx",
+      "provider_md5": "0ca9c8e264519eec3dd07ddc72177b0a",
+      "license": "CC0-1.0",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending"
+    },
+    {
+      "id": "rock_09",
+      "source": "D:\\yacs\\data\\assets\\pcg365-rock-qualification01\\rock_09\\rock_09_2k.fbx",
+      "source_relative": "rock-source/rock_09.fbx",
+      "sha256": "a04920ea816c4a3ca88c57ce8cbe2a9ba9315130df1c32b589640819d5096333",
+      "bytes": 890732,
+      "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/rock_09/rock_09_2k.fbx",
+      "provider_md5": "f779090f18fee85e2a1af805fc037776",
+      "license": "CC0-1.0",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending"
+    }
+  ],
+  "acquisition_manifest": "worldgen/sa_calobra/pcg365_rock_acquisition_v1.json",
+  "download_index_sha256": "5267186afa0a8ceb85f6ffe9211158a15b7c8daad0ef28c62f198d59dfbe9bf8",
+  "policy_id": "PCG_ROCK_SAMPLED_CONTACT_TRIAL_V1",
+  "placement": false,
+  "qualified_assets": [],
+  "geology": "UNKNOWN_NOT_INFERRED_FROM_MATERIAL",
+  "source_units_policy": "CONVERT_DECLARED_FBX_SCENE_UNITS_TO_CM_NO_RESCALE",
+  "contact_points": "contact-request.json;five diagnostic XY not rock semantic selectors"
+}

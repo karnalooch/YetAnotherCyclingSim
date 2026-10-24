@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "status": "ORIGINAL_MATERIAL_REPRODUCTION_IN_PROGRESS",
+  "owner_direction": "Implement the original SideFX material solution after completed original-ZIP texture delivery; preserve registered Sa Calobra data and current owner session.",
+  "source_archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "reports": [
+    {
+      "file": "download-receipt.json",
+      "bytes": 1143,
+      "sha256": "a5056b7df48e23f2f338bd3b2e711f7c043585b78d1110d871682a939a485829"
+    },
+    {
+      "file": "zip-inventory.json",
+      "bytes": 207950,
+      "sha256": "3be24582dca0d1cc4d821ee627c7208703632a289697fa2c017833b91f2e46ae"
+    },
+    {
+      "file": "original-material-settings.json",
+      "bytes": 28118,
+      "sha256": "2c3da8c52b69b3ee31e578639aca094f7ebbc82ebd97067d6a18ca9908c6f970"
+    },
+    {
+      "file": "source-png-metadata.json",
+      "bytes": 2546,
+      "sha256": "cc4c2765bda6768da7185a23bc3632bb0a21f4ea27736aba353600349acb755d"
+    },
+    {
+      "file": "video-observations.json",
+      "bytes": 2996,
+      "sha256": "422e687a7e90c871df557e5a3e04a3b301c68598a9d0c52e8d03e1a320b5e144"
+    },
+    {
+      "file": "video-frame-receipts.json",
+      "bytes": 11465,
+      "sha256": "b1e57eb5b9ba37cc552adf8c489b3a7c398a194efa18a193273dc0f59a288204"
+    },
+    {
+      "file": "source-archive-hda-summary.json",
+      "bytes": 18460,
+      "sha256": "261f5dedb4115d2a0f63b7c1f5c7ac763e35f4aaddf473925e0e0f435ce34a5e"
+    },
+    {
+      "file": "video-source-public-id-mapping.json",
+      "bytes": 3549,
+      "sha256": "4e76c8d58111332f04e024ff28dbbac05caa54e0a6d8d7eec43f3b15917f0f46"
+    },
+    {
+      "file": "delivery-parts-receipt.json",
+      "bytes": 634,
+      "sha256": "8ba4ee0dc06ac124fdc32bcec6c1d6ed7a7300f7baaf073835ba0d1148c8ffe8"
+    },
+    {
+      "file": "uv-rotation-trace.json",
+      "bytes": 10178,
+      "sha256": "ca08d1dff6b94ec18f803a048522888a59f673ad6df1fa3f0ec202c0b49104b5"
+    },
+    {
+      "file": "source-inventory-39654531355-2-bridge.json",
+      "bytes": 111969,
+      "sha256": "3f195803211fd172dbae17c0ac357ee80d461527e8a2d68561c2b954f3d8199b"
+    },
+    {
+      "file": "source-inventory-39654531355-2-probe.json",
+      "bytes": 3939,
+      "sha256": "cc9f6e212defec01e2a2a47a5192642d23d18eda39ba66dff49b4813d5e6f8c7"
+    },
+    {
+      "file": "source-inventory-39654531355-2-identity.json",
+      "bytes": 616,
+      "sha256": "7c2a94139768339ba2362a6147f2b82f49b29e6153090aa09ce110ba189e9503"
+    },
+    {
+      "file": "source-inventory-39654531355-2-download-receipt.json",
+      "bytes": 647,
+      "sha256": "2ceae44ec1f92270816a7e8f27efc536f8aec69e0bba2b0f08c49dac1e9e0433"
+    },
+    {
+      "file": "source-inventory-39654531355-2-evidence.json",
+      "bytes": 12119,
+      "sha256": "9558778efbc0691a8f331c4e660bd6c7a0d2916ec788adf2f8fc36e7209b2620"
+    },
+    {
+      "file": "source-inventory-39658443621-1-bridge.json",
+      "bytes": 120838,
+      "sha256": "0be8a7f45e33972f4e68bf9038d5318d105b161dcb27eec22ddde9103149b2c0"
+    },
+    {
+      "file": "source-inventory-39658443621-1-probe.json",
+      "bytes": 3939,
+      "sha256": "763426432e23c626c5135ac69526f00bcf4cdf8020b61199b45f21c279c52be1"
+    },
+    {
+      "file": "source-inventory-39658443621-1-identity.json",
+      "bytes": 616,
+      "sha256": "27b94242abbb7e9d2c344fcb211d6d67013d2257332a39bd73afd35aec1ed892"
+    },
+    {
+      "file": "source-inventory-39658443621-1-download-receipt.json",
+      "bytes": 647,
+      "sha256": "31a930f95154c79e30d4ad50b0611b9d3e43a4a60ab414594be2334ae8143efc"
+    },
+    {
+      "file": "source-inventory-39658443621-1-evidence.json",
+      "bytes": 14490,
+      "sha256": "bc0c2899aea40224e5d428e6a185054067c1eeed685735a43f0007c6f6162283"
+    },
+    {
+      "file": "original-textures-extraction-manifest.json",
+      "bytes": 108362,
+      "sha256": "c61c581c6cc9e79b0e6749d95ddfd2aff43ac8ab7cef1d1eed745ba4ca4360ef"
+    },
+    {
+      "file": "source-six-image-inspection.json",
+      "bytes": 10944,
+      "sha256": "a5bb844a664c884fa424fbde48bb87aedb71d4e4654c4ebdc6456494ffbbc1b1"
+    },
+    {
+      "file": "current-landscape-archive-comparison.json",
+      "bytes": 39605,
+      "sha256": "83a87ec85cfa52fe9342553c32b266f208f39fd5df5cbd5e58882947b6c78a3c"
+    },
+    {
+      "file": "one-to-one-material-contract.json",
+      "bytes": 32371,
+      "sha256": "4d2f1227e33cfbc7beddbd2c1ae103586d018a4fd43b0b5e24507a8f7d1c9888"
+    },
+    {
+      "file": "discovery-39668607144-evidence.json",
+      "bytes": 2445,
+      "sha256": "0a7cc3b85e6462336ebe8cc20986b8ccbf882b1718b5a657fe9519f0aec93326"
+    },
+    {
+      "file": "discovery-39668607144-1-bridge.json.gz",
+      "bytes": 27637,
+      "sha256": "50910496392e403f603fc20cecef2f4fa38705d655a2c72d45cef24dbd65adcb"
+    },
+    {
+      "file": "discovery-39668607144-1-probe.json",
+      "bytes": 3903,
+      "sha256": "65175919e2560c84c9ebd5fa279c7100318dde4a5e0eb591f885c4c7860e7044"
+    },
+    {
+      "file": "discovery-39668607144-1-identity.json",
+      "bytes": 616,
+      "sha256": "3d2ca78eacb377962a059e769d13bf14433018b6bdf5b551996f05b5740538c8"
+    },
+    {
+      "file": "one-to-one-mi-parameter-evidence.json",
+      "bytes": 36123,
+      "sha256": "ac030995756e92fd902eb75a2cd2673aebab9c85e91a88ab3ee2189450cf68ab"
+    },
+    {
+      "file": "preparation-39672674724-1-bridge.json.gz",
+      "bytes": 37580,
+      "sha256": "6e0a1e3a133d51499317180021e71e7ea3773d1e12014bf6c782422d8060e8f2"
+    },
+    {
+      "file": "preparation-39672674724-1-probe.json",
+      "bytes": 4457,
+      "sha256": "6f64f149e2ae5ad90bfc718d7c1769419bfb95626c80a501d5ca30ad34179b2e"
+    },
+    {
+      "file": "preparation-39672674724-1-identity.json",
+      "bytes": 616,
+      "sha256": "d546892ef43f2093e7ff1b95672c27c57f8f5f56b7f27160d8f4ebc3caecb5eb"
+    },
+    {
+      "file": "preparation-39672674724-1-candidate-assets.json",
+      "bytes": 935,
+      "sha256": "5642d6d027e331661aea633582c1d279d9fc6a6bad20a892d689331dc38a1fc7"
+    },
+    {
+      "file": "preparation-39672674724-offline-validation.json",
+      "bytes": 11369,
+      "sha256": "59c6b3ad62c0ff92c33db3f51c24678e0c7ea9eb045e18ac628d007734baefcd"
+    },
+    {
+      "file": "preparation-39672674724-candidate-prefix-evidence.json",
+      "bytes": 8215,
+      "sha256": "418f30b5fff26ca623087ab9a61b4d40330f7eecfb48813ef19ec17ff21d68cc"
+    },
+    {
+      "file": "preparation-39672674724-candidate-parameter-contract.json",
+      "bytes": 9810,
+      "sha256": "6b1802a82a234693177267378a82a2a440f6c66d422c09e00aa089eb0faa7b28"
+    },
+    {
+      "file": "preparation-39672674724-evidence.json",
+      "bytes": 6778,
+      "sha256": "9dee6f51e883459cccb392ce2453b6c289aeacf508f9998958795c5afc856112"
+    },
+    {
+      "file": "base-material-coverage-recipe.json",
+      "bytes": 1860,
+      "sha256": "3a3f3c9707e8881db42e9a1ace6b3136992d76631b49f953ce901a382643b29a"
+    },
+    {
+      "file": "input-inspection-scope.json",
+      "bytes": 2176,
+      "sha256": "5d5086215c8e1740b517fc3178c3f5658eff796acf0429db15747ebe9d893435"
+    }
+  ],
+  "custom_normal_candidate_executed": false,
+  "native_application": false,
+  "lesson07_technical_pass": false,
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "host_session_note": "Owner manually reopened the canonical project after reset. Both native read-only inventories attached to PID 11284/session 1. The latest seven-call inspection retained 14 owner/process/listener checks; no automated startup or previous identity reuse.",
+  "native_source_inspection": true,
+  "latest_native_source_inspection": {
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "run_id": 39658443621,
+    "run_attempt": 1,
+    "native_tool_calls": 7,
+    "owner_checks": 14,
+    "queries_verified": [
+      "tkekcgfn",
+      "vjulbjjr",
+      "wenocdss",
+      "ultncbnlw",
+      "ullmagidy"
+    ],
+    "all_five_pages_complete": true,
+    "all_five_queries_shown": 0,
+    "all_five_queries_total": 0,
+    "raw_from_registry_per_query": 457,
+    "registered_name_matches_found": false,
+    "renamed_assets_or_external_cache_absence_proven": false,
+    "license_entitlement_verified": false
+  },
+  "owner_reports_possession_of_required_source_files": false,
+  "archive_texture_delivery": {
+    "status": "DELIVERED_TO_OWNER",
+    "zip_name": "SideFX_Textures_From_Original_Zip.zip",
+    "zip_bytes": 217202273,
+    "zip_sha256": "672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee",
+    "original_file_count": 57,
+    "texture2d_count": 48,
+    "landscape_debug_texture2d_count": 9,
+    "foliage_texture2d_count": 39,
+    "texture2darray_count": 3,
+    "png_count": 4,
+    "exr_count": 2,
+    "uasset_metadata_inspected_count": 125,
+    "original_paths_and_bytes_preserved": true,
+    "all_zip_members_size_crc32_sha256_verified": true,
+    "native_import_performed": false,
+    "images_edited_or_converted": false,
+    "uassets_reserialized": false,
+    "five_final_video_pbr_families_supplied": false,
+    "manifest": "original-textures-extraction-manifest.json",
+    "source_image_inspection": "source-six-image-inspection.json"
+  },
+  "current_original_landscape_pointer_comparison": {
+    "report": "current-landscape-archive-comparison.json",
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "original_landscape_packages": 37,
+    "all_original_sha256_and_size_match_committed_canonical_lfs_pointers": true,
+    "remote_tree_truncated": false,
+    "lfs_binary_downloaded": false,
+    "lfs_server_object_availability_verified": false,
+    "windows_workspace_bytes_verified": false,
+    "unreal_invoked": false
+  },
+  "external_source_search_active": false,
+  "existing_local_export_requested_from_owner": false,
+  "protected_ci_for_latest_native_source": {
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "run_id": 39658455912,
+    "conclusion": "failure",
+    "hosted_python_job_id": 119425014052,
+    "hosted_python_conclusion": "success",
+    "saved_mi_reader_tests_passed": 60,
+    "wingman_client_tests_passed": 110,
+    "full_plan_modules_selected": 285,
+    "full_plan_modules_available": 285,
+    "selection_count_is_not_all_modules_passed": true,
+    "windows_job_id": 119426772514,
+    "windows_failure": "LOCAL_BUSY before checkout/build; later proof-log staging had no working directory, and final cleanup also refused LOCAL_BUSY",
+    "owner_editor_preserved": true,
+    "native_build_pass": false,
+    "automation_pass": false
+  },
+  "one_to_one_reproduction": {
+    "base_commit": "0d6064147f14a89767007d381d7c292b81bdecbd",
+    "status": "ORIGINAL_MI_COPY_SAVED_NATIVE_ORDERED_VALUES_VERIFIED_OFFLINE_REVIEW_PARTIAL",
+    "metadata_contract_added": "edit_level",
+    "new_native_calls_admitted": 11,
+    "source_mi_copy_prepared": true,
+    "native_application_verified": false,
+    "global_colour_repaired": false,
+    "exact_final_video_pbr_sets_available": false,
+    "metadata_source_commit": "a287c5a87c3d1410513512f9711eed04814290b4",
+    "metadata_discovery_run": 39668607144,
+    "metadata_discovery_verified": true,
+    "metadata_native_calls": 0,
+    "metadata_workflow_conclusion": "failure",
+    "metadata_later_failure": "FAILURE_LOG_OWNER",
+    "material_contract": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json",
+    "shared_master_expression_links_verified": 257,
+    "source_variant": "ZIP_SAVED_DEFAULTS_FINAL_VIDEO_PROFILE_SEPARATE",
+    "owner_checks_per_complete_preparation": 22,
+    "preparation_marker": "[l07-prepare-pegasus-candidate]",
+    "mi_parameter_comparison": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json",
+    "persisted_current_layer_and_blend_indices_match_source": true,
+    "explicit_current_global_colour_strength_overrides": 1,
+    "zip_profile_global_parameter_delta_count": 5,
+    "editor_only_layer_cache_verified": false,
+    "preparation_source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+    "preparation_run": 39672674724,
+    "preparation_workflow_conclusion": "success",
+    "preparation_native_tool_calls": 11,
+    "preparation_owner_checks": 22,
+    "preparation_evidence": "docs/assets/lesson07-sidefx-source-20261021/preparation-39672674724-evidence.json",
+    "native_current_mi_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "small_rgb_canary_admitted": false,
+    "small_rgb_cache_status": "MISSING",
+    "full_candidate_export_verified": false,
+    "backup_offline_parameter_contract_matches": true,
+    "candidate_prefix_parameters_match_zip_and_yacs_adaptations": true,
+    "candidate_added_terrain_scale_guid_matches_existing_yacs_mi": false,
+    "base_coverage_recipe_corrected": true,
+    "base_coverage_recipe_evidence": "docs/assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json",
+    "existing_colour_caches_rebuilt": false,
+    "automatic_cache_invalidation": false,
+    "input_inspection_marker": "[l07-inspect-pegasus-inputs]",
+    "input_inspection_status": "READY_FOR_NATIVE_INSPECTION_RESULTS_PENDING",
+    "input_inspection_native_calls": 1,
+    "input_inspection_owner_checks": 2
+  }
+}

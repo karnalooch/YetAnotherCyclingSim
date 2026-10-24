@@ -1,0 +1,456 @@
+{
+  "status": "LOCAL_MASKED_TINT_REPAIR_NATIVE_PASS_VISUAL_ACCEPTANCE_PENDING",
+  "branch": "codex/365-world-graph",
+  "base_head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "issue": 365,
+  "milestone_authority": "Roadmap M3; GitHub issue milestone is null",
+  "pr": 474,
+  "commit_push_merge": "NOT_REQUESTED_NOT_RUN",
+  "initial_tracked_changes": false,
+  "preexisting_untracked_files_preserved": true,
+  "original_checkpoint_sha256": "876eb856004822a014ed4bcf383a96a030d493cea3d383704e692c53c6562b32",
+  "checkpoint": {
+    "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05_Reviewed.hiplc",
+    "hip_sha256": "bfc6e06461f9cf092d5bee4380ec527955c02e4566286853318f6d777270ce7d",
+    "lesson04_unchanged_sha256": "6d5419191083ed32a79e4fb1668a1476cdf49b38bdc27d3b869424959793d098",
+    "stage_graphs_per_area": 10,
+    "fresh_reopen": "PASS; both full native tails rebuilt with zero height/R/G/B/roughness differences"
+  },
+  "material_inputs": {
+    "filename1": {
+      "path": "D:\\yacs\\work\\lesson05-material-forge-20261018\\run-a\\mediterranean_soil\\limestone_scree_v1\\export\\YACS_Material_BaseColor.png",
+      "sha256": "970ba2edac525d4d49390702250cbc4ae214319f79fbee6b7035e0afca276c11"
+    },
+    "filename2": {
+      "path": "D:\\yacs\\work\\lesson05-houdini-20261018\\Roughness_Pegasus.exr",
+      "sha256": "622df0c5e65c4f278c7523bf5ac827218c62689316e9348cd4524da8b185b174"
+    },
+    "filename3": {
+      "path": "D:\\yacs\\work\\lesson05-houdini-20261018\\Height_Pegasus.exr",
+      "sha256": "7a886fe97b46b556ffb242a530c1d9037869a284d90f4ea32d2394045530ffba"
+    }
+  },
+  "hda_definitions": {
+    "PE_heightfield_layerslump": {
+      "path": "C:/Users/akarn/OneDrive/Dokumenty/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/outputs/Pegasus_Komplet/P1_02_Landscape_Workflow/Materialy/ProjectFiles_LandscapeWorkflow3/ProjectFiles_LandscapeWorkflow/Houdini/Packages/PegasusDemo/otls/sop_PE_heightfield_layerslump.hda",
+      "sha256": "7d6fdfa34a3794ad320cf7593966b68caeb64d243309d8d422babcb7cfe057b4"
+    },
+    "PE_heightfield_material::1.0": {
+      "path": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda",
+      "sha256": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023"
+    },
+    "PE_heightfield_tint::1.0": {
+      "path": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_tint.1.0.hda",
+      "sha256": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed"
+    }
+  },
+  "stage_file_dependencies_checked": 22,
+  "missing_dependencies": [],
+  "houdini": "22.0.466",
+  "labs_root": "D:/yacs/tools/sidefx_packages/SideFXLabs22.0",
+  "areas": {
+    "working": {
+      "area": "working",
+      "fresh_hip_read": true,
+      "samples": 70316666,
+      "resolution": [
+        7154,
+        9829,
+        1
+      ],
+      "origin": [
+        -1771.25,
+        0.0,
+        3144.25
+      ],
+      "delta_l05": {
+        "min": -0.00048828125,
+        "max": 0.0167236328125,
+        "mean": 3.1194096163891086e-05
+      },
+      "outside_scree_delta_max_m": 0,
+      "mask": {
+        "min": 0.0,
+        "max": 0.7987728714942932,
+        "mean": 0.004377347514570864
+      },
+      "colors": {
+        "r": {
+          "min": 0.0,
+          "max": 0.7616127729415894,
+          "mean": 0.4255013726584275
+        },
+        "g": {
+          "min": 0.0,
+          "max": 0.7639183402061462,
+          "mean": 0.4088026794927017
+        },
+        "b": {
+          "min": 0.0,
+          "max": 0.7685295343399048,
+          "mean": 0.3276149988698392
+        },
+        "roughness": {
+          "min": 0.0,
+          "max": 0.9863357543945312,
+          "mean": 0.6357638103487053
+        }
+      },
+      "fresh_native_tail_rebuild": {
+        "height": 0,
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "roughness": 0
+      },
+      "retained_masks": {
+        "scree": {
+          "min": 0.0,
+          "max": 0.7987728714942932,
+          "mean": 0.004377347514570864
+        },
+        "cliff": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.4286037354314022
+        },
+        "pockets": {
+          "min": 0.0,
+          "max": 0.9993420243263245,
+          "mean": 0.0868122306879583
+        },
+        "broad_occlusion": {
+          "min": 0.0006579868495464325,
+          "max": 1.0,
+          "mean": 0.8390692309690537
+        },
+        "curvature": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.018250569811346186
+        }
+      },
+      "review_locations": {
+        "scree": {
+          "index": [
+            1576,
+            9544
+          ],
+          "position": [
+            -983.2499389648438,
+            0.0,
+            -1627.75
+          ]
+        },
+        "pocket": {
+          "index": [
+            1576,
+            9544
+          ],
+          "position": [
+            -983.2499389648438,
+            0.0,
+            -1627.75
+          ]
+        },
+        "transition": {
+          "index": [
+            1192,
+            648
+          ],
+          "position": [
+            -1175.25,
+            0.0,
+            2820.25
+          ]
+        },
+        "gentle": {
+          "index": [
+            176,
+            2216
+          ],
+          "position": [
+            -1683.25,
+            0.0,
+            2036.25
+          ]
+        }
+      },
+      "unchanged_from_previous": {
+        "height": 0,
+        "scree": 0,
+        "roughness": 0
+      },
+      "color_changes_from_previous": {
+        "r": 43801333,
+        "g": 67576033,
+        "b": 67575162
+      },
+      "total_procedural_vs_source_manual_m": {
+        "min": -0.34796908497810364,
+        "max": 0.5093994140625,
+        "mean": 0.014337529474223589
+      },
+      "total_abs_p95_m": 0.16064453125,
+      "final_cache_sha256": "e55fcd9c1638853dcf18e0cf9a5fe4cda66dfa047516a8fade2c587c3a2c8d46",
+      "constant_tint_support": {
+        "cliff_tint": {
+          "outside_mask_changed_samples": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "zero_mask_samples": 33709325
+        },
+        "scree_tint": {
+          "outside_mask_changed_samples": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "zero_mask_samples": 64981867
+        }
+      }
+    },
+    "context": {
+      "area": "context",
+      "fresh_hip_read": true,
+      "samples": 4194304,
+      "resolution": [
+        2048,
+        2048,
+        1
+      ],
+      "origin": [
+        -3998.046875,
+        0.0,
+        3998.046875
+      ],
+      "delta_l05": {
+        "min": -0.000457763671875,
+        "max": 0.019287109375,
+        "mean": 1.7683012510191776e-05
+      },
+      "outside_scree_delta_max_m": 0,
+      "mask": {
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.00254920741159192
+      },
+      "colors": {
+        "r": {
+          "min": 0.0,
+          "max": 0.7616127729415894,
+          "mean": 0.3366590304544457
+        },
+        "g": {
+          "min": 0.0,
+          "max": 0.7639183402061462,
+          "mean": 0.3171299005415124
+        },
+        "b": {
+          "min": 0.0,
+          "max": 0.7685295343399048,
+          "mean": 0.2400111136423455
+        },
+        "roughness": {
+          "min": 0.0,
+          "max": 0.9911764860153198,
+          "mean": 0.5307391353459419
+        }
+      },
+      "fresh_native_tail_rebuild": {
+        "height": 0,
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "roughness": 0
+      },
+      "retained_masks": {
+        "scree": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.00254920741159192
+        },
+        "cliff": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.3007559667641158
+        },
+        "pockets": {
+          "min": 0.0,
+          "max": 0.9714931845664978,
+          "mean": 0.01628420976433631
+        },
+        "broad_occlusion": {
+          "min": 0.026121992617845535,
+          "max": 1.0,
+          "mean": 0.9446859584439977
+        },
+        "curvature": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.06149030804881647
+        }
+      },
+      "review_locations": {
+        "scree": {
+          "index": [
+            1512,
+            808
+          ],
+          "position": [
+            1908.203125,
+            0.0,
+            841.796875
+          ]
+        },
+        "pocket": {
+          "index": [
+            1512,
+            808
+          ],
+          "position": [
+            1908.203125,
+            0.0,
+            841.796875
+          ]
+        },
+        "transition": {
+          "index": [
+            1408,
+            1544
+          ],
+          "position": [
+            1501.953125,
+            0.0,
+            -2033.203125
+          ]
+        },
+        "gentle": {
+          "index": [
+            1304,
+            160
+          ],
+          "position": [
+            1095.703125,
+            0.0,
+            3373.046875
+          ]
+        }
+      },
+      "unchanged_from_previous": {
+        "height": 0,
+        "scree": 0,
+        "roughness": 0
+      },
+      "color_changes_from_previous": {
+        "r": 2582252,
+        "g": 3549109,
+        "b": 3549086
+      },
+      "total_procedural_vs_source_manual_m": {
+        "min": -0.3404541015625,
+        "max": 0.35107421875,
+        "mean": 0.010371764886210215
+      },
+      "total_abs_p95_m": 0.1416015625,
+      "final_cache_sha256": "b39fb5495bffdb9caed4948278a991ab117f8dde43a45c32377accc2f18e4251",
+      "constant_tint_support": {
+        "cliff_tint": {
+          "outside_mask_changed_samples": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "zero_mask_samples": 2630390
+        },
+        "scree_tint": {
+          "outside_mask_changed_samples": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "zero_mask_samples": 4008016
+        }
+      }
+    }
+  },
+  "direction_control": {
+    "scope": "400 m diagnostic crop; retained full Working/Context outputs unchanged",
+    "center_xz": [
+      -983.25,
+      -1627.75
+    ],
+    "cases": {
+      "zero": {
+        "iterations": 0,
+        "direction": 1,
+        "weighted_pockets": 0.13786724288960048,
+        "height_changed_samples": 0
+      },
+      "opposite": {
+        "iterations": 20,
+        "direction": 0,
+        "weighted_pockets": 0.014172377668602007,
+        "height_changed_samples": 0
+      },
+      "retained": {
+        "iterations": 20,
+        "direction": 1,
+        "weighted_pockets": 0.1851865036055583,
+        "height_changed_samples": 0
+      }
+    },
+    "accumulates_in_pockets": true
+  },
+  "unreal_session_preserved_pid": 7704,
+  "unreal_import_corrected_colour": "NOT_RUN_OUT_OF_SCOPE",
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "notes": [
+    "Original HIP and caches retained; separate Reviewed HIP is the corrected local output.",
+    "No height, scree, roughness changes against original L05 at any sample.",
+    "Constant tint mask binding corrected; original L04 cliff mask reused.",
+    "Full raster previews and native-resolution crops inspected; neutral views are CPU hillshade, not perspective screenshots.",
+    "Inherited ID-layer menu warning remains outside Lesson05."
+  ],
+  "validation": {
+    "native_fresh_tail_both_domains": "PASS",
+    "unchanged_height_scree_roughness": "PASS",
+    "constant_tint_outside_mask": "PASS",
+    "layer_slump_direction_control": "PASS",
+    "python_compile": "PASS",
+    "docs_links": "PASS",
+    "docs_i18n": "PASS",
+    "docs_structure": "PASS",
+    "docs_freshness": "PASS",
+    "git_diff_check": "PASS",
+    "new_receipt_storage": "PASS",
+    "global_evidence_storage": "FAIL_PREEXISTING_CRLF_RAW_BLOB_MISMATCH"
+  },
+  "resolved_tooling_errors": [
+    "Sandbox hython startup failed with Invalid System DLL Relocation; native invocation outside sandbox succeeded at Houdini 22.0.466.",
+    "Sandbox gh could not connect to api.github.com; authorized read outside sandbox verified current PR and issue.",
+    "Two legacy non-UTF8 multiplication-sign bytes in LESSON05_FULL_LANDSCAPE.md were replaced with ASCII x."
+  ],
+  "changed_repository_paths": [
+    "scripts/houdini/lesson05_full.py",
+    "scripts/houdini/measure_lesson05_full.py",
+    "scripts/houdini/save_lesson05_full_checkpoint.py",
+    "scripts/houdini/check_lesson05_transport.py",
+    "scripts/houdini/render_lesson05_review.py",
+    "docs/tooling/sidefx/LESSON05_FULL_LANDSCAPE.md",
+    "docs/tooling/sidefx/SA_CALOBRA_BUILD_GUIDE.md",
+    "docs/tooling/sidefx/catalog/PEG-02.md",
+    "docs/tooling/sidefx/lesson05-tail-repair-20261018.json"
+  ],
+  "global_evidence_storage_failure": {
+    "path": "docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json",
+    "error": "raw evidence JSON exceeds 1 MiB without an exact reviewed exception",
+    "raw_blob": "def1b40f191edbb97e52623755dda13824ec0a5e",
+    "lf_normalized_and_HEAD_blob": "ff01ac7b33225b91ce7ece82f438544be6d62983",
+    "crlf_count": 44200,
+    "changed_by_this_task": false
+  }
+}

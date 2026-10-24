@@ -1,0 +1,245 @@
+{
+  "parent": "/Game/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.M_Landscape_YACS",
+  "scalar": {
+    "[\"Detail Brightness\",\"GlobalParameter\",-1]": {
+      "value": 1.0,
+      "expression_guid": "{9099961F-4AF9-0044-E301-658A64ADF407}"
+    },
+    "[\"Detail Tiling\",\"GlobalParameter\",-1]": {
+      "value": 0.25,
+      "expression_guid": "{5897E66C-4E0E-393D-578B-87823F202812}"
+    },
+    "[\"Displacement\",\"GlobalParameter\",-1]": {
+      "value": 1.0,
+      "expression_guid": "{52D07BEF-4EE1-AF05-8DEA-4AAD182DE806}"
+    },
+    "[\"Displacement Offset\",\"GlobalParameter\",-1]": {
+      "value": 0.5019999742507935,
+      "expression_guid": "{FFE9EF07-4230-09D3-F51B-A78E6EE6E0EA}"
+    },
+    "[\"Displacement_Micro\",\"GlobalParameter\",-1]": {
+      "value": 0.0,
+      "expression_guid": "{043EEBCD-45E8-26CE-C29A-919ADB7FF8CC}"
+    },
+    "[\"Global AO Power\",\"GlobalParameter\",-1]": {
+      "value": 1.0,
+      "expression_guid": "{558998B0-4896-C838-48CC-70AEDE4EC828}"
+    },
+    "[\"Global Brightness\",\"GlobalParameter\",-1]": {
+      "value": 0.5,
+      "expression_guid": "{66EC90C2-4AF0-2BAD-7864-C89BEBEE4FE9}"
+    },
+    "[\"Global Colour Strength\",\"GlobalParameter\",-1]": {
+      "value": 0.5,
+      "expression_guid": "{F9DB5509-40C8-4611-89C7-32B5940806AD}"
+    },
+    "[\"Global Normal Flatten\",\"GlobalParameter\",-1]": {
+      "value": 0.0,
+      "expression_guid": "{BC33238D-4506-0D92-6FCE-2599C032B63E}"
+    },
+    "[\"Global Saturation\",\"GlobalParameter\",-1]": {
+      "value": 0.5,
+      "expression_guid": "{4B5775F7-4E42-933E-B7BD-7A96E6D0E086}"
+    },
+    "[\"Global Specular Scale\",\"GlobalParameter\",-1]": {
+      "value": 1.0,
+      "expression_guid": "{422D04CC-4A3F-0673-0B85-3AB80A45C709}"
+    },
+    "[\"Macro Texture Displacement\",\"GlobalParameter\",-1]": {
+      "value": 5.0,
+      "expression_guid": "{8FE7A4A4-4189-4EB8-8A0D-189173C12772}"
+    },
+    "[\"Macro Texture Distance\",\"GlobalParameter\",-1]": {
+      "value": 10000.0,
+      "expression_guid": "{DCAAB46A-4393-60B2-8164-AA8AF0D61587}"
+    },
+    "[\"Macro Tiling\",\"GlobalParameter\",-1]": {
+      "value": 0.05000000074505806,
+      "expression_guid": "{04710697-4D52-A5C1-4D78-49B68D4A491A}"
+    },
+    "[\"Num IDmap Layers\",\"GlobalParameter\",-1]": {
+      "value": 5.0,
+      "expression_guid": "{512261CA-47B7-C326-D3A4-65AD1C5AE9FC}"
+    },
+    "[\"Specular Falloff Exponent\",\"GlobalParameter\",-1]": {
+      "value": 0.5,
+      "expression_guid": "{12D47DA7-4423-7403-3335-3798164A10D4}"
+    },
+    "[\"Terrain Resolution\",\"GlobalParameter\",-1]": {
+      "value": 16000.0,
+      "expression_guid": "{F11D4389-4666-5DAD-BBFF-35A9AE567810}"
+    },
+    "[\"UV Distort\",\"GlobalParameter\",-1]": {
+      "value": 4.0,
+      "expression_guid": "{CCDDD410-48EF-F915-D066-B2B8D00893C9}"
+    },
+    "[\"UV Rotate\",\"GlobalParameter\",-1]": {
+      "value": 0.0,
+      "expression_guid": "{C6ECD5AA-47C7-CA38-C4CB-1FA9E50814D6}"
+    },
+    "[\"Noise_Scale\",\"GlobalParameter\",-1]": {
+      "value": 0.0005000000237487257,
+      "expression_guid": "{5CCE3051-45EA-2C3E-951B-12BF1BE507ED}"
+    },
+    "[\"Bit\",\"BlendParameter\",3]": {
+      "value": 4.0,
+      "expression_guid": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    "[\"Bit\",\"BlendParameter\",2]": {
+      "value": 3.0,
+      "expression_guid": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    "[\"Bit\",\"BlendParameter\",1]": {
+      "value": 2.0,
+      "expression_guid": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    "[\"Bit\",\"BlendParameter\",0]": {
+      "value": 1.0,
+      "expression_guid": "{F283C919-41A5-9921-5B2E-0DA9D895B3ED}"
+    },
+    "[\"Material_Selection\",\"LayerParameter\",4]": {
+      "value": 4.0,
+      "expression_guid": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    "[\"Material_Selection\",\"LayerParameter\",2]": {
+      "value": 2.0,
+      "expression_guid": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    "[\"Material_Selection\",\"LayerParameter\",1]": {
+      "value": 1.0,
+      "expression_guid": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    "[\"Material_Selection\",\"LayerParameter\",3]": {
+      "value": 3.0,
+      "expression_guid": "{6C9FF81B-4BF8-D5AC-81FA-45808116098B}"
+    },
+    "[\"RefractionDepthBias\",\"GlobalParameter\",-1]": {
+      "value": 0.0,
+      "expression_guid": "{00000000-0000-0000-0000-000000000000}"
+    },
+    "[\"Terrain Scale\",\"GlobalParameter\",-1]": {
+      "value": 50.0,
+      "expression_guid": "{00000000-0000-0000-0000-000000000000}"
+    }
+  },
+  "vector": {
+    "[\"Offset\",\"GlobalParameter\",-1]": {
+      "value": [
+        -8000.0,
+        -8000.0,
+        0.0,
+        0.0
+      ],
+      "expression_guid": "{3436346D-4C0C-9A66-2DE0-CEAA47B5E5CB}"
+    }
+  },
+  "texture": {
+    "[\"Colour Atlas\",\"GlobalParameter\",-1]": {
+      "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+      "expression_guid": "{5357E2FE-4F88-F459-8B05-8FB49EF27792}"
+    },
+    "[\"Masks Atlas\",\"GlobalParameter\",-1]": {
+      "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+      "expression_guid": "{5CA04BB3-4139-33C3-750C-DBB1ADBE10E7}"
+    },
+    "[\"Normal Atlas\",\"GlobalParameter\",-1]": {
+      "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+      "expression_guid": "{82DD6E53-46F1-75A6-2CAE-DCBF8AFF2512}"
+    },
+    "[\"Terrain Colour\",\"GlobalParameter\",-1]": {
+      "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+      "expression_guid": "{FE8B4565-4055-E93E-346B-ED90C8828670}"
+    },
+    "[\"Terrain IDmap\",\"GlobalParameter\",-1]": {
+      "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+      "expression_guid": "{58BBD5C8-4541-23B3-F85B-5ABCEC7BBAE1}"
+    }
+  },
+  "switch": {
+    "[\"Allow Grass\",\"GlobalParameter\",-1]": {
+      "value": false,
+      "override": true,
+      "expression_guid": "{89ED7543-4C8D-6BEA-1674-1895D73D5C9B}"
+    },
+    "[\"Use IDmap\",\"GlobalParameter\",-1]": {
+      "value": true,
+      "override": true,
+      "expression_guid": "{FF3FEE18-437F-D478-063C-79BAE53AFF1A}"
+    },
+    "[\"Use Terrain Colour\",\"GlobalParameter\",-1]": {
+      "value": true,
+      "override": true,
+      "expression_guid": "{F6BF4B0D-45AF-FBAE-6A6B-FF99B4ADF698}"
+    }
+  },
+  "runtime_layers": [
+    "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.ML_PE_Landscape_Base",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer"
+  ],
+  "runtime_blends": [
+    "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+    "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape"
+  ],
+  "has_material_layers": true,
+  "ordered_override_keys": {
+    "scalar": [
+      "[\"Detail Brightness\",\"GlobalParameter\",-1]",
+      "[\"Detail Tiling\",\"GlobalParameter\",-1]",
+      "[\"Displacement\",\"GlobalParameter\",-1]",
+      "[\"Displacement Offset\",\"GlobalParameter\",-1]",
+      "[\"Displacement_Micro\",\"GlobalParameter\",-1]",
+      "[\"Global AO Power\",\"GlobalParameter\",-1]",
+      "[\"Global Brightness\",\"GlobalParameter\",-1]",
+      "[\"Global Colour Strength\",\"GlobalParameter\",-1]",
+      "[\"Global Normal Flatten\",\"GlobalParameter\",-1]",
+      "[\"Global Saturation\",\"GlobalParameter\",-1]",
+      "[\"Global Specular Scale\",\"GlobalParameter\",-1]",
+      "[\"Macro Texture Displacement\",\"GlobalParameter\",-1]",
+      "[\"Macro Texture Distance\",\"GlobalParameter\",-1]",
+      "[\"Macro Tiling\",\"GlobalParameter\",-1]",
+      "[\"Num IDmap Layers\",\"GlobalParameter\",-1]",
+      "[\"Specular Falloff Exponent\",\"GlobalParameter\",-1]",
+      "[\"Terrain Resolution\",\"GlobalParameter\",-1]",
+      "[\"UV Distort\",\"GlobalParameter\",-1]",
+      "[\"UV Rotate\",\"GlobalParameter\",-1]",
+      "[\"Noise_Scale\",\"GlobalParameter\",-1]",
+      "[\"Bit\",\"BlendParameter\",3]",
+      "[\"Bit\",\"BlendParameter\",2]",
+      "[\"Bit\",\"BlendParameter\",1]",
+      "[\"Bit\",\"BlendParameter\",0]",
+      "[\"Material_Selection\",\"LayerParameter\",4]",
+      "[\"Material_Selection\",\"LayerParameter\",2]",
+      "[\"Material_Selection\",\"LayerParameter\",1]",
+      "[\"Material_Selection\",\"LayerParameter\",3]",
+      "[\"RefractionDepthBias\",\"GlobalParameter\",-1]",
+      "[\"Terrain Scale\",\"GlobalParameter\",-1]"
+    ],
+    "vector": [
+      "[\"Offset\",\"GlobalParameter\",-1]"
+    ],
+    "texture": [
+      "[\"Colour Atlas\",\"GlobalParameter\",-1]",
+      "[\"Masks Atlas\",\"GlobalParameter\",-1]",
+      "[\"Normal Atlas\",\"GlobalParameter\",-1]",
+      "[\"Terrain Colour\",\"GlobalParameter\",-1]",
+      "[\"Terrain IDmap\",\"GlobalParameter\",-1]"
+    ]
+  },
+  "phys_material": null,
+  "base_property_overrides": {
+    "BlendMode": "BLEND_Masked",
+    "OpacityMaskClipValue": 0.33329999446868896,
+    "UsageFlags": 4587520
+  },
+  "editor_cache_verified": false,
+  "opaque_data_excluded_from_contract": [
+    "EditorOnly MaterialLayers: LayerNames/LayerGuids/cache",
+    "ScalarParameterAtlasInstanceData",
+    "package localization/registry/thumbnails/derived caches"
+  ]
+}

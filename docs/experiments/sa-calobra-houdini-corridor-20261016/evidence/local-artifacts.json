@@ -1,0 +1,14 @@
+[
+  {
+    "file": "SaCalobra_Maski_500m.hiplc",
+    "bytes": 13335,
+    "sha256": "69e7d809df78a9078535ba83186939f33daec0e5c3d69df54b19ed16b84a275a",
+    "delivery": "local only; not included in report commit"
+  },
+  {
+    "file": "Ma2141_Corridor_Masks.bgeo.sc",
+    "bytes": 183781107,
+    "sha256": "a23b484b5043452c8ea7752683ca5b3a056bcdbfff277a0bdb199ae9249cf6c9",
+    "delivery": "local only; not included in report commit"
+  }
+]

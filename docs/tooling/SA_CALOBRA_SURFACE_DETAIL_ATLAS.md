@@ -1,5 +1,23 @@
 # Sa Calobra surface detail atlas and PCGEx handoff plan
 
+**Current continuation — 2026-10-13:** the owner authorized the [rock rollout plan and handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md). P0–P4 are retired. Begin with one registered physical surface, initially investigating window 0067; its numerical search extent is not planting authority. Gray simplified-object review remains deliberately deferred and does not block independent qualified surfaces. Upgrade the currently open Remote session without routine restarts or older-Landscape restoration.
+
+Owner continuation, 2026-10-13: former technical-holdback map gaps now have terrain/visibility treatment proposals over 161,342 m²; see the [reanalysis](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md#former-holdback-areas-analysed--2026-10-13). Road/water pixels remain the exact display exclusion. Native BOB/structure ownership and consumer gates remain separate.
+
+**2026-10-13 continuation:** the owner reaffirmed spatial planning before rock
+placement. The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)
+adds registered full-grid cliff/scree candidates and protected/unknown layers to
+the existing observation map. Physical A/B/C footprints remain unresolved;
+the remainder is not automatically texture-only. This map admits no world,
+Landscape, material or production placement change.
+
+**Sampled visibility continuation — 2026-10-13:** the same map now includes a
+separate terrain-visibility/treatment proposal from all 1,338 TPP cameras and the
+669-pair visual prestudy. It retains camera witnesses, exact exclusions and unresolved
+coverage; 4 m planning bins are not executable footprints or confirmed hidden D.
+Existing v8/native occlusion and physical ownership still require review before planting.
+The active Remote trial was cancelled and rolled back while this analysis was prepared.
+
 **Owner direction:** 2026-10-08  
 **Historical work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
 **Status:** surface-detail plan with a tested Component 230 source-face pilot and native mask/visibility/bounded-patch proof, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending

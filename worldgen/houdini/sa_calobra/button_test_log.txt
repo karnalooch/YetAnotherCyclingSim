@@ -1,0 +1,6 @@
+=== TESTING TRIGGER_BUTTON_PARAMETER IN HOUDINI ENGINE ===
+Processing component synchronous...
+Triggering execute2 button ('Save All Layers')...
+trigger_button_parameter returned: True
+Post-execute2 last_error: 'None'
+Done!

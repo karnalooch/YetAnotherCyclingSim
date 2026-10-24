@@ -16,6 +16,34 @@ class YETANOTHERCYCLINGSIMEDITOR_API UYacsLandscapeMeshDiagnosticLibrary : publi
 {
     GENERATED_BODY()
 public:
+    /** Read actual component grid/section settings in quads from the saved Lesson 07 editor world; never modifies it. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07ComponentLayout(ULandscapeComponent* Component);
+
+    /** Read at most 1024 unique LOD0 vertices and allocated visibility weights in the exact saved L07 editor world. Never modifies it. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07ComponentSamples(ULandscapeComponent* Component, const TArray<int32>& LocalVertexIndices);
+
+    /** Hash every composite heightmap source mip and report component bindings in the exact L07 editor world. Read only. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07HeightmapHashes();
+
+    /** Observe completion and original edit-layer identity for all four L07 landscapes; never ticks, flushes or changes them. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07LayerUpdateState();
+
+    /** Read only the existing HAPI cookable's landscape modification/temp-layer flags in the exact L07 world. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07CookableState(UObject* Cookable);
+
+    /** Read an existing HAPI landscape output's actual target, extents and layer flags. No import, cleanup or save. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07OutputState(UObject* Output);
+
+    /** Refresh only the four L07 actors' cached grass types from their repaired material. Never imports terrain or saves packages. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString RefreshLesson07GrassCaches();
+
     /** Read at most 12000 existing support triangle positions for Issue459. Empty IDs reads all; never changes the mesh. */
     UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
     static FString ReadWindow0112SupportTriangles(UDynamicMesh* Mesh, const TArray<int32>& TriangleIds);

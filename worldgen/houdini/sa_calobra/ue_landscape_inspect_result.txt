@@ -1,0 +1,145 @@
+Found 5 landscapes:
+
+--- Landscape: SaCalobra_Detail_0_0 ---
+Class: Landscape
+get_edit_layers error: 'Landscape' object has no attribute 'get_edit_layers'
+get_edit_layers_bp: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_0_0.LandscapeEditLayer_0'"]
+
+--- Landscape: SaCalobra_Detail_1_0 ---
+Class: Landscape
+get_edit_layers error: 'Landscape' object has no attribute 'get_edit_layers'
+get_edit_layers_bp: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_1_0.LandscapeEditLayer_0'"]
+
+--- Landscape: SaCalobra_Detail_0_1 ---
+Class: Landscape
+get_edit_layers error: 'Landscape' object has no attribute 'get_edit_layers'
+get_edit_layers_bp: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_0_1.LandscapeEditLayer_0'"]
+
+--- Landscape: SaCalobra_Detail_1_1 ---
+Class: Landscape
+get_edit_layers error: 'Landscape' object has no attribute 'get_edit_layers'
+get_edit_layers_bp: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_1_1.LandscapeEditLayer_0'"]
+
+--- Landscape: SaCalobra_Context_Valid ---
+Class: Landscape
+get_edit_layers error: 'Landscape' object has no attribute 'get_edit_layers'
+get_edit_layers_bp: ["/Script/Landscape.LandscapeEditLayer'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Context_Valid.LandscapeEditLayer_0'"]
+
+=== Landscape edit layer methods ===
+  acquire_editor_element_handle
+  add_actor_local_offset
+  add_actor_local_rotation
+  add_actor_local_transform
+  add_actor_world_offset
+  add_actor_world_rotation
+  add_actor_world_transform
+  add_actor_world_transform_keep_scale
+  add_tick_prerequisite_actor
+  add_tick_prerequisite_component
+  create_input_component
+  create_pcg_data_from_actor
+  data_layers
+  delete_unused_layers
+  editor_apply_spline
+  force_layers_full_update
+  get_edit_layer_by_name_bp
+  get_edit_layers_bp
+  get_editor_property
+  get_target_layer_names
+  is_editable
+  is_editor_property_overridden
+  is_temporarily_hidden_in_editor
+  reset_editor_property
+  set_editor_properties
+  set_editor_property
+  set_is_temporarily_hidden_in_editor
+
+=== Subsystems / Libraries ===
+Class: CyclingLandscapeEarthworksLibrary
+Class: HoudiniLandscapeOutputBakeType
+Class: LandmassLandscapeInfo
+Class: Landscape
+Class: LandscapeBlueprintBrush
+Class: LandscapeBlueprintBrushBase
+Class: LandscapeBlueprintCustomBrush
+Class: LandscapeBrushParameters
+Class: LandscapeCircleHeightPatch
+Class: LandscapeComponent
+Class: LandscapeCullingPrecision
+Class: LandscapeCustomizedCoordType
+Class: LandscapeEditLayer
+Class: LandscapeEditLayerBase
+Class: LandscapeEditLayerPersistent
+Class: LandscapeEditLayerProcedural
+Class: LandscapeEditLayerSplines
+Class: LandscapeGizmoActiveActor
+Class: LandscapeGizmoActor
+Class: LandscapeGizmoRenderComponent
+Class: LandscapeGrassName
+Class: LandscapeGrassType
+Class: LandscapeGrassTypeFactory
+Class: LandscapeHLODMeshSourceLODPolicy
+Class: LandscapeHLODTextureSizePolicy
+Class: LandscapeHeightTextureBackedRenderTarget
+Class: LandscapeHeightfieldCollisionComponent
+Class: LandscapeLODStreamingProxy_DEPRECATED
+Class: LandscapeLayerBlendType
+Class: LandscapeLayerInfoObject
+Class: LandscapeMaterialInstanceConstant
+Class: LandscapeMeshCollisionComponent_DEPRECATED
+Class: LandscapeMeshProxyActor
+Class: LandscapeMeshProxyComponent
+Class: LandscapeNaniteComponent
+Class: LandscapePatchComponent
+Class: LandscapePatchEditLayer
+Class: LandscapePatchManager
+Class: LandscapePatchPriorityInitialization
+Class: LandscapePerLODMaterialOverride
+Class: LandscapePlaceholder
+Class: LandscapeProxy
+Class: LandscapeSplineActor
+Class: LandscapeSplineControlPoint
+Class: LandscapeSplineMeshEntry
+Class: LandscapeSplineMeshesActor
+Class: LandscapeSplineSegment
+Class: LandscapeSplineSegmentConnection
+Class: LandscapeSplinesComponent
+Class: LandscapeStreamingProxy
+Class: LandscapeTargetLayerBlendMethod
+Class: LandscapeTargetLayerSettings
+Class: LandscapeTextureBackedRenderTargetBase
+Class: LandscapeTextureHeightPatchEncoding
+Class: LandscapeTextureHeightPatchZeroHeightMeaning
+Class: LandscapeTexturePatch
+Class: LandscapeTexturePatchAlphaSettings
+Class: LandscapeTexturePatchAlphaSourceMode
+Class: LandscapeTexturePatchBlendMode
+Class: LandscapeTexturePatchEncodingSettings
+Class: LandscapeTexturePatchFalloffMode
+Class: LandscapeTexturePatchSourceMode
+Class: LandscapeTexturePatchTextureChannel
+Class: LandscapeTexturePatchTextureTransform
+Class: LandscapeToolTargetType
+Class: LandscapeWeightPatchTextureInfo
+Class: LandscapeWeightTextureBackedRenderTarget
+Class: MaterialExpressionLandscapeGrassOutput
+Class: MaterialExpressionLandscapeLayerBlend
+Class: MaterialExpressionLandscapeLayerCoords
+Class: MaterialExpressionLandscapeLayerSample
+Class: MaterialExpressionLandscapeLayerSwitch
+Class: MaterialExpressionLandscapeLayerWeight
+Class: MaterialExpressionLandscapePhysicalMaterialOutput
+Class: MaterialExpressionLandscapeVisibilityMask
+Class: PCGGenerateLandscapeTexturesSettings
+Class: PCGGetLandscapeSettings
+Class: PCGLandscapeCache
+Class: PCGLandscapeCacheSerializationContents
+Class: PCGLandscapeCacheSerializationMode
+Class: PCGLandscapeData
+Class: PCGLandscapeDataProps
+Class: PCGLandscapeLayerWeight
+Class: PCGLandscapeSplineData
+Class: PCGWaitLandscapeReadySettings
+Class: PCGWorldQuerySelectLandscapeHits
+Class: WaterLandscapeBrush
+Class: YacsLandscapeMeshDiagnosticLibrary

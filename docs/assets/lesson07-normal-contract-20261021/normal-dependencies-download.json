@@ -1,0 +1,34 @@
+[
+  {
+    "name": "MF_PE_TextureAtlas_Sample.uasset",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "source_url": "https://media.githubusercontent.com/media/karnalooch/YetAnotherCyclingSim/c59f717f11b134f75f695a26b94f8655bd3bd271/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_Sample.uasset",
+    "bytes": 20824,
+    "sha256": "688e07e906f5c8273d3acaadedc46aa5251d984b54f2d50e002b6bd082c5c5b2",
+    "expected_pin_source": "retained technical-audit.json"
+  },
+  {
+    "name": "MF_PE_TextureAtlas_SampleMasks.uasset",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "source_url": "https://media.githubusercontent.com/media/karnalooch/YetAnotherCyclingSim/c59f717f11b134f75f695a26b94f8655bd3bd271/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleMasks.uasset",
+    "bytes": 22310,
+    "sha256": "a5c39ede4f354fe42fbfedf5c07383b0362b651c8a60672679a54bdaf9eda282",
+    "expected_pin_source": "retained technical-audit.json"
+  },
+  {
+    "name": "MF_PE_BilinearBlend.uasset",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "source_url": "https://media.githubusercontent.com/media/karnalooch/YetAnotherCyclingSim/c59f717f11b134f75f695a26b94f8655bd3bd271/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BilinearBlend.uasset",
+    "bytes": 13914,
+    "sha256": "f67f4057eba49d734c6dcd54e260f17a4edc350ed713d8af85f12942174dc64d",
+    "expected_pin_source": "retained technical-audit.json"
+  },
+  {
+    "name": "MF_PE_Material.uasset",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "source_url": "https://media.githubusercontent.com/media/karnalooch/YetAnotherCyclingSim/c59f717f11b134f75f695a26b94f8655bd3bd271/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Material.uasset",
+    "bytes": 13312,
+    "sha256": "2fbd815bdd95f909336eea263ee393329603a03e352e01b3669559178436f71d",
+    "expected_pin_source": "https://raw.githubusercontent.com/karnalooch/YetAnotherCyclingSim/c59f717f11b134f75f695a26b94f8655bd3bd271/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Material.uasset"
+  }
+]

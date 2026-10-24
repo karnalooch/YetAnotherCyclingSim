@@ -1,0 +1,239 @@
+{
+  "issue": 365,
+  "milestone": "M3",
+  "pull_request": 474,
+  "base_head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "status": "LIVE_RGB_TRANSITION_VERIFIED",
+  "pid": 11820,
+  "map_saved": false,
+  "editor_restarted": false,
+  "lessons_02_05_rebuilt": false,
+  "merge_performed": false,
+  "scope": "Four Working RGB textures and duplicate material bindings only",
+  "method": {
+    "nodes": [
+      "heightfield_maskbyobject",
+      "heightfield_layer"
+    ],
+    "layers": "r g b",
+    "inset_m": 128,
+    "blur_radius_m": 128,
+    "settings_authority": "YACS local adaptation, not tutorial constants"
+  },
+  "prepared": [
+    {
+      "name": "SaCalobra_Detail_0_0",
+      "status": "PREPARED_RGB_ONLY",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06MaterialSampling\\SaCalobra_Detail_0_0_Color.png",
+      "sha256": "50eb2971da919f1f440a1ab28fe7634b7fe37650799acf0c564afbaa6ca86808",
+      "source_sha256": "65988c08dfc54ab75ed837d06344c66fcf122d2d8228e9b91e6d2886c8e8474d",
+      "resolution": [
+        3811,
+        5081
+      ],
+      "unchanged_core_pixels": 13708828,
+      "changed_pixels": 4216060,
+      "native_nodes": [
+        "heightfield_maskbyobject",
+        "heightfield_layer"
+      ],
+      "inset_m": 128,
+      "blur_radius_m": 128,
+      "height_or_source_mask_output": false
+    },
+    {
+      "name": "SaCalobra_Detail_0_1",
+      "status": "PREPARED_RGB_ONLY",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06MaterialSampling\\SaCalobra_Detail_0_1_Color.png",
+      "sha256": "a7ab70abce5dbb576acdc91853ef0f73ea39f0b380b371b8b684d9274a42c283",
+      "source_sha256": "28e5bcba891f211554e1bc8875a3055b55a61bc5a4dfcc4d270b875345374026",
+      "resolution": [
+        3811,
+        5081
+      ],
+      "unchanged_core_pixels": 13070218,
+      "changed_pixels": 4353789,
+      "native_nodes": [
+        "heightfield_maskbyobject",
+        "heightfield_layer"
+      ],
+      "inset_m": 128,
+      "blur_radius_m": 128,
+      "height_or_source_mask_output": false
+    },
+    {
+      "name": "SaCalobra_Detail_1_0",
+      "status": "PREPARED_RGB_ONLY",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06MaterialSampling\\SaCalobra_Detail_1_0_Color.png",
+      "sha256": "cd6a1dec21bcabecba319144f4f0bb5a7e5b5692c6fda88aadd91e3797c8227b",
+      "source_sha256": "e13daeb9b4196f7dbf728b06a8382598882fe03a3a247076771ed97e53724f09",
+      "resolution": [
+        3811,
+        5081
+      ],
+      "unchanged_core_pixels": 13929720,
+      "changed_pixels": 4166493,
+      "native_nodes": [
+        "heightfield_maskbyobject",
+        "heightfield_layer"
+      ],
+      "inset_m": 128,
+      "blur_radius_m": 128,
+      "height_or_source_mask_output": false
+    },
+    {
+      "name": "SaCalobra_Detail_1_1",
+      "status": "PREPARED_RGB_ONLY",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06MaterialSampling\\SaCalobra_Detail_1_1_Color.png",
+      "sha256": "66ff6e8fc3970bba128750828426427fd87ca397de5a043814fc4548a02f86e3",
+      "source_sha256": "387296ce35b4f1941889e0130e08ab99dc447bbf62063f34ee2af7387e9e36a8",
+      "resolution": [
+        3811,
+        5081
+      ],
+      "unchanged_core_pixels": 13280820,
+      "changed_pixels": 4358891,
+      "native_nodes": [
+        "heightfield_maskbyobject",
+        "heightfield_layer"
+      ],
+      "inset_m": 128,
+      "blur_radius_m": 128,
+      "height_or_source_mask_output": false
+    }
+  ],
+  "native_texture_verification": {
+    "status": "BIT_EXACT",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "pixels": 19363691,
+        "native_export": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "pixels": 19363691,
+        "native_export": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "pixels": 19363691,
+        "native_export": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "pixels": 19363691,
+        "native_export": "BIT_EXACT"
+      }
+    ],
+    "total_pixels": 77454764,
+    "retained_color_sources": 5,
+    "original_map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681"
+  },
+  "preservation": {
+    "status": "BIT_EXACT",
+    "height_samples": 81523053,
+    "tiles": [
+      {
+        "name": "SaCalobra_Context_Valid.bgeo",
+        "volumes": [
+          "height",
+          "mask",
+          "visibility"
+        ],
+        "status": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_0_0.bgeo",
+        "volumes": [
+          "height",
+          "mask",
+          "visibility"
+        ],
+        "status": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_0_1.bgeo",
+        "volumes": [
+          "height",
+          "mask",
+          "visibility"
+        ],
+        "status": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_1_0.bgeo",
+        "volumes": [
+          "height",
+          "mask",
+          "visibility"
+        ],
+        "status": "BIT_EXACT"
+      },
+      {
+        "name": "SaCalobra_Detail_1_1.bgeo",
+        "volumes": [
+          "height",
+          "mask",
+          "visibility"
+        ],
+        "status": "BIT_EXACT"
+      }
+    ],
+    "source_files_verified": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c"
+    },
+    "scope": "Four changed Working material bindings and retained original Context; 22 DTM Context actors were not modified."
+  },
+  "fresh_reopen": {
+    "status": "PASS",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "pixels": 19363691,
+        "fresh_reopen": "BIT_EXACT",
+        "unchanged_core_pixels": 13708828
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "pixels": 19363691,
+        "fresh_reopen": "BIT_EXACT",
+        "unchanged_core_pixels": 13070218
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "pixels": 19363691,
+        "fresh_reopen": "BIT_EXACT",
+        "unchanged_core_pixels": 13929720
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "pixels": 19363691,
+        "fresh_reopen": "BIT_EXACT",
+        "unchanged_core_pixels": 13280820
+      }
+    ]
+  },
+  "screenshots": [
+    "Saved\\RuntimeProof\\Lesson06MaterialSampling\\screenshots\\west_after_confirmed.png",
+    "Saved\\RuntimeProof\\Lesson06MaterialSampling\\screenshots\\east_after_confirmed.png",
+    "Saved\\RuntimeProof\\Lesson06MaterialSampling\\screenshots\\north_after_confirmed.png",
+    "Saved\\RuntimeProof\\Lesson06MaterialSampling\\screenshots\\south_after_confirmed.png"
+  ],
+  "visual_result": "Gradual color transition observed in four Remote edge views; Working is softened locally toward retained coarse Context color. Equal source sharpness everywhere is not claimed.",
+  "owner_visual_acceptance": false,
+  "runtime_evidence_root": "Saved\\RuntimeProof\\Lesson06MaterialSampling"
+}

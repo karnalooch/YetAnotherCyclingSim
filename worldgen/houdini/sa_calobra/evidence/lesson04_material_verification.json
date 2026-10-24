@@ -1,0 +1,105 @@
+{
+  "candidate_project": "SaCalobra_Pegasus_Lesson04.hiplc",
+  "base_composition": {
+    "source_node": "SOURCE_CACHE",
+    "manual_node": "MANUAL_EDITS_CACHE",
+    "compose_node": "COMPOSE_SOURCE_AND_MANUAL",
+    "layer_operation": "add"
+  },
+  "sequence": [
+    {
+      "step": "A. Grass / Ground",
+      "node": "WORKING_GRASS_MATERIAL",
+      "colour_texture": "$HIP/inputs/textures/SaCalobra_Grass_BaseColor.png",
+      "roughness_texture": "$HIP/inputs/textures/SaCalobra_Grass_Roughness.png",
+      "displacement_texture": "$HIP/inputs/textures/tlonbisya_4K_Displacement.exr",
+      "size_m": 12.0,
+      "heightscale_m": 0.0,
+      "slope_mask_deg": [
+        0.0,
+        32.0
+      ],
+      "height_mask_min_m": 8.0
+    },
+    {
+      "step": "B. Scale, Tiling & Distortion",
+      "node": "WORKING_GRASS_MATERIAL",
+      "distortion_enabled": true,
+      "noise_type": "Perlin",
+      "amplitude_m": 3.5,
+      "element_size_m": 15.0,
+      "heightscale_m": 0.0
+    },
+    {
+      "step": "C. Sand",
+      "node": "WORKING_SAND_MATERIAL",
+      "colour_texture": "$HIP/inputs/textures/coast_sand_01_diff_2k.jpg",
+      "roughness_texture": "$HIP/inputs/textures/coast_sand_01_rough_2k.jpg",
+      "displacement_texture": "$HIP/inputs/textures/coast_sand_01_disp_2k.png",
+      "size_m": 8.0,
+      "heightscale_m": 0.08,
+      "height_range_m": [
+        -50.0,
+        25.0
+      ],
+      "slope_range_deg": [
+        0.0,
+        18.0
+      ]
+    },
+    {
+      "step": "D. PE Heightfield Tint",
+      "node": "WORKING_HEIGHTFIELD_TINT",
+      "mode": "Gradient",
+      "ramp_coordinate_layer": "ramp_layer",
+      "action_mask": "global",
+      "strength": 0.85,
+      "height_delta_m": 0.0
+    },
+    {
+      "step": "E. Cliff",
+      "node": "WORKING_CLIFF_MATERIAL",
+      "colour_texture": "$HIP/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+      "roughness_texture": "$HIP/inputs/textures/SaCalobra_PaleLimestone_Roughness.png",
+      "displacement_texture": "$HIP/inputs/textures/wepoeaw_4K_Displacement.exr",
+      "size_m": 20.0,
+      "heightscale_m": 0.35,
+      "slope_mask_deg": [
+        28.0,
+        90.0
+      ]
+    }
+  ],
+  "working_landscape_grid": {
+    "resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "spacing_m": 0.5,
+    "total_cells": 70316666
+  },
+  "context_background_grid": {
+    "resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "size_m": [
+      8000.0,
+      8000.0
+    ],
+    "total_cells": 4194304
+  },
+  "measurements": {
+    "max_absolute_displacement_m": 0.5093994140625,
+    "mean_displacement_over_full_landscape_m": 0.037332188338041306,
+    "mean_displacement_in_cliff_mask_m": 0.0704895630478859,
+    "p95_displacement_in_cliff_mask_m": 0.1865081787109375,
+    "modified_cells_count": 37993636,
+    "tint_height_delta_m": 0.0,
+    "reversibility_max_delta_when_disabled_m": 0.0,
+    "cell_signed_equality_max_error_m": 0.0,
+    "cell_signed_equality_mean_error_m": 0.0
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "BLOCKED_EDITOR_SESSION_NOT_RUNNING",
+  "observed_at": "2026-10-18T23:09:57+02:00",
+  "issue": 365,
+  "milestone": "M3",
+  "pr": 474,
+  "expected_editor_pid": 31408,
+  "expected_pid_running": false,
+  "any_unreal_editor_process_found": false,
+  "remote_port_80_listening": false,
+  "checks": ["Elevated Get-Process", "Elevated Win32_Process query", "Get-NetTCPConnection"],
+  "visibility_fix_verified": false,
+  "tiles_deployed_this_attempt": 0,
+  "whole_landscape_dtm_2m_runtime_verified": false,
+  "boundary_visual_verified": false,
+  "editor_started_or_restarted": false,
+  "terrain_masks_caches_modified": false,
+  "lessons_2_to_5_rebuilt": false,
+  "merge_performed": false,
+  "code_findings": {
+    "installed_houdini": "22.0.466",
+    "unreal": "5.8",
+    "target_registration": "CreateTargetLayerInfoAssets derives target names from materials and performs a case-sensitive FString lookup in PartsForLandscape before registration.",
+    "visibility_write": "TranslateHeightFieldPart recognizes lowercase visibility separately and uses the engine VisibilityLayer.",
+    "native_api": "ALandscapeProxy::AddTargetLayer exists; TargetLayers is read-only through Python.",
+    "cause_status": "Registration/case mismatch remains a hypothesis until observed in a running first-tile probe. Do not claim a verified fix from source inspection alone."
+  },
+  "next_gate": "Restore an owner-authorized running UE Remote session, verify map and actual PID, then prove Visibility and DTM height on one hidden tile before staging the remaining 21. Do not enqueue a stale command for a future session.",
+  "official_reference": "https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html"
+}

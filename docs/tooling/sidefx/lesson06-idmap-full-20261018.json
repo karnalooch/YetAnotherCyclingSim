@@ -1,0 +1,311 @@
+{
+  "status": "LESSON06_PARTIAL",
+  "timestamp": "2026-10-18T18:09:56Z",
+  "checkpoint_input": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05_Reviewed.hiplc",
+  "checkpoint_input_sha256": "c4720f00e1bdcab20a1a4639509bee8cb874eff01d7d18b4a7049b1d1cdcd539",
+  "output_root": "D:\\yacs\\work\\lesson06-idmap-20261018",
+  "hda_definitions": {
+    "PE_heightield_idmap_layers": {
+      "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\sop_PE_heightield_idmap_layers.hda",
+      "sha256": "6cf536de60b0dd03ba34b6d77e77a4e1ab08f2b7fb44eb653bed6b8a335535ba"
+    },
+    "PE_Heightfield_Layers_to_ID::2.0": {
+      "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\sop_PE_Heightfield_Layers_to_ID.2.0.hda",
+      "sha256": "9ff14ed0d6e43fe38cde69dd286197f7bd8ed3396de7132042d21d7d8d3a58ac"
+    },
+    "PE_Heightfield_id_to_layer": {
+      "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\sop_PE_Heightfield_id_to_layer.hda",
+      "sha256": "5a9aef5ce656666b111e37d4c71f9fff4aee3fdcf07997e069b94175a80add14"
+    }
+  },
+  "materials": [
+    {
+      "id": 0,
+      "name": "grass",
+      "color": [
+        0.25,
+        0.55,
+        0.15
+      ],
+      "token": "0",
+      "target_val": 0
+    },
+    {
+      "id": 1,
+      "name": "grass 2",
+      "color": [
+        0.85,
+        0.85,
+        0.15
+      ],
+      "token": "1",
+      "target_val": 64
+    },
+    {
+      "id": 2,
+      "name": "sand",
+      "color": [
+        0.9,
+        0.75,
+        0.45
+      ],
+      "token": "2",
+      "target_val": 128
+    },
+    {
+      "id": 3,
+      "name": "cliffs",
+      "color": [
+        0.4,
+        0.35,
+        0.3
+      ],
+      "token": "3",
+      "target_val": 191
+    },
+    {
+      "id": 4,
+      "name": "scree",
+      "color": [
+        0.6,
+        0.6,
+        0.6
+      ],
+      "token": "4",
+      "target_val": 255
+    }
+  ],
+  "areas": {
+    "context": {
+      "resolution": [
+        2048,
+        2048,
+        1
+      ],
+      "origin": [
+        -3998.046875,
+        0.0,
+        3998.046875
+      ],
+      "total_samples": 4194304,
+      "cook_duration_s": 0.0,
+      "cache_path": "D:\\yacs\\work\\lesson06-idmap-20261018\\context\\final.bgeo.sc",
+      "cache_sha256": "a4f036fda15370015ff4b686eba4a41160f28dc6acc97f13f634aff79c9c535d",
+      "invariants": {
+        "height_max_delta": 0.0,
+        "color_max_deltas": {
+          "r": 0.0,
+          "g": 0.0,
+          "b": 0.0
+        },
+        "height_bit_exact": true,
+        "color_bit_exact": true
+      },
+      "material_distribution": {
+        "grass": {
+          "target_id": 0,
+          "count": 1751119,
+          "percentage": 41.7499
+        },
+        "grass 2": {
+          "target_id": 64,
+          "count": 1084096,
+          "percentage": 25.8469
+        },
+        "sand": {
+          "target_id": 128,
+          "count": 98707,
+          "percentage": 2.3534
+        },
+        "cliffs": {
+          "target_id": 191,
+          "count": 1259945,
+          "percentage": 30.0394
+        },
+        "scree": {
+          "target_id": 255,
+          "count": 437,
+          "percentage": 0.0104
+        }
+      },
+      "id_to_layer_verification": {
+        "grass": {
+          "token": "0",
+          "active_voxels": 1751119,
+          "matches_idmap": true
+        },
+        "grass 2": {
+          "token": "1",
+          "active_voxels": 1084096,
+          "matches_idmap": true
+        },
+        "sand": {
+          "token": "2",
+          "active_voxels": 98707,
+          "matches_idmap": true
+        },
+        "cliffs": {
+          "token": "3",
+          "active_voxels": 1259945,
+          "matches_idmap": true
+        },
+        "scree": {
+          "token": "4",
+          "active_voxels": 437,
+          "matches_idmap": true
+        }
+      }
+    },
+    "working": {
+      "resolution": [
+        7154,
+        9829,
+        1
+      ],
+      "origin": [
+        -1771.25,
+        0.0,
+        3144.25
+      ],
+      "total_samples": 70316666,
+      "cook_duration_s": 0.0,
+      "cache_path": "D:\\yacs\\work\\lesson06-idmap-20261018\\working\\final.bgeo.sc",
+      "cache_sha256": "98f4318536156826a923322e8df7cff9d19d14c9c710e148b49f765989d659b6",
+      "invariants": {
+        "height_max_delta": 0.0,
+        "color_max_deltas": {
+          "r": 0.0,
+          "g": 0.0,
+          "b": 0.0
+        },
+        "height_bit_exact": true,
+        "color_bit_exact": true
+      },
+      "material_distribution": {
+        "grass": {
+          "target_id": 0,
+          "count": 23114119,
+          "percentage": 32.8715
+        },
+        "grass 2": {
+          "target_id": 64,
+          "count": 16345709,
+          "percentage": 23.2459
+        },
+        "sand": {
+          "target_id": 128,
+          "count": 730512,
+          "percentage": 1.0389
+        },
+        "cliffs": {
+          "target_id": 191,
+          "count": 30125723,
+          "percentage": 42.8429
+        },
+        "scree": {
+          "target_id": 255,
+          "count": 603,
+          "percentage": 0.0009
+        }
+      },
+      "id_to_layer_verification": {
+        "grass": {
+          "token": "0",
+          "active_voxels": 23114119,
+          "matches_idmap": true
+        },
+        "grass 2": {
+          "token": "1",
+          "active_voxels": 16345709,
+          "matches_idmap": true
+        },
+        "sand": {
+          "token": "2",
+          "active_voxels": 730512,
+          "matches_idmap": true
+        },
+        "cliffs": {
+          "token": "3",
+          "active_voxels": 30125723,
+          "matches_idmap": true
+        },
+        "scree": {
+          "token": "4",
+          "active_voxels": 603,
+          "matches_idmap": true
+        }
+      }
+    }
+  },
+  "checkpoint_output": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06.hiplc",
+  "checkpoint_output_sha256": "b5a57a752034efd334ec12710233682d6ce38fe3d3f5dbfdca93cc4eb88d7567",
+  "fresh_reopen_verification": {
+    "status": "PASS",
+    "details": {
+      "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06.hiplc",
+      "hip_sha256": "b5a57a752034efd334ec12710233682d6ce38fe3d3f5dbfdca93cc4eb88d7567",
+      "areas": {
+        "context": {
+          "resolution": [
+            2048,
+            2048,
+            1
+          ],
+          "unique_ids": [
+            0,
+            64,
+            128,
+            191,
+            255
+          ],
+          "counts": {
+            "grass": 1751119,
+            "grass 2": 1084096,
+            "sand": 98707,
+            "cliffs": 1259945,
+            "scree": 437
+          },
+          "height_delta": 0.0,
+          "color_deltas": {
+            "r": 0.0,
+            "g": 0.0,
+            "b": 0.0
+          },
+          "reopen_pass": true
+        },
+        "working": {
+          "resolution": [
+            7154,
+            9829,
+            1
+          ],
+          "unique_ids": [
+            0,
+            64,
+            128,
+            191,
+            255
+          ],
+          "counts": {
+            "grass": 23114119,
+            "grass 2": 16345709,
+            "sand": 730512,
+            "cliffs": 30125723,
+            "scree": 603
+          },
+          "height_delta": 0.0,
+          "color_deltas": {
+            "r": 0.0,
+            "g": 0.0,
+            "b": 0.0
+          },
+          "reopen_pass": true
+        }
+      }
+    }
+  },
+  "audit_correction": {
+    "reason": "Historical full-pass claim exceeded count-only decoder verification, cache-only reopen and unverified decoder provenance. Retained historical measurements are not discarded.",
+    "superseded_by": "LESSON06_FULL_IDMAP.md"
+  }
+}

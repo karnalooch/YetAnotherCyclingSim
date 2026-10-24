@@ -1,0 +1,4 @@
+x.process_component_synchronous() -> None
+Helper function for manually processing the wrapped component until it reaches a blocking state
+This means that instantiating, cooking and processing of the HDA will be blocking, as the function
+only returns once all processing is finished.

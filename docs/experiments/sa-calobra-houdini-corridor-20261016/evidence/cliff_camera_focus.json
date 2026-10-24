@@ -1,0 +1,39 @@
+{
+  "world": "/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly",
+  "target": "Former LandscapeComponent_230 geographic footprint",
+  "target_epsg25831_m": [
+    483409.75,
+    4409043.75
+  ],
+  "target_cm": [
+    -24025.0,
+    85575.0,
+    43633.55264219651
+  ],
+  "before": {
+    "location_cm": [
+      390000.0,
+      680000.0,
+      560000.0
+    ],
+    "rotation_deg": [
+      -55.19990096986294,
+      -98.15930429972812,
+      -5.329668106530501e-07
+    ]
+  },
+  "after": {
+    "location_cm": [
+      -15025.0,
+      94575.0,
+      50413.72878093071
+    ],
+    "rotation_deg": [
+      -28.044270404631128,
+      -135.0,
+      -4.916676484335972e-07
+    ]
+  },
+  "geometry_changed": false,
+  "time": 1792157433.7222698
+}

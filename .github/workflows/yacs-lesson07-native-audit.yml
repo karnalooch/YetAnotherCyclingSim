@@ -1,0 +1,244 @@
+name: YACS Lesson07 native source audit (read-only)
+
+# Fixed PEGASUS_MATERIAL_RESOURCE_METADATA_ONLY profile. No hou/hython, HIP,
+# cook, geometry/cache load, subprocess, renderer or UE change. Absence is scoped.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-native-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-unreal-ci-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Original Pegasus material resource metadata
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 8
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Read fixed HDA, recipe, default image and exact-family file identities
+        env:
+          AUDIT_SHA: ${{ github.sha }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference='Stop'
+          if ($PSVersionTable.PSVersion -lt [version]'7.4') { throw 'PowerShell 7.4 or later required.' }
+          $project='D:\yacs\project'
+          $world=Join-Path $project 'worldgen\houdini\sa_calobra'
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-pegasus-material-resource-audit.json'
+
+          function Get-L07PlainFile([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+              $cursor=[IO.Path]::GetDirectoryName($cursor)
+            }
+            $item=Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+            if ($item.PSIsContainer) { throw 'REGULAR_FILE_REQUIRED' }
+            return $item
+          }
+          function Get-L07FileMetadata([string]$Path) {
+            $row=[ordered]@{path=$Path;status='MISSING';bytes=$null;modified_utc=$null;sha256=$null}
+            try {
+              if (Test-Path -LiteralPath $Path) {
+                $item=Get-L07PlainFile $Path
+                $row.bytes=[long]$item.Length;$row.modified_utc=$item.LastWriteTimeUtc.ToString('o')
+                $row.status='METADATA_ONLY'
+              }
+            } catch { $row.status='UNAVAILABLE_OR_REJECTED' }
+            return $row
+          }
+          function Get-L07StableHash([string]$Path,[long]$Limit,[long]$ExactBytes=0) {
+            $row=Get-L07FileMetadata $Path
+            if ($row.status -cne 'METADATA_ONLY') { return $row }
+            if ($row.bytes -le 0 -or $row.bytes -gt $Limit) { $row.status='METADATA_ONLY_SIZE_BOUND';return $row }
+            if ($ExactBytes -gt 0 -and $row.bytes -ne $ExactBytes) { $row.status='METADATA_ONLY_PINNED_SIZE_MISMATCH';return $row }
+            $stream=$null
+            try {
+              $before=Get-L07PlainFile $Path
+              # Sharing only reads prevents writers/deletion while streaming this fixed file.
+              $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+              if ($stream.Length -ne $before.Length -or $before.Length -ne $row.bytes -or
+                  $before.LastWriteTimeUtc.ToString('o') -cne $row.modified_utc) { throw 'SOURCE_CHANGED' }
+              $hash=(Get-FileHash -InputStream $stream -Algorithm SHA256).Hash.ToLowerInvariant()
+              $after=Get-L07PlainFile $Path
+              if ($after.Length -ne $before.Length -or $after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) { throw 'SOURCE_CHANGED' }
+              $row.sha256=$hash;$row.status='STABLE_HASH_OBSERVED'
+            } catch { $row.sha256=$null;$row.status='UNAVAILABLE_OR_CHANGED' }
+            finally { if ($null -ne $stream) { $stream.Dispose() } }
+            return $row
+          }
+          function Get-L07MemorySnapshot {
+            $row=[ordered]@{observed_utc=[DateTime]::UtcNow.ToString('o');status='UNAVAILABLE';available_physical_bytes=$null;
+              available_commit_bytes=$null;total_physical_bytes=$null;total_commit_bytes=$null}
+            try {
+              if (-not ('L07SourceMemory' -as [type])) {
+                Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class L07SourceMemory {
+            [StructLayout(LayoutKind.Sequential)] public struct Status {
+              public uint length, load;
+              public ulong totalPhys, availPhys, totalCommit, availCommit, totalVirtual, availVirtual, availExtended;
+            }
+            [DllImport("kernel32.dll", SetLastError=true)] [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool GlobalMemoryStatusEx(ref Status status);
+          }
+          '@
+              }
+              $m=[L07SourceMemory+Status]::new();$m.length=[Runtime.InteropServices.Marshal]::SizeOf($m)
+              if (-not [L07SourceMemory]::GlobalMemoryStatusEx([ref]$m)) { throw 'MEMORY_SNAPSHOT_FAILED' }
+              $row.status='OBSERVED';$row.available_physical_bytes=$m.availPhys;$row.available_commit_bytes=$m.availCommit
+              $row.total_physical_bytes=$m.totalPhys;$row.total_commit_bytes=$m.totalCommit
+            } catch {}
+            return $row
+          }
+          function Get-L07PlainDirectory([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+              $cursor=[IO.Path]::GetDirectoryName($cursor)
+            }
+            $item=Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+            if (-not $item.PSIsContainer) { throw 'DIRECTORY_REQUIRED' }
+            return $item
+          }
+          function Read-L07ExactTextureInventory([string]$Root) {
+            $families=[ordered]@{tjmledzr='Rock_Lava_tjmledzr';ulgmbhwn='ground_other_ulgmbhwn';
+              td1hcimn='sand_fine_td1hcimn';tdwlcc1l='Rock_Cliffs_tdwlcc1l';vjdqcba='rock_forest_vjdqcba'}
+            # Only exact family IDs, resolution tokens and these two channels; extensions are observed, not guessed.
+            $pattern='^(?<id>tjmledzr|ulgmbhwn|td1hcimn|tdwlcc1l|vjdqcba)_(?<resolution>[1-9][0-9]?K)_(?<channel>Albedo|Displacement)\.(?<extension>[A-Za-z0-9]{1,8})$'
+            $row=[ordered]@{root=$Root;status='OBSERVED_WITHIN_FIXED_SCOPE';scope='ROOT_AND_FIVE_NAMED_FAMILY_DIRECTORIES_ONE_LEVEL_ONLY';
+              entry_limit=1024;entries_observed=0;hit_limit=20;hash_file_limit_bytes=128MB;hash_total_limit_bytes=256MB;
+              hash_budget_reserved_bytes=0;enumeration_complete=$true;hashes_complete=$true;complete=$false;
+              directories=@();matches=@();incomplete_reasons=@();absence_scope='Only the checked root and named immediate family directories.'}
+            $directories=[Collections.Generic.List[object]]::new()
+            $hits=[Collections.Generic.List[object]]::new()
+            $reasons=[Collections.Generic.List[string]]::new()
+            $targets=[Collections.Generic.List[object]]::new()
+            [void]$targets.Add([ordered]@{path=$Root;family_id=$null})
+            foreach ($id in $families.Keys) { [void]$targets.Add([ordered]@{path=(Join-Path $Root $families[$id]);family_id=$id}) }
+            $timer=[Diagnostics.Stopwatch]::StartNew();$stop=$false
+            foreach ($target in $targets) {
+              $directory=[ordered]@{path=$target.path;family_id=$target.family_id;status='NOT_ENUMERATED';entries_observed=0}
+              [void]$directories.Add($directory)
+              if ($stop) { $directory.status='NOT_ENUMERATED_BOUND';continue }
+              $enumerator=$null
+              try {
+                if (-not (Test-Path -LiteralPath $target.path)) { $directory.status='MISSING_WITHIN_SCOPE';continue }
+                $before=Get-L07PlainDirectory $target.path
+                $directory.status='ENUMERATED'
+                # Lazy, non-recursive enumeration: never materialize an unbounded directory listing.
+                $enumerator=[IO.Directory]::EnumerateFileSystemEntries($target.path,'*',[IO.SearchOption]::TopDirectoryOnly).GetEnumerator()
+                while ($true) {
+                  # Reaching a bound stops conservatively, even if this might have been the last entry.
+                  if ($row.entries_observed -ge 1024 -or $hits.Count -ge 20 -or $timer.Elapsed.TotalSeconds -ge 60) {
+                    $row.enumeration_complete=$false;$stop=$true;$directory.status='INCOMPLETE_BOUND'
+                    [void]$reasons.Add('ENUMERATION_ENTRY_HIT_OR_TIME_BOUND');break
+                  }
+                  if (-not $enumerator.MoveNext()) { break }
+                  $entry=[string]$enumerator.Current
+                  $row.entries_observed++;$directory.entries_observed++
+                  $name=[IO.Path]::GetFileName($entry)
+                  if ($name -notmatch $pattern) { continue }
+                  $id=$Matches.id.ToLowerInvariant();$resolution=$Matches.resolution;$channel=$Matches.channel
+                  $file=Get-L07FileMetadata $entry
+                  if ($file.status -ceq 'METADATA_ONLY') {
+                    $remaining=[long](256MB-$row.hash_budget_reserved_bytes)
+                    if ($file.bytes -le 0 -or $file.bytes -gt 128MB) {
+                      $file.status='METADATA_ONLY_SIZE_BOUND';$row.hashes_complete=$false
+                      [void]$reasons.Add('TEXTURE_FILE_HASH_SIZE_BOUND')
+                    } elseif ($file.bytes -gt $remaining) {
+                      $file.status='METADATA_ONLY_TOTAL_HASH_BOUND';$row.hashes_complete=$false
+                      [void]$reasons.Add('TEXTURE_TOTAL_HASH_BOUND')
+                    } else {
+                      # Reserve before reading, including attempts that fail or observe a changed file.
+                      $row.hash_budget_reserved_bytes+=[long]$file.bytes
+                      $file=Get-L07StableHash $entry ([Math]::Min([long]128MB,$remaining)) ([long]$file.bytes)
+                    }
+                  }
+                  if ($file.status -cne 'STABLE_HASH_OBSERVED') {
+                    $row.hashes_complete=$false;[void]$reasons.Add('MATCH_IDENTITY_NOT_FULLY_OBSERVED')
+                  }
+                  [void]$hits.Add([ordered]@{family_id=$id;resolution_token=$resolution;channel=$channel;filename=$name;file=$file})
+                }
+                $after=Get-L07PlainDirectory $target.path
+                if ($after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) {
+                  $directory.status='INCOMPLETE_DIRECTORY_CHANGED';$row.enumeration_complete=$false
+                  [void]$reasons.Add('DIRECTORY_CHANGED')
+                }
+              } catch {
+                $directory.status='INCOMPLETE_UNAVAILABLE_OR_REJECTED';$row.enumeration_complete=$false
+                [void]$reasons.Add('DIRECTORY_UNAVAILABLE_OR_REJECTED')
+              } finally { if ($null -ne $enumerator) { $enumerator.Dispose() } }
+            }
+            $row.directories=$directories.ToArray();$row.matches=$hits.ToArray()
+            $row.incomplete_reasons=@($reasons | Sort-Object -Unique)
+            $row.complete=($row.enumeration_complete -and $row.hashes_complete)
+            if (-not $row.complete) { $row.status='INCOMPLETE' }
+            return $row
+          }
+
+          $result=[ordered]@{status='READ_ONLY_RESOURCE_METADATA_OBSERVED_NOT_MATERIAL_ADMISSION';commit=$env:AUDIT_SHA;
+            profile='PEGASUS_MATERIAL_RESOURCE_METADATA_ONLY';memory_before=(Get-L07MemorySnapshot);memory_after=$null;
+            hdas=@();installed_recipe=$null;default_pic_candidates=@();exact_texture_inventory=$null;
+            missing_file_meaning='Absent only at the exact checked path; no whole-host absence claim.';
+            default_pic_limit='Candidate file identity only; neither author CWD nor the original HDA roughness branch is established.';
+            author_cwd_verified=$false;roughness_resolved=$false;subprocess_started=$false;hython_started=$false;
+            hou_imported=$false;hip_loaded=$false;full_geometry_load_requested=$false;terrain_cook_requested=$false;
+            cache_written=$false;editor_started_or_stopped=$false;project_files_written=$false;
+            source_profile_admitted=$false;material_source_admitted=$false;performance_pass=$false}
+          try {
+            foreach ($pin in @(
+              @{name='material';filename='sop_PE_heightfield_material.1.0.hda';bytes=45649;sha256='e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023'},
+              @{name='tint';filename='sop_PE_heightfield_tint.1.0.hda';bytes=28878;sha256='93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed'}
+            )) {
+              $file=Get-L07StableHash (Join-Path $world ('otls\'+$pin.filename)) 128KB $pin.bytes
+              $result.hdas+=[ordered]@{name=$pin.name;file=$file;original_bytes=$pin.bytes;original_sha256=$pin.sha256;
+                original_pin_matches=($file.status -ceq 'STABLE_HASH_OBSERVED' -and $file.sha256 -ceq $pin.sha256)}
+            }
+            $result.installed_recipe=Get-L07StableHash (Join-Path $project 'scripts\houdini\lesson06_unified_pipeline.py') 256KB
+            foreach ($candidate in @(
+              @{context='PROJECT_CWD_CANDIDATE';path='D:\yacs\project\default.pic'},
+              @{context='PIPELINE_WORK_CWD_CANDIDATE';path='D:\yacs\work\lesson06-unified-20261019\default.pic'},
+              @{context='STOCK_INSTALLATION_RESOURCE_CANDIDATE';path='D:\yacs\tools\houdini-22.0.466\houdini\pic\default.pic'}
+            )) {
+              $result.default_pic_candidates+=[ordered]@{context=$candidate.context;file=(Get-L07StableHash $candidate.path 2MB)}
+            }
+            $result.exact_texture_inventory=Read-L07ExactTextureInventory (Join-Path $world 'inputs\textures')
+            $fixedFiles=@($result.hdas | ForEach-Object { $_.file })+@($result.installed_recipe)+@($result.default_pic_candidates | ForEach-Object { $_.file })
+            if (-not $result.exact_texture_inventory.complete -or
+                @($fixedFiles | Where-Object { $_.status -cnotin @('STABLE_HASH_OBSERVED','MISSING') }).Count -gt 0) {
+              $result.status='RESOURCE_METADATA_INCOMPLETE'
+            }
+          } catch { $result.status='RESOURCE_METADATA_INCOMPLETE';$result.error_type=$_.Exception.GetType().Name }
+          finally {
+            $result.memory_after=Get-L07MemorySnapshot
+            $json=$result | ConvertTo-Json -Depth 12
+            if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 256KB) { throw 'SOURCE_REPORT_SIZE_BOUND' }
+            [IO.File]::WriteAllText($out,$json,[Text.UTF8Encoding]::new($false))
+            [ordered]@{status=$result.status;profile=$result.profile;commit=$result.commit;
+              source_profile_admitted=$false;roughness_resolved=$false;subprocess_started=$false;editor_started_or_stopped=$false} | ConvertTo-Json -Compress
+          }
+      - name: Upload bounded Pegasus resource observations even when an input is absent
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-pegasus-material-resource-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lesson07-pegasus-material-resource-audit.json
+          if-no-files-found: warn
+          retention-days: 7

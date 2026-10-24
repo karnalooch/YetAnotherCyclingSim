@@ -1,0 +1,16 @@
+=== TESTING NATIVE SCULPT ON LAYER1_MANUAL IN UNREAL ===
+Target: SaCalobra_Detail_0_0
+Existing edit layers: [Name("Houdini_Source_Pegasus_Gentle")]
+Creating Layer1_Manual via sop_PE_Load_Landscape_2 bake...
+Layers after load bake: [Name("Houdini_Source_Pegasus_Gentle"), Name("Layer1_Manual")]
+
+Applying manual sculpt mound at <Struct 'Vector' (0x0000020B7B6FC150) {x: -95000.000000, y: -53000.000000, z: 30000.000000}> (r=40.0m, delta=+4.5m)...
+apply_manual_sculpt_mound returned: True
+
+Exporting manual edit from Unreal via original PE_Cache_Landscape...
+Processing PE_Cache_Landscape component synchronous...
+Post-cook last_error: 'None'
+Triggering execute button ('Cache Manual Edits')...
+trigger_button_parameter returned: True
+Post-execute last_error: 'None'
+Done test_apply_sculpt!

@@ -1,0 +1,26 @@
+=== START LESSON 07 UE OFFSCREEN CAPTURE ===
+[03:13:12] Loading level /Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07...
+[03:13:24] Level loaded successfully.
+[03:13:24] --- Scheduling [1/8] ue_panorama_material.png ---
+[03:13:24] Setting landscape material to /Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS...
+[03:13:40] Shot ue_panorama_material.png captured successfully (2650872 bytes in 13.80s)
+[03:13:42] --- Scheduling [2/8] ue_panorama_neutral.png ---
+[03:13:42] Setting landscape material to /Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview...
+[03:14:34] Shot ue_panorama_neutral.png captured successfully (1901267 bytes in 15.89s)
+[03:14:36] --- Scheduling [3/8] ue_closeup_scree.png ---
+[03:14:36] Setting landscape material to /Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS...
+[03:15:32] Shot ue_closeup_scree.png captured successfully (3217612 bytes in 10.23s)
+[03:15:33] --- Scheduling [4/8] ue_closeup_scree_neutral.png ---
+[03:15:33] Setting landscape material to /Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview...
+[03:16:35] Shot ue_closeup_scree_neutral.png captured successfully (2155082 bytes in 9.53s)
+[03:16:37] --- Scheduling [5/8] ue_closeup_puig_major.png ---
+[03:16:37] Setting landscape material to /Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS...
+[03:17:51] Shot ue_closeup_puig_major.png captured successfully (2577999 bytes in 8.95s)
+[03:17:52] --- Scheduling [6/8] ue_closeup_sa_calobra_cove.png ---
+[03:17:55] Shot ue_closeup_sa_calobra_cove.png captured successfully (2449739 bytes in 2.42s)
+[03:17:56] --- Scheduling [7/8] ue_closeup_transition.png ---
+[03:17:59] Shot ue_closeup_transition.png captured successfully (2852572 bytes in 2.36s)
+[03:18:00] --- Scheduling [8/8] ue_tile_seam_check.png ---
+[03:18:03] Shot ue_tile_seam_check.png captured successfully (3668402 bytes in 2.41s)
+[03:19:13] All shots captured and verified successfully!
+[03:19:13] Quitting editor...

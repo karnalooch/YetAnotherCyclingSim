@@ -1,0 +1,3 @@
+
+# Retained receipt archives are ordinary Git binary blobs, not LFS.
+*.json.gz -text -diff -filter -merge

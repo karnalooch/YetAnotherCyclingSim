@@ -1,0 +1,752 @@
+[
+  {
+    "component": {
+      "refPath": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.PCG365_PCGEx_V3_Preview_a1e9cbdd_x78sfx01bztd_1767737027.ISM_SM_namaqualand_boulder_06_01_0"
+    },
+    "PerInstanceSMData": [
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": -0.94832618155074,
+            "y": -0.317297105857261,
+            "z": -2.7755575615628914e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.27423520783442956,
+            "y": -0.8196243290330878,
+            "z": 0.5030019980487842
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.15960107822129885,
+            "y": 0.47700996412199603,
+            "z": 0.8642852480280634
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -19929.2019946089,
+            "y": -73332.38504982062,
+            "z": 50185.9227558746
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.6448170668426759,
+            "y": -0.7643369350675185,
+            "z": -8.326672684688674e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.6635258031115981,
+            "y": 0.5597698377601714,
+            "z": 0.49637811931939546
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.37940013035516573,
+            "y": -0.3200730829444165,
+            "z": 0.868106423580047
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 36521.89700065178,
+            "y": -62828.39963458528,
+            "z": 65956.59537402201
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": -0.5531973991684795,
+            "y": -0.8330502011002876,
+            "z": -1.3877787807814457e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.8219096057718966,
+            "y": -0.5457993475832157,
+            "z": 0.16299592669027374
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.1357837895078603,
+            "y": 0.09016892272011562,
+            "z": 0.9866267419254249
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -69479.32108105246,
+            "y": -55080.4508446136,
+            "z": 42334.58598558579
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.508981465607883,
+            "y": -0.8607774786015557,
+            "z": 5.551115123125783e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.7415826695889883,
+            "y": 0.43850105680045104,
+            "z": 0.5077124849264172
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.4370274726294916,
+            "y": -0.25841624468526814,
+            "z": 0.8615265710643187
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 24472.18513736315,
+            "y": -54478.70791877657,
+            "z": 66523.9963119303
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": -0.4661134771682516,
+            "y": -0.8847249439244503,
+            "z": 5.551115123125783e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.7929702563674953,
+            "y": -0.41777292030099655,
+            "z": 0.443468104354356
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.39234729375718985,
+            "y": 0.206706460133822,
+            "z": 0.8962901541467216
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 26321.961736468787,
+            "y": -51081.033532300666,
+            "z": 67037.20140034406
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9572869073208183,
+            "y": -0.2891397189459499,
+            "z": 1.3877787807814457e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.2529069499589268,
+            "y": 0.8373270640530006,
+            "z": 0.48468697369215014
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.14014225535011138,
+            "y": -0.46398449406444525,
+            "z": 0.8746876799939193
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -24079.299288723254,
+            "y": -46477.68007752968,
+            "z": 51651.10483804383
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": -0.2591906417032368,
+            "y": -0.9658261806626822,
+            "z": 0
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.8208946718166354,
+            "y": -0.22029659271913204,
+            "z": 0.5268788750931269
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.5088734116030452,
+            "y": 0.1365620737352672,
+            "z": 0.8499403808389158
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 15072.544367058013,
+            "y": -38980.68281036868,
+            "z": 62401.29894961785
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.7710764511958427,
+            "y": 0.6367425746808715,
+            "z": 8.326672684688674e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.524848480247645,
+            "y": 0.635576007726067,
+            "z": 0.5661953825180241
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.3605207056369476,
+            "y": -0.4365799262354708,
+            "z": 0.8242710651328653
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -94731.80260352818,
+            "y": -34677.81710036882,
+            "z": 44218.37099488769
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.32438763145122096,
+            "y": 0.9459242382778162,
+            "z": -5.551115123125783e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.7732165957096867,
+            "y": 0.26516066502080227,
+            "z": 0.57604332983279
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.5448933479870988,
+            "y": -0.18686133137773314,
+            "z": 0.8174191594005803
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -89982.72446673994,
+            "y": -33379.06569334312,
+            "z": 42646.16736290541
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9431018902513308,
+            "y": -0.3325038715629738,
+            "z": 0
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.2989378872330677,
+            "y": 0.8478965528792348,
+            "z": 0.43784423622121665
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.14558490368508784,
+            "y": -0.4129317268158797,
+            "z": 0.8990508466198446
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 15670.727924518433,
+            "y": -30577.935341365926,
+            "z": 66874.88584089074
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.4103646773288,
+            "y": 0.9119215051751055,
+            "z": 0
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.7360358361735377,
+            "y": 0.33121612627809405,
+            "z": 0.5903787983673319
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.5383791224306074,
+            "y": -0.24227060509377477,
+            "z": 0.807126306372395
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 12017.308104387848,
+            "y": -29478.788646974528,
+            "z": 63979.45796965889
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.5192604003487999,
+            "y": 0.8546160755740579,
+            "z": 2.7755575615628914e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.7266229749636415,
+            "y": 0.4414924404842423,
+            "z": 0.5264061903608799
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.4498751925641057,
+            "y": -0.27334188915287705,
+            "z": 0.8502332166821907
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 31167.750624037173,
+            "y": -26628.633290554237,
+            "z": 70363.75580998183
+          }
+        }
+      }
+    ],
+    "StaticMesh": {
+      "refPath": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_06_01.SM_namaqualand_boulder_06_01"
+    },
+    "OverrideMaterials": [],
+    "BodyInstance": {
+      "positionSolverIterationCount": 8,
+      "velocitySolverIterationCount": 2,
+      "projectionSolverIterationCount": 1,
+      "objectType": "ECC_WorldStatic",
+      "collisionEnabled": "NoCollision",
+      "sleepFamily": "Normal",
+      "dOFMode": "Default",
+      "bUseCCD": false,
+      "bUseMACD": false,
+      "bAllowPartialIslandSleep": true,
+      "bIgnoreAnalyticCollisions": false,
+      "bNotifyRigidBodyCollision": false,
+      "bSmoothEdgeCollisions": false,
+      "bLockTranslation": true,
+      "bLockRotation": true,
+      "bLockXTranslation": false,
+      "bLockYTranslation": false,
+      "bLockZTranslation": false,
+      "bLockXRotation": false,
+      "bLockYRotation": false,
+      "bLockZRotation": false,
+      "bOverrideMaxAngularVelocity": false,
+      "bOverrideMaxDepenetrationVelocity": false,
+      "bOverrideWalkableSlopeOnInstance": false,
+      "bOverrideIterationCounts": false,
+      "bInterpolateWhenSubStepping": true,
+      "bInertiaConditioning": true,
+      "bOneWayInteraction": false,
+      "bOverrideSolverAsyncDeltaTime": false,
+      "solverAsyncDeltaTime": 0.01666666753590107,
+      "collisionProfileName": "NoCollision",
+      "collisionResponses": {
+        "responseArray": [
+          {
+            "channel": "Visibility",
+            "response": "ECR_Ignore"
+          },
+          {
+            "channel": "Camera",
+            "response": "ECR_Ignore"
+          }
+        ]
+      },
+      "maxDepenetrationVelocity": 0,
+      "massInKgOverride": 100,
+      "linearDamping": 0.009999999776482582,
+      "angularDamping": 0,
+      "customDOFPlaneNormal": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "cOMNudge": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "massScale": 1,
+      "gravityGroupIndex": 0,
+      "inertiaTensorScale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "walkableSlopeOverride": {
+        "walkableSlopeBehavior": "WalkableSlope_Default",
+        "walkableSlopeAngle": 0
+      },
+      "physMaterialOverride": "None",
+      "maxAngularVelocity": 3600,
+      "customSleepThresholdMultiplier": 1,
+      "stabilizationThresholdMultiplier": 1,
+      "physicsBlendWeight": 0,
+      "bSimulatePhysics": false,
+      "bOverrideMass": false,
+      "bEnableGravity": true,
+      "bUpdateKinematicFromSimulation": false,
+      "bGyroscopicTorqueEnabled": false,
+      "bAutoWeld": true,
+      "bStartAwake": true,
+      "bGenerateWakeEvents": false,
+      "bUpdateMassWhenScaleChanges": true
+    }
+  },
+  {
+    "component": {
+      "refPath": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.PCG365_PCGEx_V3_Preview_a1e9cbdd_x78sfx01bztd_1767737027.ISM_SM_namaqualand_boulder_05_01_0"
+    },
+    "PerInstanceSMData": [
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9878803032398079,
+            "y": -0.15521761005383766,
+            "z": 0
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.14192234574868473,
+            "y": 0.9032627799518752,
+            "z": 0.40493752373767616
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.06285343465568125,
+            "y": -0.4000298037431524,
+            "z": 0.9143443562844357
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 32020.314267173264,
+            "y": -67177.99985098129,
+            "z": 65121.92579975991
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9303107587720961,
+            "y": 0.36677226191860096,
+            "z": 0
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.28413445125976694,
+            "y": 0.7207015480451773,
+            "z": 0.6323423853045089
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.23192564696513823,
+            "y": -0.5882749242763949,
+            "z": 0.7746890393876784
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 32068.840371765167,
+            "y": -65827.05862537862,
+            "z": 65388.4996305379
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.34651624332962705,
+            "y": -0.9380439718417911,
+            "z": -1.6653345369377348e-16
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.7812649919002045,
+            "y": 0.288601620142248,
+            "z": 0.5534745859408935
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.5191834989094863,
+            "y": -0.19178793429865948,
+            "z": 0.832866065293548
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 16572.595917494546,
+            "y": -56379.041060328505,
+            "z": 58733.18612130351
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9855872370243123,
+            "y": -0.16916795859376604,
+            "z": -6.938893903907228e-18
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.13998555302586124,
+            "y": 0.8155680045852558,
+            "z": 0.5614738416354479
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.09498338359326822,
+            "y": -0.5533814522389073,
+            "z": 0.8274944864826181
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -30579.52508308203,
+            "y": -47777.2330927388,
+            "z": 49749.912316938106
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9489831813903435,
+            "y": 0.3153266900188791,
+            "z": 1.3877787807814457e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.27264017924231915,
+            "y": 0.8205171108627656,
+            "z": 0.502413180006393
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.15842428507327516,
+            "y": -0.4767816579349062,
+            "z": 0.8646276635383949
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -90980.79212142536,
+            "y": -37327.616091710326,
+            "z": 41275.121638093144
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.03541084863429911,
+            "y": -0.9993728392341863,
+            "z": 5.551115123125783e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": 0.8397596047239346,
+            "y": 0.029755261584720638,
+            "z": 0.5421424450104659
+          },
+          "zPlane": {
+            "w": 0,
+            "x": -0.541802434539473,
+            "y": -0.019197724058494514,
+            "z": 0.840286599511187
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 39422.70901217271,
+            "y": -28679.90401137971,
+            "z": 73663.62921139022
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.9665927927323683,
+            "y": 0.2563169386479187,
+            "z": -1.3877787807814457e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.19905667402445515,
+            "y": 0.7506595056583752,
+            "z": 0.6299894817304852
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.1614769753375469,
+            "y": -0.608943292537887,
+            "z": 0.776603665268813
+          },
+          "wPlane": {
+            "w": 1,
+            "x": -90180.80738487668,
+            "y": -27776.955283537303,
+            "z": 45676.88779925419
+          }
+        }
+      },
+      {
+        "transform": {
+          "xPlane": {
+            "w": 0,
+            "x": 0.5343722790687342,
+            "y": 0.8452492338729959,
+            "z": -2.7755575615628914e-17
+          },
+          "yPlane": {
+            "w": 0,
+            "x": -0.7506695280452499,
+            "y": 0.4745783497382793,
+            "z": 0.4596418710518146
+          },
+          "zPlane": {
+            "w": 0,
+            "x": 0.38851193936249684,
+            "y": -0.2456198741893753,
+            "z": 0.8881043578183743
+          },
+          "wPlane": {
+            "w": 1,
+            "x": 46568.05744030318,
+            "y": 92621.22809937096,
+            "z": 57188.38128420414
+          }
+        }
+      }
+    ],
+    "StaticMesh": {
+      "refPath": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_05_01.SM_namaqualand_boulder_05_01"
+    },
+    "OverrideMaterials": [],
+    "BodyInstance": {
+      "positionSolverIterationCount": 8,
+      "velocitySolverIterationCount": 2,
+      "projectionSolverIterationCount": 1,
+      "objectType": "ECC_WorldStatic",
+      "collisionEnabled": "NoCollision",
+      "sleepFamily": "Normal",
+      "dOFMode": "Default",
+      "bUseCCD": false,
+      "bUseMACD": false,
+      "bAllowPartialIslandSleep": true,
+      "bIgnoreAnalyticCollisions": false,
+      "bNotifyRigidBodyCollision": false,
+      "bSmoothEdgeCollisions": false,
+      "bLockTranslation": true,
+      "bLockRotation": true,
+      "bLockXTranslation": false,
+      "bLockYTranslation": false,
+      "bLockZTranslation": false,
+      "bLockXRotation": false,
+      "bLockYRotation": false,
+      "bLockZRotation": false,
+      "bOverrideMaxAngularVelocity": false,
+      "bOverrideMaxDepenetrationVelocity": false,
+      "bOverrideWalkableSlopeOnInstance": false,
+      "bOverrideIterationCounts": false,
+      "bInterpolateWhenSubStepping": true,
+      "bInertiaConditioning": true,
+      "bOneWayInteraction": false,
+      "bOverrideSolverAsyncDeltaTime": false,
+      "solverAsyncDeltaTime": 0.01666666753590107,
+      "collisionProfileName": "NoCollision",
+      "collisionResponses": {
+        "responseArray": [
+          {
+            "channel": "Visibility",
+            "response": "ECR_Ignore"
+          },
+          {
+            "channel": "Camera",
+            "response": "ECR_Ignore"
+          }
+        ]
+      },
+      "maxDepenetrationVelocity": 0,
+      "massInKgOverride": 100,
+      "linearDamping": 0.009999999776482582,
+      "angularDamping": 0,
+      "customDOFPlaneNormal": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "cOMNudge": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "massScale": 1,
+      "gravityGroupIndex": 0,
+      "inertiaTensorScale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "walkableSlopeOverride": {
+        "walkableSlopeBehavior": "WalkableSlope_Default",
+        "walkableSlopeAngle": 0
+      },
+      "physMaterialOverride": "None",
+      "maxAngularVelocity": 3600,
+      "customSleepThresholdMultiplier": 1,
+      "stabilizationThresholdMultiplier": 1,
+      "physicsBlendWeight": 0,
+      "bSimulatePhysics": false,
+      "bOverrideMass": false,
+      "bEnableGravity": true,
+      "bUpdateKinematicFromSimulation": false,
+      "bGyroscopicTorqueEnabled": false,
+      "bAutoWeld": true,
+      "bStartAwake": true,
+      "bGenerateWakeEvents": false,
+      "bUpdateMassWhenScaleChanges": true
+    }
+  }
+]

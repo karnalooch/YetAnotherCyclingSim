@@ -1,0 +1,917 @@
+name: YACS Lesson07 remote Editor connection
+
+# Scoped owner authorization on 2026-10-21: attach without closing a live
+# Editor; establish the missing connection and start the saved L07 if absent.
+# Trial mode separately admits only the reviewed Macro Tiling A/B/A operation
+# on the existing owner session. No mode grants material/visual acceptance.
+# Apply mode retains only the independently reviewed Macro Tiling 0.05 result.
+# Vault mode only lists three fixed owned-pack filters; raw inventory stays local.
+# Source inspection performs five fixed surface-ID reads across /Game, then MI and arrays.
+# Pegasus preparation performs eleven fixed calls and saves only a new source MI copy and backup.
+# Pegasus input inspection reads one plugin source search and eight fixed cache metadata rows.
+# After owner-requested startup, reuse the bounded camera recovery and retain its viewport.
+# Discovery performs no native calls; oversized graph contracts may retain only
+# their complete plain-text description within the existing report limits.
+# Source sync is an independent fixed-file deployment; it never enters an Editor job.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-remote-editor.yml
+      - scripts/ue/Install-YacsLesson07RemoteEditor.ps1
+      - scripts/ue/Start-YacsLesson07RemoteEditor.ps1
+      - scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1
+      - scripts/ue/Test-YacsLesson07RemotePreflight.ps1
+      - scripts/ue/lesson07_wingman_client.py
+      - scripts/ue/test_lesson07_wingman_client.py
+      - scripts/ue/lesson07_observe_editor.py
+      - scripts/ue/test_lesson07_observe_editor.py
+      - scripts/ue/Read-YacsLesson07Viewport.ps1
+      - scripts/ue/Test-YacsLesson07Viewport.ps1
+      - scripts/assemble_surface_slices.py
+      - scripts/assets/test_assemble_surface_slices.py
+      - scripts/ue/Stage-Lesson07SurfaceRepair.ps1
+      - scripts/ue/apply_lesson07_surface_repair.py
+      - scripts/ue/test_apply_lesson07_surface_repair.py
+      - scripts/assets/prepare_lesson07_surface_repair.py
+      - scripts/assets/test_prepare_lesson07_surface_repair.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  await_ci:
+    name: Require protected exact-SHA CI before establishing the session
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      !contains(github.event.head_commit.message, '[l07-sync-material-source]') &&
+      contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+      !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+      !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+      !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+      !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+      !contains(github.event.head_commit.message, '[l07-discover-editor]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    outputs:
+      ci_run_id: ${{ steps.await.outputs.ci_run_id }}
+    steps:
+      - name: Await the latest same-repository PR CI for this exact revision
+        id: await
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 270); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
+              [.workflow_runs[] | select(
+                .name == "CyclingSim CI" and .path == ".github/workflows/ci.yml" and
+                .head_sha == $sha and .head_branch == "codex/365-world-graph" and
+                .head_repository.full_name == $repo)]
+              | . as $runs
+              | (([.[] | select(.status != "completed")]
+                  | sort_by((.updated_at // .created_at), .id, .run_attempt) | last)
+                 // ($runs | sort_by((.updated_at // .created_at), .id, .run_attempt) | last))
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$payload")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r ci_id state conclusion <<< "$row"
+              if [[ "$state" == completed ]]; then
+                if [[ "$conclusion" == success ]]; then
+                  echo "ci_run_id=$ci_id" >> "$GITHUB_OUTPUT"
+                  echo "Protected CI $ci_id succeeded for $GITHUB_SHA"
+                  exit 0
+                fi
+                echo "::error::Protected CI $ci_id ended with $conclusion; no session startup."
+                exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "::error::Exact-SHA protected CI did not succeed within the bounded wait."
+          exit 1
+
+  observe_cpu:
+    name: Admit the exact-source bounded operation in the existing Editor
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      !contains(github.event.head_commit.message, '[l07-sync-material-source]') &&
+      !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]')) ||
+       (contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-repair-sources]')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout the exact passive-reader source without LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            .github/workflows
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Verify immutable source and the fixed passive observer
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib
+          import subprocess
+          from pathlib import Path
+
+          if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"]):
+              raise ValueError("Tracked source changed after checkout")
+          for name in (
+              "lesson07_wingman_client.py", "lesson07_observe_editor.py",
+              "test_lesson07_wingman_client.py", "test_lesson07_observe_editor.py",
+              "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
+              "Read-YacsLesson07ObserverFailure.ps1", "Test-YacsLesson07ObserverFailure.ps1",
+              "Read-YacsLesson07Viewport.ps1", "Test-YacsLesson07Viewport.ps1",
+              "Stage-Lesson07SurfaceRepair.ps1", "apply_lesson07_surface_repair.py",
+              "test_apply_lesson07_surface_repair.py",
+          ):
+              path = Path("scripts/ue") / name
+              subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
+              if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
+                  raise ValueError("Passive-reader source boundary differs")
+              if path.read_bytes() != subprocess.check_output(["git", "show", "HEAD:" + str(path)]):
+                  raise ValueError("Passive-reader source bytes differ from exact commit")
+          observer = Path("scripts/ue/lesson07_observe_editor.py").read_bytes()
+          if hashlib.sha256(observer).hexdigest() != "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5":
+              raise ValueError("Reviewed observer source differs")
+          print("Fixed passive observer admitted; existing native Editor still required")
+          for name in ("scripts/assemble_surface_slices.py", "scripts/assets/test_assemble_surface_slices.py",
+                       "scripts/assets/prepare_lesson07_surface_repair.py", "scripts/assets/test_prepare_lesson07_surface_repair.py"):
+              path = Path(name)
+              if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
+                  raise ValueError("Surface-source adapter boundary differs")
+              if path.read_bytes() != subprocess.check_output(["git", "show", "HEAD:" + name]):
+                  raise ValueError("Surface-source adapter differs from exact commit")
+          PY
+      - name: Install existing pinned image-test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+      - name: Run focused client, observer and surface-import CPU tests
+        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices scripts.ue.test_apply_lesson07_surface_repair scripts.assets.test_prepare_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair
+
+  connect:
+    name: Verify one canonical L07 Editor connection
+    needs: [await_ci, observe_cpu]
+    if: ${{ !cancelled() && !contains(github.event.head_commit.message, '[l07-sync-material-source]') && (needs.await_ci.result == 'success' || needs.observe_cpu.result == 'success') }}
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 18
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+      L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
+      L07_READONLY_OBSERVATION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-observe-editor]') }}
+      L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
+      L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
+      L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
+      L07_SOURCE_ASSETS_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-source-assets]') }}
+      L07_PEGASUS_CANDIDATE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') }}
+      L07_PEGASUS_INPUTS_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') }}
+      L07_VAULT_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
+      L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
+      L07_SURFACE_IMPORT: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
+      L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') && !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') && !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') }}
+    steps:
+      - name: Create isolated Git settings for code-only staging
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'l07-remote-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if (Test-Path -LiteralPath $isolated) { throw 'Owned Git configuration already exists.' }
+          [IO.File]::WriteAllText($isolated, '')
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve source bytes.' }
+          git config --global core.eol lf
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
+
+      - name: Checkout reviewed source without LFS payloads or canonical edits
+        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' && env.L07_SOURCE_ASSETS_INSPECTION != 'true' && env.L07_PEGASUS_CANDIDATE != 'true' && env.L07_PEGASUS_INPUTS_INSPECTION != 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Checkout only startup, import or source-inspection code without LFS payloads
+        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' || env.L07_SOURCE_ASSETS_INSPECTION == 'true' || env.L07_PEGASUS_CANDIDATE == 'true' || env.L07_PEGASUS_INPUTS_INSPECTION == 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          # LFS pointers are smaller than 1024 bytes. Retain all of them plus
+          # small blobs; checkout hydrates only the required source directories.
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+
+      - name: Validate code and boundaries before any task creation
+        id: validate
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
+          try {
+            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true' -or $env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true' -or $env:L07_PEGASUS_CANDIDATE -ceq 'true' -or $env:L07_PEGASUS_INPUTS_INSPECTION -ceq 'true') {
+              # All pointer blobs are already local; do not fetch unrelated
+              # large Git blobs merely to inspect their sizes in this scanner.
+              $env:GIT_NO_LAZY_FETCH='1'
+            }
+            ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          } finally { $env:GIT_NO_LAZY_FETCH=$l07PriorNoLazyFetch }
+          foreach ($relative in @(
+            'scripts/ue/Install-YacsLesson07RemoteEditor.ps1',
+            'scripts/ue/Start-YacsLesson07RemoteEditor.ps1',
+            'scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1',
+            'scripts/ue/Test-YacsLesson07RemotePreflight.ps1',
+            'scripts/ue/Read-YacsLesson07ObserverFailure.ps1',
+            'scripts/ue/Test-YacsLesson07ObserverFailure.ps1',
+            'scripts/ue/Read-YacsLesson07Viewport.ps1',
+            'scripts/ue/Test-YacsLesson07Viewport.ps1',
+            'scripts/ue/Stage-Lesson07SurfaceRepair.ps1')) {
+            $tokens=$null; $errors=$null
+            [Management.Automation.Language.Parser]::ParseFile(
+              (Join-Path (Get-Location).Path $relative), [ref]$tokens, [ref]$errors) | Out-Null
+            if (@($errors).Count) { throw ($errors.Message -join '; ') }
+          }
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
+          & ./scripts/ue/Test-YacsLesson07ObserverFailure.ps1
+          & ./scripts/ue/Test-YacsLesson07Viewport.ps1
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_apply_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair scripts.ue.test_lesson07_recover_view
+          if ($LASTEXITCODE -ne 0) { throw 'L07 discovery or passive-reader boundary tests failed.' }
+
+      - name: Start a separate limited interactive task only if the host is idle
+        if: ${{ needs.await_ci.result == 'success' && needs.observe_cpu.result == 'skipped' }}
+        run: |
+          ./scripts/ue/Install-YacsLesson07RemoteEditor.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -RepoRoot (Get-Location).Path -Apply
+
+      - name: Verify process ownership and run the selected fixed operation
+        id: probe
+        run: |
+          $parameters = @{
+            ExpectedHead = $env:GITHUB_SHA
+            RunToken = '${{ github.run_id }}-${{ github.run_attempt }}'
+          }
+          if ($env:L07_READONLY_OBSERVATION -ceq 'true') { $parameters['ObserveLesson07'] = $true }
+          if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
+          if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
+          if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
+          if ($env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true') { $parameters['InspectSourceAssets'] = $true }
+          if ($env:L07_PEGASUS_CANDIDATE -ceq 'true') { $parameters['PreparePegasusCandidate'] = $true }
+          if ($env:L07_PEGASUS_INPUTS_INSPECTION -ceq 'true') { $parameters['InspectPegasusInputs'] = $true }
+          if ($env:L07_VAULT_INSPECTION -ceq 'true') { $parameters['InspectVault'] = $true }
+          if ($env:L07_SURFACE_IMPORT -ceq 'true') { $parameters['ImportSurfaces'] = $true }
+          if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
+          if ($env:L07_MACRO_APPLY -ceq 'true') { $parameters['ApplyReviewedMacro'] = $true }
+          & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
+
+      - name: Recover the Landscape camera after the authorized startup
+        if: ${{ success() && needs.await_ci.result == 'success' }}
+        run: |
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B scripts/ue/lesson07_recover_view.py `
+            --expected-head $env:GITHUB_SHA --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Startup camera recovery stopped; Editor retained without retry.' }
+
+      - name: Retain the bounded startup camera result
+        if: ${{ always() && needs.await_ci.result == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-startup-view-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/result.json
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/landscape.jpg
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Retain the exact JPEG returned by the dedicated viewport tool
+        id: capture
+        if: ${{ success() && env.L07_VIEWPORT_CAPTURE == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
+
+      - name: Retain the exact A B A JPEGs only after verified Macro restoration
+        id: trial_capture
+        if: ${{ !cancelled() && steps.validate.outcome == 'success' && env.L07_MACRO_TRIAL == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -TrialMacro
+
+      - name: Retain the final JPEG only after the reviewed Macro candidate is verified
+        id: apply_capture
+        if: ${{ success() && env.L07_MACRO_APPLY == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -ApplyReviewedMacro
+
+      - name: Recover the bounded error from the retained observer attempt
+        if: ${{ success() && env.L07_READONLY_DISCOVERY == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07ObserverFailure.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
+
+      - name: Prepare only corrected Grass and Cliffs source slices offline
+        if: ${{ !cancelled() && steps.validate.outcome == 'success' && env.L07_PREPARE_SURFACE_SOURCES == 'true' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          $output = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}'
+          $cursor = [IO.Path]::GetFullPath($output)
+          while ($cursor) {
+            if ((Test-Path -LiteralPath $cursor) -and
+                ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+              throw 'Redirected offline source-output path.'
+            }
+            $cursor = [IO.Path]::GetDirectoryName($cursor)
+          }
+          & $python -B -m unittest scripts.assets.test_assemble_surface_slices
+          if ($LASTEXITCODE -ne 0) { throw 'Surface-source regression tests failed.' }
+          & $python -B scripts/assemble_surface_slices.py --classes Grass Cliffs --output $output --project 'D:\yacs\project'
+          if ($LASTEXITCODE -ne 0) { throw 'Offline source assembly failed; no Unreal import requested.' }
+
+      - name: Print bounded reports without config, credentials or raw UE logs
+        id: reports
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Assert-PlainReportPath([string]$Path) {
+            $cursor = [IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              if (Test-Path -LiteralPath $cursor) {
+                if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                  throw 'Redirected evidence path is not admitted.'
+                }
+              }
+              $parent = Split-Path -Path $cursor -Parent
+              if ($parent -eq $cursor) { break }
+              $cursor = $parent
+            }
+          }
+          $root = 'D:\yacs\lesson07-remote\reports\${{ github.run_id }}-${{ github.run_attempt }}'
+          $stage = Join-Path $env:RUNNER_TEMP 'l07-connection-evidence-${{ github.run_id }}-${{ github.run_attempt }}'
+          Assert-PlainReportPath $root
+          Assert-PlainReportPath $stage
+          if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
+          [void][IO.Directory]::CreateDirectory($stage)
+          foreach ($name in @('install.json','identity.json','bridge.json','vault-summary.json','probe.json','observer-failure-log.json','viewport.json',
+              'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json','apply-macro.json','candidate-assets.json')) {
+            # Vault text can include unrelated owned-pack or account-path data.
+            # Only the client's explicit metadata-only summary may leave the host.
+            if ($env:L07_VAULT_INSPECTION -ceq 'true' -and $name -ceq 'bridge.json') { continue }
+            $path = Join-Path $root $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+            Assert-PlainReportPath $path
+            $bytes = (Get-Item -LiteralPath $path).Length
+            if ($bytes -gt 2MB) { throw 'Report exceeds bounded output size.' }
+            $report = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+            if ($bytes -le 256KB) {
+              Write-Host ('L07_REMOTE_REPORT ' + $name + '=' + ($report | ConvertTo-Json -Depth 32 -Compress))
+            } else { Write-Host ('L07_REMOTE_REPORT ' + $name + '=SEE_BOUNDED_JSON_ARTIFACT') }
+            Copy-Item -LiteralPath $path -Destination (Join-Path $stage $name) -ErrorAction Stop
+          }
+          $viewport = Join-Path $root 'current-viewport.jpg'
+          if ('${{ steps.capture.outcome }}' -ceq 'success' -and
+              -not (Test-Path -LiteralPath $viewport -PathType Leaf)) {
+            throw 'Successful viewport retention has no exact JPEG artifact.'
+          }
+          if (Test-Path -LiteralPath $viewport -PathType Leaf) {
+            Assert-PlainReportPath $viewport
+            $manifestPath = Join-Path $root 'viewport.json'
+            Assert-PlainReportPath $manifestPath
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if ($manifest.status -isnot [string] -or $manifest.status -cne 'VIEWPORT_CAPTURE_RETAINED' -or
+                $manifest.source_commit -isnot [string] -or $manifest.source_commit -cne $env:GITHUB_SHA -or
+                $manifest.run_token -isnot [string] -or $manifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $manifest.sha256 -isnot [string] -or $manifest.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+                ($manifest.byte_count -isnot [int] -and $manifest.byte_count -isnot [long]) -or
+                $manifest.byte_count -ne (Get-Item -LiteralPath $viewport).Length -or
+                (Get-Item -LiteralPath $viewport).Length -le 0 -or
+                (Get-Item -LiteralPath $viewport).Length -gt 32MB -or
+                (Get-FileHash -LiteralPath $viewport -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Viewport artifact does not match its bounded capture receipt.'
+            }
+            $stageViewport = Join-Path $stage 'current-viewport.jpg'
+            Copy-Item -LiteralPath $viewport -Destination $stageViewport -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $stageViewport -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Viewport evidence changed during staging.'
+            }
+          }
+          $trialManifestPath = Join-Path $root 'trial-macro.json'
+          if ('${{ steps.trial_capture.outcome }}' -ceq 'success' -and
+              -not (Test-Path -LiteralPath $trialManifestPath -PathType Leaf)) {
+            throw 'Successful trial retention has no exact aggregate receipt.'
+          }
+          $trialImages = @(
+            @{stage='A_baseline';name='trial-macro-A-baseline'},
+            @{stage='B_macro_005';name='trial-macro-B-005'},
+            @{stage='A_restored';name='trial-macro-A-restored'}
+          )
+          $trialImageCount = 0
+          foreach ($entry in $trialImages) {
+            $imagePath = Join-Path $root ($entry.name+'.jpg')
+            if (-not (Test-Path -LiteralPath $imagePath -PathType Leaf)) { continue }
+            Assert-PlainReportPath $imagePath
+            $manifestPath = Join-Path $root ($entry.name+'.json')
+            Assert-PlainReportPath $manifestPath
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if ($manifest.status -isnot [string] -or $manifest.status -cne 'TRIAL_MACRO_VIEWPORT_RETAINED' -or
+                $manifest.stage -isnot [string] -or $manifest.stage -cne $entry.stage -or
+                $manifest.source_commit -isnot [string] -or $manifest.source_commit -cne $env:GITHUB_SHA -or
+                $manifest.run_token -isnot [string] -or $manifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $manifest.trial_restore_verified -isnot [bool] -or -not $manifest.trial_restore_verified -or
+                $manifest.sha256 -isnot [string] -or $manifest.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+                ($manifest.byte_count -isnot [int] -and $manifest.byte_count -isnot [long]) -or
+                $manifest.byte_count -ne (Get-Item -LiteralPath $imagePath).Length -or
+                $manifest.byte_count -le 0 -or $manifest.byte_count -gt 32MB -or
+                (Get-FileHash -LiteralPath $imagePath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Trial JPEG does not match its stage receipt.'
+            }
+            $stageImage = Join-Path $stage ($entry.name+'.jpg')
+            Copy-Item -LiteralPath $imagePath -Destination $stageImage -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $stageImage -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Trial JPEG changed during staging.'
+            }
+            $trialImageCount++
+          }
+          if (Test-Path -LiteralPath $trialManifestPath -PathType Leaf) {
+            Assert-PlainReportPath $trialManifestPath
+            $trialManifest = Get-Content -LiteralPath $trialManifestPath -Raw | ConvertFrom-Json
+            if ($trialManifest.status -isnot [string] -or $trialManifest.status -cnotin @(
+                  'TRIAL_MACRO_CAPTURES_RETAINED_REVIEW_PENDING','TRIAL_MACRO_CAPTURES_PARTIAL_RESTORED_REVIEW_PENDING') -or
+                $trialManifest.source_commit -isnot [string] -or $trialManifest.source_commit -cne $env:GITHUB_SHA -or
+                $trialManifest.run_token -isnot [string] -or $trialManifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $trialManifest.trial_restore_verified -isnot [bool] -or -not $trialManifest.trial_restore_verified -or
+                ($trialManifest.capture_count -isnot [int] -and $trialManifest.capture_count -isnot [long]) -or
+                $trialManifest.capture_count -ne $trialImageCount -or $trialImageCount -lt 1 -or
+                ($trialManifest.status -ceq 'TRIAL_MACRO_CAPTURES_RETAINED_REVIEW_PENDING' -and $trialImageCount -ne 3)) {
+              throw 'Trial aggregate receipt differs from retained JPEGs.'
+            }
+          }
+          $applyImagePath = Join-Path $root 'apply-macro.jpg'
+          if ('${{ steps.apply_capture.outcome }}' -ceq 'success' -and
+              -not (Test-Path -LiteralPath $applyImagePath -PathType Leaf)) {
+            throw 'Successful reviewed Macro retention has no exact JPEG.'
+          }
+          if (Test-Path -LiteralPath $applyImagePath -PathType Leaf) {
+            Assert-PlainReportPath $applyImagePath
+            $manifestPath = Join-Path $root 'apply-macro.json'
+            Assert-PlainReportPath $manifestPath
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if ($manifest.status -isnot [string] -or $manifest.status -cne 'APPLY_MACRO_VIEWPORT_RETAINED_REVIEW_PENDING' -or
+                $manifest.stage -isnot [string] -or $manifest.stage -cne 'B_applied_macro_005' -or
+                $manifest.source_commit -isnot [string] -or $manifest.source_commit -cne $env:GITHUB_SHA -or
+                $manifest.run_token -isnot [string] -or $manifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $manifest.apply_verified -isnot [bool] -or -not $manifest.apply_verified -or
+                $manifest.apply_candidate_verified -isnot [bool] -or -not $manifest.apply_candidate_verified -or
+                $manifest.apply_restore_attempted -isnot [bool] -or $manifest.apply_restore_attempted -or
+                $manifest.apply_restore_verified -isnot [bool] -or $manifest.apply_restore_verified -or
+                $manifest.sha256 -isnot [string] -or $manifest.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+                ($manifest.byte_count -isnot [int] -and $manifest.byte_count -isnot [long]) -or
+                $manifest.byte_count -ne (Get-Item -LiteralPath $applyImagePath).Length -or
+                $manifest.byte_count -le 0 -or $manifest.byte_count -gt 32MB -or
+                (Get-FileHash -LiteralPath $applyImagePath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Applied Macro JPEG does not match its verified candidate receipt.'
+            }
+            $stageImage = Join-Path $stage 'apply-macro.jpg'
+            Copy-Item -LiteralPath $applyImagePath -Destination $stageImage -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $stageImage -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Applied Macro JPEG changed during staging.'
+            }
+          }
+          if ($env:L07_PEGASUS_CANDIDATE -ceq 'true') {
+            $manifestPath=Join-Path $root 'candidate-assets.json'
+            if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+              Assert-PlainReportPath $manifestPath
+              if ((Get-Item -LiteralPath $manifestPath).Length -gt 16KB) { throw 'Candidate asset manifest too large.' }
+              $manifest=Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -AsHashtable
+              $bridgePath=Join-Path $root 'bridge.json'
+              Assert-PlainReportPath $bridgePath
+              if ((Get-Item -LiteralPath $bridgePath).Length -gt 2MB) { throw 'Candidate bridge report too large.' }
+              $bridge=Get-Content -LiteralPath $bridgePath -Raw | ConvertFrom-Json -AsHashtable -Depth 32
+              if ($manifest['status'] -cne 'TWO_NEW_PACKAGES_RETAINED_OFFLINE_REVIEW_PENDING' -or
+                  $manifest['assets'] -isnot [array] -or $manifest['assets'].Count -ne 2 -or
+                  $bridge['status'] -cne 'PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING' -or
+                  $bridge['native_tool_calls'] -ne 11 -or $bridge['pegasus_current_unchanged'] -ne $true -or
+                  $bridge['pegasus_packages'] -isnot [array] -or $bridge['pegasus_packages'].Count -ne 2) {
+                throw 'Candidate package receipt is not confirmed.'
+              }
+              $expected=@(
+                @{file='MI_BeforePegasusSource_20261021.uasset';object_path='/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_BeforePegasusSource_20261021'},
+                @{file='MI_Pegasus_Source_YACS.uasset';object_path='/Game/Generated/YACS/Lesson07_Unified/Materials/SideFX_OneToOne_20261021/MI_Pegasus_Source_YACS'}
+              )
+              for ($index=0; $index -lt 2; $index++) {
+                $entry=$manifest['assets'][$index];$record=$bridge['pegasus_packages'][$index];$fixed=$expected[$index]
+                $source='D:/yacs/project/Content/'+$fixed.object_path.Substring(6)+'.uasset'
+                if ($entry -isnot [Collections.IDictionary] -or $entry.Count -ne 5 -or
+                    $entry['file'] -cne $fixed.file -or $entry['object_path'] -cne $fixed.object_path -or
+                    $entry['source_file'] -isnot [string] -or
+                    $entry['source_file'].Replace('\','/') -cne $source -or
+                    ($entry['size_bytes'] -isnot [int] -and $entry['size_bytes'] -isnot [long]) -or
+                    $entry['size_bytes'] -le 0 -or $entry['size_bytes'] -gt 1MB -or
+                    $entry['sha256'] -isnot [string] -or $entry['sha256'] -cnotmatch '^[0-9a-f]{64}$') {
+                  throw 'Candidate package is outside the two fixed paths.'
+                }
+                foreach ($key in @('file','object_path','source_file','size_bytes','sha256')) {
+                  if ($entry[$key] -cne $record[$key]) { throw 'Candidate package receipts disagree.' }
+                }
+                $path=Join-Path (Join-Path $root 'candidate-assets') $fixed.file
+                Assert-PlainReportPath $path
+                if ((Get-Item -LiteralPath $path).Length -ne $entry['size_bytes'] -or
+                    (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $entry['sha256']) {
+                  throw 'Candidate package bytes do not match the receipt.'
+                }
+                $target=Join-Path $stage $fixed.file
+                [IO.File]::Copy($path,$target,$false)
+                if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant() -cne $entry['sha256']) {
+                  throw 'Candidate package changed during artifact staging.'
+                }
+              }
+            } elseif ('${{ steps.probe.outcome }}' -ceq 'success') {
+              throw 'Successful candidate preparation has no two-package receipt.'
+            }
+          }
+          if ($env:L07_SURFACE_IMPORT -ceq 'true') {
+            $surfaceRoot='D:\yacs\project\Saved\RuntimeProof\Lesson07SurfaceRepair-20261021\${{ github.run_id }}-${{ github.run_attempt }}'
+            Assert-PlainReportPath $surfaceRoot
+            # Retain partial receipts on failure as well; they do not establish success.
+            foreach ($name in @('live-import.json','surface-before.jpg','surface-after.jpg',
+                'surface-panorama.jpg','surface-puig-major.jpg','surface-scree.jpg')) {
+              $path=Join-Path $surfaceRoot $name
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+              Assert-PlainReportPath $path
+              $bytes=(Get-Item -LiteralPath $path).Length
+              $limit=if ($name.EndsWith('.json')) { 256KB } else { 32MB }
+              if ($bytes -le 0 -or $bytes -gt $limit) { throw 'Surface evidence outside size bound.' }
+              $hash=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+              $target=Join-Path $stage $name
+              [IO.File]::Copy($path,$target,$false)
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -cne $hash) { throw 'Surface evidence copy changed.' }
+            }
+            $manifest=Join-Path $surfaceRoot 'package\surface-repair-package.json'
+            if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+              Assert-PlainReportPath $manifest
+              if ((Get-Item -LiteralPath $manifest).Length -gt 64KB) { throw 'Surface package manifest too large.' }
+              $hash=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash
+              $target=Join-Path $stage 'surface-repair-package.json'
+              [IO.File]::Copy($manifest,$target,$false)
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -cne $hash) { throw 'Surface manifest copy changed.' }
+            }
+          }
+          $assembly = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}\assembly-receipt.json'
+          if (Test-Path -LiteralPath $assembly -PathType Leaf) {
+            Assert-PlainReportPath $assembly
+            if ((Get-Item -LiteralPath $assembly).Length -gt 64KB) { throw 'Offline assembly receipt too large.' }
+            $assemblyReport = Get-Content -LiteralPath $assembly -Raw | ConvertFrom-Json
+            Write-Host ('L07_OFFLINE_ASSEMBLY ' + ($assemblyReport | ConvertTo-Json -Depth 16 -Compress))
+            Copy-Item -LiteralPath $assembly -Destination (Join-Path $stage 'assembly-receipt.json') -ErrorAction Stop
+          }
+          $session = 'D:\yacs\lesson07-remote\state\${{ github.sha }}\session.json'
+          if (Test-Path -LiteralPath $session -PathType Leaf) {
+            Assert-PlainReportPath $session
+            if ((Get-Item -LiteralPath $session).Length -gt 64KB) { throw 'Session report exceeds bounded output size.' }
+            $sessionReport = Get-Content -LiteralPath $session -Raw | ConvertFrom-Json
+            Write-Host ('L07_REMOTE_REPORT session.json=' + ($sessionReport | ConvertTo-Json -Depth 32 -Compress))
+            Copy-Item -LiteralPath $session -Destination (Join-Path $stage 'session.json') -ErrorAction Stop
+          }
+          "directory=$stage" >> $env:GITHUB_OUTPUT
+          "validated=true" >> $env:GITHUB_OUTPUT
+
+      - name: Retain only explicit reports from this operation
+        if: ${{ always() && steps.reports.outputs.validated == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: lesson07-remote-connection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ steps.reports.outputs.directory }}/*.json
+            ${{ steps.reports.outputs.directory }}/current-viewport.jpg
+            ${{ steps.reports.outputs.directory }}/trial-macro-A-baseline.jpg
+            ${{ steps.reports.outputs.directory }}/trial-macro-B-005.jpg
+            ${{ steps.reports.outputs.directory }}/trial-macro-A-restored.jpg
+            ${{ steps.reports.outputs.directory }}/apply-macro.jpg
+            ${{ steps.reports.outputs.directory }}/surface-before.jpg
+            ${{ steps.reports.outputs.directory }}/surface-after.jpg
+            ${{ steps.reports.outputs.directory }}/surface-panorama.jpg
+            ${{ steps.reports.outputs.directory }}/surface-puig-major.jpg
+            ${{ steps.reports.outputs.directory }}/surface-scree.jpg
+            ${{ steps.reports.outputs.directory }}/MI_Pegasus_Source_YACS.uasset
+            ${{ steps.reports.outputs.directory }}/MI_BeforePegasusSource_20261021.uasset
+          if-no-files-found: warn
+          retention-days: 7
+
+  sync_material_source:
+    name: Install one fixed Houdini recipe source without executing it
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      contains(github.event.head_commit.message, '[l07-sync-material-source]')
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 8
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - name: Create isolated Git settings preserving exact source bytes
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $isolated=Join-Path $env:RUNNER_TEMP 'l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if (Test-Path -LiteralPath $isolated) { throw 'GIT_CONFIG_ALREADY_EXISTS' }
+          [IO.File]::WriteAllText($isolated,'')
+          $env:GIT_CONFIG_GLOBAL=$isolated;$env:GIT_CONFIG_NOSYSTEM='1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          'GIT_CONFIG_NOSYSTEM=1' >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_LONGPATHS_FAILED' }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_AUTOCRLF_FAILED' }
+          git config --global core.eol lf
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_EOL_FAILED' }
+
+      - name: Checkout only the reviewed recipe at this exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          filter: blob:limit=1m
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/houdini/lesson06_unified_pipeline.py
+
+      - name: Verify, retain and replace only the fixed canonical recipe
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference='Stop'
+          $source=Join-Path (Get-Location).Path 'scripts/houdini/lesson06_unified_pipeline.py'
+          $target='D:\yacs\project\scripts\houdini\lesson06_unified_pipeline.py'
+          $stage=Join-Path 'D:\yacs\work' ('l07-material-source-sync-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)
+          $temporary=Join-Path $stage 'lesson06_unified_pipeline.new.py'
+          $backup=Join-Path $stage 'lesson06_unified_pipeline.previous.py'
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.json'
+          $oldSha='6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e'
+          $newSha='9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf'
+          $report=[ordered]@{profile='SOURCE_SYNC';source_sha=$env:GITHUB_SHA;status='FAILED';phase='PREFLIGHT';
+            source_installed=$false;replacement_attempted=$false;replacement_completed=$false;atomic_compare_and_swap=$false;
+            hou_imported=$false;hython_executed=$false;cook_executed=$false;ue_changed=$false;runtime_reloaded=$false;
+            source=$null;before=$null;after=$null;backup=$null;retained_directory=$stage;error_type=$null;error_code=$null}
+          function Get-SyncPlainPath([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+              $cursor=[IO.Path]::GetDirectoryName($cursor)
+            }
+            return Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+          }
+          function Get-SyncIdentity([string]$Path,[long]$Bytes,[string]$Sha,[IO.Stream]$Stream=$null) {
+            $owned=$null
+            try {
+              $before=Get-SyncPlainPath $Path
+              if ($before.PSIsContainer -or $before.Length -ne $Bytes -or $Bytes -gt 256KB) { throw 'PINNED_SIZE' }
+              if ($null -eq $Stream) { $owned=[IO.File]::Open($Path,'Open','Read','Read');$Stream=$owned }
+              if ($Stream.Length -ne $Bytes) { throw 'OPEN_FILE_SIZE' }
+              $Stream.Position=0;$hash=(Get-FileHash -InputStream $Stream -Algorithm SHA256).Hash.ToLowerInvariant()
+              $after=Get-SyncPlainPath $Path
+              if ($hash -cne $Sha -or $after.Length -ne $Bytes -or $before.LastWriteTimeUtc -ne $after.LastWriteTimeUtc) { throw 'SOURCE_CHANGED_OR_PIN_MISMATCH' }
+              return [ordered]@{path=$Path;bytes=$Bytes;sha256=$hash;modified_utc=$after.LastWriteTimeUtc.ToString('o')}
+            } finally { if ($null -ne $owned) { $owned.Dispose() } }
+          }
+          $held=$null
+          try {
+            if ($env:GITHUB_SHA -cnotmatch '^[0-9a-f]{40}$' -or $env:GITHUB_RUN_ID -notmatch '^[0-9]{6,16}$' -or $env:GITHUB_RUN_ATTEMPT -notmatch '^[0-9]{1,3}$') { throw 'RUN_IDENTITY' }
+            $head=@(& git rev-parse HEAD)
+            if ($LASTEXITCODE -ne 0 -or $head.Count -ne 1 -or $head[0] -cne $env:GITHUB_SHA) { throw 'CHECKOUT_HEAD' }
+            $report.source=Get-SyncIdentity $source 37392 $newSha
+            $report.before=Get-SyncIdentity $target 34868 $oldSha
+            $parent=Get-SyncPlainPath 'D:\yacs\work'
+            if (-not $parent.PSIsContainer -or (Test-Path -LiteralPath $stage)) { throw 'STAGING_BOUNDARY_OR_EXISTS' }
+            $report.phase='STAGING'
+            New-Item -ItemType Directory -Path $stage -ErrorAction Stop | Out-Null
+            $null=Get-SyncPlainPath $stage
+            [IO.File]::Copy($source,$temporary,$false)
+            $null=Get-SyncIdentity $temporary 37392 $newSha
+            $report.phase='TARGET_RECHECK'
+            $null=Get-SyncPlainPath $target
+            # Deny in-place writers while retaining rename compatibility. This is not a compare-and-swap.
+            $held=[IO.File]::Open($target,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::Read -bor [IO.FileShare]::Delete))
+            $null=Get-SyncPlainPath $stage
+            $null=Get-SyncIdentity $temporary 37392 $newSha
+            if (Test-Path -LiteralPath $backup) { throw 'BACKUP_ALREADY_EXISTS' }
+            $report.before=Get-SyncIdentity $target 34868 $oldSha $held
+            $report.phase='REPLACE';$report.replacement_attempted=$true
+            [IO.File]::Replace($temporary,$target,$backup,$false)
+            $report.replacement_completed=$true;$report.phase='VERIFY'
+            # Verify the bytes actually replaced: a competing rename must never yield successful admission.
+            $report.backup=Get-SyncIdentity $backup 34868 $oldSha
+            $report.after=Get-SyncIdentity $target 37392 $newSha
+            $report.source_installed=$true;$report.status='SOURCE_INSTALLED';$report.phase='COMPLETE'
+          } catch {
+            $report.error_type=$_.Exception.GetType().Name;$report.error_code='SOURCE_SYNC_FAILED'
+            if ($_.Exception.Message -cmatch '^[A-Z_]{1,64}$') { $report.error_code=$_.Exception.Message }
+          }
+          finally {
+            if ($null -ne $held) { $held.Dispose() }
+            $json=$report | ConvertTo-Json -Depth 6 -Compress
+            if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 16KB) { throw 'RECEIPT_SIZE' }
+            [IO.File]::WriteAllText($out,$json,[Text.UTF8Encoding]::new($false))
+            Write-Host ('L07_MATERIAL_SOURCE_SYNC '+$json)
+          }
+          if (-not $report.source_installed) { throw 'SOURCE_SYNC_FAILED_SEE_RECEIPT' }
+
+      - name: Retain the source installation receipt only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.json
+          if-no-files-found: warn
+          retention-days: 7

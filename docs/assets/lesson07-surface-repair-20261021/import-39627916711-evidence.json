@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "status": "OFFLINE_PACKAGE_STAGED_IMPORT_NOT_ATTEMPTED_OWNER_CLOSED_EDITOR",
+  "source_commit": "a65a3d22f562080e7ab91ee9c2699215675e5f4c",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711",
+  "native_job_id": 119318226141,
+  "run_attempt": 1,
+  "artifact": {
+    "id": 12357737271,
+    "bytes": 2582,
+    "sha256": "be602ab5e5bdf72ac9ef460a9fba17e8f7eb5a579a540d3c3e7ef503a43b0bf3"
+  },
+  "receipt": {
+    "path": "import-39627916711-probe.json",
+    "bytes": 2170,
+    "sha256": "3c2e93c3ee75843b14f30db8fb49fa816fc6dfd822cd458d46ab9ead4c0cab2b"
+  },
+  "package_manifest_sha256": "e8e0ae6cbd752b6b564a67b830aa16a5c4dbb01db3af9792963e8c6121bc88a6",
+  "reason": "SURFACE_IMPORT_OWNER_CHANGED",
+  "native_tool_calls": 0,
+  "import_attempted": false,
+  "package_save_requested": false,
+  "owner_context": "The owner reported accidental Editor closure during the active task. This is not treated as evidence of an Editor crash.",
+  "recovery": "Retain original source/package hashes. Establish a fresh authorized owner Editor session, then use a new run token; never retry the retained directory.",
+  "source_ci_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627930173",
+  "lesson07_technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

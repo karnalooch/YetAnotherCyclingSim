@@ -1,0 +1,113 @@
+{
+  "status": "REJECTED_AS_REAL_SA_CALOBRA; HISTORICAL_NEGATIVE_EVIDENCE; NOT_DEFAULT_TERRAIN",
+  "owner_clarification": "Original Sa Calobra geography using Pegasus methods, not the fictional island amplitudes.",
+  "working_artifact": "work/ma2141-sidefx-landscape-v001 (resolve relative to the YACS workspace root)",
+  "evidence_sha256": {
+    "geographic_verification": "58ba5e9716cbb5fdabeaf3dba92ce0d9f209f247057d9190c74ced466f7c534d",
+    "adaptations": "caf8ece5bbfc06e4fae74228887892d20b1ba8a5bd72cba25fffb0e8c5f4d5c2",
+    "original_node_comparison": "785ec7f3175b521ad370a342648db525ff6a9d82fe060ef8f6be82f061ca4f42",
+    "native_build": "ff3aab4e11d89dda9ad1be6b8757053c11dfb3dc74950c2513af9a45895ff484"
+  },
+  "geographic_verification": {
+    "grid_shape": [
+      2048,
+      2048
+    ],
+    "spacing_m": 3.90625,
+    "source_raster_correlation": 0.9999996754066643,
+    "source_resampling_mean_absolute_difference_m": 0.14948096871376038,
+    "source_resampling_p99_absolute_difference_m": 1.1772003173828125,
+    "alpha_agreement_fraction": 1.0,
+    "native_working_area_m2": 7996414.1845703125,
+    "reference_working_area_m2": 7996503.912180085,
+    "working_mask_intersection_over_union": 1.0,
+    "finite_fields": {
+      "height": true,
+      "mask": true,
+      "Alpha": true,
+      "working_area": true
+    },
+    "delta_max_absolute_m": 173.49009704589844,
+    "delta_working_area_mean_signed_m": 12.610486030578613,
+    "delta_working_area_mean_absolute_m": 22.570598602294922,
+    "delta_working_area_p95_absolute_m": 65.22661590576172,
+    "delta_working_area_over_10m_fraction": 0.6309896136459481,
+    "changed_area_outside_500m_m2": 3143157.958984375,
+    "status": "Experimental Pegasus variation; not accepted as a geographically faithful Sa Calobra terrain.",
+    "interpretation": "Original Pegasus noise/erosion settings have large geographic effects. The independent baseline is resampled real DTM; resampling differences are not noise/erosion changes.",
+    "route_parts": 6,
+    "route_vertices_inside_working_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "adaptations": {
+    "source": "Original island massing replaced by real DTM, imported with SideFX HeightField File.",
+    "curve": "Source-derived Ma-2141 500 m boundary replaces island outline for HeightField Mask by Geometry.",
+    "height_remap": "Three island-specific height remaps bypassed; original values remain visible.",
+    "resolution": "Original 512 -> 1024 -> 2048 sample workflow, over 8 km context.",
+    "cache": "Erosion cache reduced from 5000 to 512 MB per pass; simulation parameters unchanged.",
+    "composition": "SideFX HeightField Layer combines the original noise/erosion result with the real source through the original shrink/blur mask.",
+    "material": "Unavailable Unreal example material assignment bypassed. Terrain-only Houdini visualization."
+  },
+  "original_node_comparison": {
+    "checked_nodes": [
+      "heightfield_noise1",
+      "heightfield_noise2",
+      "heightfield_masknoise1",
+      "heightfield_masknoise2",
+      "heightfield_distort1",
+      "heightfield_distort2",
+      "heightfield_distort3",
+      "heightfield_resample1",
+      "heightfield_resample2",
+      "heightfield_erode1",
+      "heightfield_erode2",
+      "heightfield_erode3",
+      "heightfield_erode4",
+      "heightfield_maskshrink1",
+      "heightfield_maskblur1"
+    ],
+    "checked_parameters": 874,
+    "mismatches": [],
+    "exception": "Erosion cache memory only; documented source/masking/bypass/composition adaptations are separate."
+  },
+  "native_build": {
+    "version": "22.0.466",
+    "license": "licenseCategoryType.Indie",
+    "resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "index_0_position": [
+      -3998.046875,
+      0.0,
+      3998.046875
+    ],
+    "index_1_x_position": [
+      -3994.140625,
+      0.0,
+      3998.046875
+    ],
+    "index_1_y_position": [
+      -3998.046875,
+      0.0,
+      3994.140625
+    ],
+    "copied_original_nodes": 36,
+    "adaptations": {
+      "source": "Original island massing replaced by real DTM, imported with SideFX HeightField File.",
+      "curve": "Source-derived Ma-2141 500 m boundary replaces island outline for HeightField Mask by Geometry.",
+      "height_remap": "Three island-specific height remaps bypassed; original values remain visible.",
+      "resolution": "Original 512 -> 1024 -> 2048 sample workflow, over 8 km context.",
+      "cache": "Erosion cache reduced from 5000 to 512 MB per pass; simulation parameters unchanged.",
+      "composition": "SideFX HeightField Layer combines the original noise/erosion result with the real source through the original shrink/blur mask.",
+      "material": "Unavailable Unreal example material assignment bypassed. Terrain-only Houdini visualization."
+    }
+  }
+}

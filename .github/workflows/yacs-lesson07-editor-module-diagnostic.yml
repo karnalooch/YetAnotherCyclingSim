@@ -1,0 +1,562 @@
+name: YACS Lesson07 editor module diagnostic (read-only)
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-editor-module-diagnostic.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-lesson07-module-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Inspect Editor modules and existing bridge (no build or HTTP)
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 4
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Inspect missing Editor module and available binary manifests
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'D:\yacs\project'
+          $engine = 'D:\yacs\engine\UE_5.8'
+          $binaries = Join-Path $root 'Binaries\Win64'
+          $out = Join-Path $env:RUNNER_TEMP 'lesson07-editor-module-diagnostic.json'
+          $dlls = @(
+            'UnrealEditor-YetAnotherCyclingSim.dll',
+            'UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )
+          $items = @()
+          foreach ($name in $dlls) {
+            $path = Join-Path $binaries $name
+            $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+            $items += [ordered]@{
+              name = $name
+              exists = $null -ne $item
+              bytes = if ($item) { [long]$item.Length } else { 0 }
+              modified_utc = if ($item) { $item.LastWriteTimeUtc.ToString('o') } else { $null }
+            }
+          }
+          $manifestInfo = @()
+          $manifestFiles = @(Get-ChildItem -LiteralPath $binaries -Filter '*.modules' -File -ErrorAction SilentlyContinue)
+          foreach ($file in $manifestFiles) {
+            try {
+              $obj = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+              $mods = @()
+              if ($obj.Modules) {
+                $mods = @($obj.Modules.PSObject.Properties.Name | Sort-Object)
+              }
+              $manifestInfo += [ordered]@{
+                file = $file.Name
+                build_id = [string]$obj.BuildId
+                modules = $mods
+              }
+            } catch {
+              $manifestInfo += [ordered]@{
+                file=$file.Name
+                parse_error_type=$_.Exception.GetType().Name
+              }
+            }
+          }
+          $plugins = @(
+            'Plugins\Runtime\HoudiniEngine',
+            'Plugins\PCGExtendedToolkit',
+            'Plugins\RoadForge'
+          )
+          $pluginInventory = @()
+          foreach ($relative in $plugins) {
+            $path = Join-Path $root $relative
+            $pluginInventory += [ordered]@{
+              path = $relative
+              exists = (Test-Path -LiteralPath $path -PathType Container)
+              plugin_descriptor_count = @(Get-ChildItem -LiteralPath $path -Filter '*.uplugin' -ErrorAction SilentlyContinue).Count
+            }
+          }
+          $free = [math]::Round(([IO.DriveInfo]::new('D:\')).AvailableFreeSpace / 1GB, 2)
+          $projectDescriptor = [ordered]@{status='NOT_READ';engine_association=$null;modules=@();sha256=$null}
+          try {
+            $projectPath = Join-Path $root 'YetAnotherCyclingSim.uproject'
+            $cursor = $projectPath
+            while ($cursor) {
+              if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Redirected project path.' }
+              $parent = Split-Path -Path $cursor -Parent
+              if ($parent -eq $cursor) { break }
+              $cursor = $parent
+            }
+            $item = Get-Item -LiteralPath $projectPath
+            if ($item.Length -le 0 -or $item.Length -gt 256KB) { throw 'Project descriptor size.' }
+            $raw = Get-Content -LiteralPath $projectPath -Raw
+            $object = $raw | ConvertFrom-Json
+            $dictionary = $raw | ConvertFrom-Json -AsHashtable
+            $association = [string]$object.EngineAssociation
+            $projectDescriptor.engine_association = if ($association -cmatch '^(?:[0-9]+\.[0-9]+(?:\.[0-9]+)?|\{?[0-9A-Fa-f-]{36}\}?)$') { $association } else { 'UNRECOGNIZED' }
+            $projectDescriptor.modules = @($object.Modules | Select-Object -First 32 | ForEach-Object {
+              if ($_.Name -cmatch '^[A-Za-z][A-Za-z0-9_]{0,127}$' -and $_.Type -cmatch '^[A-Za-z]{1,32}$') {
+                [ordered]@{name=[string]$_.Name;type=[string]$_.Type}
+              }
+            })
+            $projectDescriptor.sha256 = (Get-FileHash -LiteralPath $projectPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            $projectDescriptor.dictionary_name_predicate_counts = [ordered]@{
+              runtime_property = @($dictionary.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSim').Count
+              runtime_key = @($dictionary.Modules | Where-Object { $_['Name'] -ceq 'YetAnotherCyclingSim' }).Count
+              editor_property = @($dictionary.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSimEditor').Count
+              editor_key = @($dictionary.Modules | Where-Object { $_['Name'] -ceq 'YetAnotherCyclingSimEditor' }).Count
+            }
+            $projectDescriptor.status = 'BOUNDED_PROJECT_DESCRIPTOR_OBSERVED'
+          } catch { $projectDescriptor.status='DESCRIPTOR_READ_FAILED';$projectDescriptor.error_type=$_.Exception.GetType().Name }
+          $report = [ordered]@{
+            status = 'READ_ONLY_DIAGNOSTIC'
+            source_commit = '${{ github.sha }}'
+            engine_editor_cmd = (Test-Path -LiteralPath (Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe') -PathType Leaf)
+            canonical_project_present = (Test-Path -LiteralPath (Join-Path $root 'YetAnotherCyclingSim.uproject') -PathType Leaf)
+            project_descriptor = $projectDescriptor
+            free_d_gib = $free
+            editor_binaries = $items
+            module_manifests = $manifestInfo
+            plugins = $pluginInventory
+            note = 'Module presence is diagnostic, not a binary compatibility or successful runtime load proof.'
+          }
+          $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $out -Encoding utf8
+          $report | ConvertTo-Json -Depth 6
+      - name: Discover existing Editor bridge without connecting or changing state
+        if: ${{ always() }}
+        env:
+          L07_DIAGNOSTIC_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $projectRoot = 'D:\yacs\project'
+          $engineRoot = 'D:\yacs\engine\UE_5.8'
+          $projectFile = Join-Path $projectRoot 'YetAnotherCyclingSim.uproject'
+          $expectedExe = Join-Path $engineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
+          $output = Join-Path $env:RUNNER_TEMP 'lesson07-editor-bridge-discovery.json'
+          $failures = [Collections.Generic.List[string]]::new()
+          $editorRows = [Collections.Generic.List[object]]::new()
+          $pluginRows = [Collections.Generic.List[object]]::new()
+          $sourceRows = [Collections.Generic.List[object]]::new()
+          $declarations = [Collections.Generic.List[object]]::new()
+          $limits = [ordered]@{
+            editors=8; listeners_per_editor=32; plugin_directories=128
+            plugin_depth=3; descriptors=8; source_directories=128
+            source_depth=8; source_files=64; source_file_bytes=2MB
+            source_total_bytes=16MB; declarations=128; discovery_bytes=16KB
+          }
+          function Test-L07PlainPath([string]$Path, [string]$Boundary) {
+            $full = [IO.Path]::GetFullPath($Path)
+            $base = [IO.Path]::GetFullPath($Boundary).TrimEnd('\')
+            if ($full -ine $base -and -not $full.StartsWith($base+'\', [StringComparison]::OrdinalIgnoreCase)) { return $false }
+            $cursor = $full
+            while ($cursor.Length -ge $base.Length) {
+              $item = Get-Item -LiteralPath $cursor -Force -ErrorAction SilentlyContinue
+              if ($null -eq $item -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $false }
+              if ($cursor -ieq $base) { return $true }
+              $cursor = [IO.Path]::GetDirectoryName($cursor)
+            }
+            return $false
+          }
+          # Win32_Process is queried locally. Never serialize CommandLine or a
+          # CIM object: the only retained command-line fact is an exact match.
+          try {
+            $observed = @(Get-CimInstance -ClassName Win32_Process -Filter "Name='UnrealEditor.exe' OR Name='UnrealEditor-Cmd.exe'" |
+              Select-Object -First ($limits.editors + 1))
+            if ($observed.Count -gt $limits.editors) { throw 'EDITOR_COUNT_LIMIT' }
+            foreach ($editor in $observed) {
+              $projectArguments = @([regex]::Matches([string]$editor.CommandLine, '(?:"[^"]*"|\S)+') |
+                ForEach-Object { ($_.Value -replace '^-project=', '').Trim('"') } |
+                Where-Object { $_ -like '*.uproject' })
+              $projectMatches = $projectArguments.Count -eq 1 -and $projectArguments[0].Replace('/','\') -ieq $projectFile
+              $connections = @(Get-CimInstance -Namespace 'root/StandardCimv2' -ClassName MSFT_NetTCPConnection `
+                -Filter ("State=2 AND OwningProcess=" + [uint32]$editor.ProcessId) |
+                Select-Object -First ($limits.listeners_per_editor + 1))
+              if ($connections.Count -gt $limits.listeners_per_editor) { throw 'LISTENER_COUNT_LIMIT' }
+              $listeners = @($connections | Sort-Object LocalPort,LocalAddress | ForEach-Object {
+                [ordered]@{address=[string]$_.LocalAddress;port=[int]$_.LocalPort;pid=[int]$_.OwningProcess}
+              })
+              $editorRows.Add([ordered]@{
+                pid=[int]$editor.ProcessId; name=[string]$editor.Name
+                created_utc=$editor.CreationDate.ToUniversalTime().ToString('o')
+                executable=[string]$editor.ExecutablePath
+                executable_matches_expected=([string]$editor.ExecutablePath -ieq $expectedExe)
+                canonical_project_argument_matches=$projectMatches
+                listeners=$listeners
+                active_editor_world='NOT_QUERIED'
+              })
+            }
+          } catch { $failures.Add('PROCESS_OR_LISTENER_QUERY_FAILED:' + $_.Exception.GetType().Name) }
+
+          # Vendor discovery contract, read in memory only:
+          # https://ai.locodev.dev/docs/developers/antigravity
+          # No INI, environment, account data, auth header or credential value
+          # enters the report. The discovery file itself is never uploaded.
+          $discoveryPath = Join-Path $projectRoot 'Saved\LocoAI\external-mcp-config.json'
+          $discovery = [ordered]@{
+            relative_path='Saved/LocoAI/external-mcp-config.json'; exists=$false
+            bytes=$null; modified_utc=$null; status='NOT_FOUND'; token_present=$false
+            transport_type_matches_vendor=$false; endpoint=$null
+            matching_editor_pids=@(); http_requests_made=0
+          }
+          try {
+            if (Test-Path -LiteralPath $discoveryPath -PathType Leaf) {
+              $discovery.exists = $true
+              if (-not (Test-L07PlainPath $discoveryPath $projectRoot)) { throw 'UNSAFE_DISCOVERY_PATH' }
+              $meta = Get-Item -LiteralPath $discoveryPath
+              $discovery.bytes = [long]$meta.Length
+              $discovery.modified_utc = $meta.LastWriteTimeUtc.ToString('o')
+              if ($meta.Length -le 0 -or $meta.Length -gt $limits.discovery_bytes) { throw 'DISCOVERY_SIZE_LIMIT' }
+              $config = Get-Content -LiteralPath $discoveryPath -Raw | ConvertFrom-Json
+              $discovery.token_present = $config.token -is [string] -and -not [string]::IsNullOrWhiteSpace($config.token)
+              $discovery.transport_type_matches_vendor = $config.type -ceq 'http'
+              $uri = $null
+              if ($config.url -isnot [string] -or -not [Uri]::TryCreate($config.url, [UriKind]::Absolute, [ref]$uri) -or
+                  $uri.Scheme -cne 'http' -or $uri.Host -cne '127.0.0.1' -or $uri.Port -le 0 -or
+                  $uri.AbsolutePath -cne '/loco' -or $uri.UserInfo -or $uri.Query -or $uri.Fragment) { throw 'DISCOVERY_ENDPOINT_NOT_VENDOR_LOOPBACK' }
+              $discovery.endpoint = [ordered]@{scheme='http';host='127.0.0.1';port=[int]$uri.Port;path='/loco'}
+              $owners = @($editorRows | Where-Object {
+                $_.canonical_project_argument_matches -and $_.executable_matches_expected -and
+                @($_.listeners | Where-Object { $_.address -ceq '127.0.0.1' -and $_.port -eq $uri.Port }).Count -eq 1
+              })
+              $discovery.matching_editor_pids = @($owners | ForEach-Object { $_.pid })
+              $discovery.status = if ($owners.Count -eq 1 -and $discovery.token_present -and $discovery.transport_type_matches_vendor) {
+                'DISCOVERY_MATCHES_ONE_EDITOR_HTTP_NOT_TESTED'
+              } else { 'DISCOVERY_PRESENT_IDENTITY_OR_AUTH_NOT_ESTABLISHED' }
+              $config = $null
+            }
+          } catch {
+            $config = $null
+            $discovery.status = 'DISCOVERY_REJECTED'
+            $failures.Add('DISCOVERY_READ_FAILED:' + $_.Exception.GetType().Name)
+          }
+
+          # Inspect only named plugin descriptors, then source beneath those
+          # plugin roots. Never recurse into Config, Saved, binaries or links.
+          $pluginRoots = @((Join-Path $projectRoot 'Plugins'), (Join-Path $engineRoot 'Engine\Plugins\Marketplace'))
+          $discoveryDirectories = [Collections.Generic.Queue[object]]::new()
+          foreach ($base in $pluginRoots) {
+            if (Test-Path -LiteralPath $base -PathType Container) { $discoveryDirectories.Enqueue(@{path=$base;depth=0;boundary=$base}) }
+          }
+          $pluginDirectoryCount = 0
+          try {
+            while ($discoveryDirectories.Count) {
+              $entry = $discoveryDirectories.Dequeue()
+              $pluginDirectoryCount++
+              if ($pluginDirectoryCount -gt $limits.plugin_directories) { throw 'PLUGIN_DIRECTORY_LIMIT' }
+              if (-not (Test-L07PlainPath $entry.path $entry.boundary)) { continue }
+              $children = @(Get-ChildItem -LiteralPath $entry.path -Force | Select-Object -First 257)
+              if ($children.Count -gt 256) { throw 'PLUGIN_ENTRY_LIMIT' }
+              foreach ($child in ($children | Sort-Object Name)) {
+                if ($child.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+                if ($child.PSIsContainer) {
+                  if ($entry.depth -lt $limits.plugin_depth -and $child.Name -notin @('Config','Content','Source','Binaries','Intermediate','Resources','Saved','.git')) {
+                    $discoveryDirectories.Enqueue(@{path=$child.FullName;depth=($entry.depth+1);boundary=$entry.boundary})
+                  }
+                  continue
+                }
+                if ($child.Extension -ine '.uplugin' -or $child.BaseName -notmatch '^(Wingman|LocoHelperAI)$') { continue }
+                if ($pluginRows.Count -ge $limits.descriptors -or $child.Length -gt 128KB) { throw 'PLUGIN_DESCRIPTOR_LIMIT' }
+                $descriptor = Get-Content -LiteralPath $child.FullName -Raw | ConvertFrom-Json
+                $modules = @($descriptor.Modules | ForEach-Object {
+                  if ($_.Name -is [string] -and $_.Name -cmatch '^[A-Za-z_][A-Za-z0-9_]{0,79}$') { $_.Name }
+                } | Select-Object -First 32)
+                $versionName = if ($descriptor.VersionName -is [string] -and $descriptor.VersionName -cmatch '^[0-9][0-9A-Za-z.+_-]{0,47}$') { $descriptor.VersionName } else { 'UNRECOGNIZED' }
+                $pluginRows.Add([ordered]@{
+                  descriptor=$child.FullName;bytes=[long]$child.Length
+                  sha256=(Get-FileHash -LiteralPath $child.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                  version_name=$versionName;module_names=$modules
+                })
+              }
+            }
+          } catch { $failures.Add('PLUGIN_DISCOVERY_INCOMPLETE:' + $_.Exception.GetType().Name) }
+
+          $sourceTotalBytes = 0L
+          $sourceDirectoryCount = 0
+          $literalNames = @('initialize','tools/list','tools/call','session/status','notifications/initialized',
+            'Authorization','Bearer','Content-Type','MCP-Protocol-Version','Mcp-Session-Id',
+            'jsonrpc','method','params','result','arguments','name','code','python_code',
+            'execute_python','execute_python_code','run_python','/loco','/mcp')
+          try {
+            foreach ($plugin in $pluginRows) {
+              $base = Split-Path -Parent $plugin.descriptor
+              $queue = [Collections.Generic.Queue[object]]::new()
+              foreach ($relative in @('Source','Content\Python')) {
+                $path = Join-Path $base $relative
+                if (Test-Path -LiteralPath $path -PathType Container) { $queue.Enqueue(@{path=$path;depth=0}) }
+              }
+              while ($queue.Count) {
+                $entry = $queue.Dequeue()
+                $sourceDirectoryCount++
+                if ($sourceDirectoryCount -gt $limits.source_directories) { throw 'SOURCE_DIRECTORY_LIMIT' }
+                if (-not (Test-L07PlainPath $entry.path $base)) { continue }
+                $children = @(Get-ChildItem -LiteralPath $entry.path -Force | Select-Object -First 257)
+                if ($children.Count -gt 256) { throw 'SOURCE_ENTRY_LIMIT' }
+                foreach ($child in ($children | Sort-Object Name)) {
+                  if ($child.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+                  if ($child.PSIsContainer) {
+                    if ($entry.depth -lt $limits.source_depth -and $child.Name -notin @('Config','Saved','Binaries','Intermediate','.git')) { $queue.Enqueue(@{path=$child.FullName;depth=($entry.depth+1)}) }
+                    continue
+                  }
+                  if ($child.Extension -notin @('.h','.cpp','.py') -or $child.BaseName -notmatch '(?i)MCP|Loco|Server|Settings|Http|Route|Python|Command') { continue }
+                  if ($sourceRows.Count -ge $limits.source_files -or $child.Length -gt $limits.source_file_bytes -or ($sourceTotalBytes+$child.Length) -gt $limits.source_total_bytes) { throw 'SOURCE_BYTE_OR_FILE_LIMIT' }
+                  $sourceTotalBytes += $child.Length
+                  $raw = [IO.File]::ReadAllBytes($child.FullName)
+                  if ($raw.Length -ne $child.Length) { throw 'SOURCE_CHANGED_DURING_READ' }
+                  $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant()
+                  $relative = [IO.Path]::GetRelativePath($base,$child.FullName).Replace('\','/')
+                  $sourceRows.Add([ordered]@{plugin=$plugin.descriptor;path=$relative;bytes=$raw.Length;sha256=$hash})
+                  # Structured candidates only: no arbitrary code excerpts,
+                  # initializers, comments, free-form strings or credential data.
+                  $lines = [Text.Encoding]::UTF8.GetString($raw).Split("`n")
+                  for ($index=0; $index -lt $lines.Count -and $declarations.Count -lt $limits.declarations; $index++) {
+                    $line = $lines[$index]
+                    $names = [Collections.Generic.List[string]]::new()
+                    foreach ($literal in $literalNames) {
+                      if ($line.Contains('"'+$literal+'"') -or $line.Contains("'"+$literal+"'")) { $names.Add($literal) }
+                    }
+                    $definition = [regex]::Match($line, '^\s*(?:async\s+)?(?:class|struct|def)\s+(?:[A-Z_]+_API\s+)?([A-Za-z_][A-Za-z0-9_]{0,79})\b')
+                    if ($definition.Success -and $definition.Groups[1].Value -match '(?i)MCP|Loco|Python|Auth|Http|Server|Settings|Execute|Tool') { $names.Add($definition.Groups[1].Value) }
+                    $member = [regex]::Match($line, '^\s*(?:(?:virtual|static|inline|FORCEINLINE|const|mutable)\s+)*(?:[A-Za-z_][A-Za-z0-9_:<>*&]{0,79}\s+){1,3}([A-Za-z_][A-Za-z0-9_]{0,79})\s*(?:\(|;|=)')
+                    if ($member.Success -and $member.Groups[1].Value -match '(?i)MCP|Loco|Python|Auth|Bearer|Token|ApiKey|Http|Server|Port|Listen|Route|Json|Execute|Tool') { $names.Add($member.Groups[1].Value) }
+                    if ($names.Count) { $declarations.Add([ordered]@{plugin=$plugin.descriptor;path=$relative;line=($index+1);candidate_identifiers=@($names | Select-Object -Unique)}) }
+                  }
+                }
+              }
+            }
+          } catch { $failures.Add('SOURCE_INVENTORY_INCOMPLETE:' + $_.Exception.GetType().Name) }
+          $report = [ordered]@{
+            schema_version=1;status='READ_ONLY_BRIDGE_DISCOVERY_NOT_RUNTIME_PROOF'
+            source_commit=$env:L07_DIAGNOSTIC_SHA;observed_utc=[DateTime]::UtcNow.ToString('o')
+            editors=@($editorRows.ToArray());discovery=$discovery
+            plugins=@($pluginRows.ToArray());source_files=@($sourceRows.ToArray())
+            source_declaration_candidates=@($declarations.ToArray())
+            declaration_limit_reached=($declarations.Count -eq $limits.declarations)
+            source_bytes_read=$sourceTotalBytes;limits=$limits;diagnostic_failures=@($failures.ToArray())
+            http_requests_made=0;editor_commands_executed=0;editor_started_or_stopped=$false
+            project_files_written=$false;native_material_readback='NOT_RUN';performance_pass=$false
+            note='PID/listener and source declarations do not prove active world, authenticated API, schemas or rendered material. No credential value or discovery-file payload is retained.'
+          }
+          $json = $report | ConvertTo-Json -Depth 10
+          if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 256KB) { throw 'REPORT_SIZE_LIMIT' }
+          $json | Set-Content -LiteralPath $output -Encoding utf8
+          Write-Host ('L07_BRIDGE_DISCOVERY ' + ($report | ConvertTo-Json -Depth 10 -Compress))
+      - name: Inspect only the prior 007c5c session and current saved Lesson07 checkpoint
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $priorSha='007c5c0737bc36e0dc482b66f4b326e363104621'
+          $priorRun='39630648547-1'
+          $priorEditorPid=34848
+          $priorEditorStart='134370724521531735'
+          $priorInteractiveSession=2
+          $root='D:\yacs\lesson07-remote'
+          $release=Join-Path $root ('releases\'+$priorSha)
+          $stateRoot=Join-Path $root ('state\'+$priorSha)
+          $project='D:\yacs\project'
+          $taskName='YACS Lesson07 Remote Editor'
+          $pwsh='D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe'
+          $editorExe='D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
+          $failures=[Collections.Generic.List[string]]::new()
+          function Read-L07PinnedEvidence([string]$Path,[long]$Limit,[switch]$Json) {
+            $proof=[ordered]@{status='NOT_FOUND';bytes=$null;modified_utc=$null;sha256=$null;stable_across_read=$false}
+            $result=@{proof=$proof;data=$null}
+            try {
+              if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $result }
+              $cursor=[IO.Path]::GetFullPath($Path)
+              while ($cursor) {
+                if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+                $cursor=[IO.Path]::GetDirectoryName($cursor)
+              }
+              $before=Get-Item -LiteralPath $Path -Force
+              $proof.bytes=[long]$before.Length;$proof.modified_utc=$before.LastWriteTimeUtc.ToString('o')
+              if ($before.Length -le 0 -or $before.Length -gt $Limit) { $proof.status='SIZE_LIMIT';return $result }
+              if ($Json) {
+                # Hash the exact bytes being parsed; never serialize private JSON.
+                $raw=[IO.File]::ReadAllBytes($Path)
+                if ($raw.Length -ne $before.Length) { throw 'FILE_CHANGED' }
+                $proof.sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant()
+                $data=[Text.UTF8Encoding]::new($false,$true).GetString($raw).TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 16
+                if ($data -isnot [Collections.IDictionary]) { throw 'JSON_ROOT' }
+              } else { $proof.sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }
+              $after=Get-Item -LiteralPath $Path -Force
+              if ($after.Length -ne $before.Length -or $after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) { throw 'FILE_CHANGED' }
+              $proof.stable_across_read=$true;$proof.status='HASHED'
+              if ($Json) { $result.data=$data }
+            } catch { $proof.status='READ_FAILED';$proof['error_type']=$_.Exception.GetType().Name }
+            return $result
+          }
+          function Get-L07SafeUtc([object]$Value) {
+            if ($Value -is [DateTime] -and $Value.Kind -eq [DateTimeKind]::Utc) { return $Value.ToString('o') }
+            return $null
+          }
+          function Get-L07PrivateSid([string]$Value) {
+            if ([string]::IsNullOrWhiteSpace($Value)) { throw 'NO_DESKTOP_IDENTITY' }
+            if ($Value -match '^S-1-\d+-') { return ([Security.Principal.SecurityIdentifier]::new($Value)).Value }
+            return ([Security.Principal.NTAccount]::new($Value)).Translate([Security.Principal.SecurityIdentifier]).Value
+          }
+          $installation=Read-L07PinnedEvidence (Join-Path $release 'installation.json') 64KB -Json
+          $session=Read-L07PinnedEvidence (Join-Path $stateRoot 'session.json') 256KB -Json
+          $installData=$installation.data;$sessionData=$session.data
+          $installInfo=[ordered]@{file=$installation.proof;source_sha_matches_expected=$false;run_token_matches_expected=$false;file_count=$null;start_permitted_until_utc=$null;start_permission_expired=$null;desktop_sid_matches_console=$null}
+          if ($null -ne $installData) {
+            $installInfo.source_sha_matches_expected=$installData['source_sha'] -is [string] -and $installData['source_sha'] -ceq $priorSha
+            $installInfo.run_token_matches_expected=$installData['run_token'] -is [string] -and $installData['run_token'] -ceq $priorRun
+            $installInfo.file_count=@($installData['files']).Count
+            $installInfo.start_permitted_until_utc=Get-L07SafeUtc $installData['start_permitted_until_utc']
+            if ($null -ne $installInfo.start_permitted_until_utc) { $installInfo.start_permission_expired=$installData['start_permitted_until_utc'] -lt [DateTime]::UtcNow }
+          } else { $failures.Add('INSTALLATION_NOT_PARSED') }
+          $sessionInfo=[ordered]@{file=$session.proof;source_sha_matches_expected=$false;status=$null;phase=$null;host_status=$null;checked_at_utc=$null;reason_code=$null;editor=$null;flags=[ordered]@{}}
+          if ($null -ne $sessionData) {
+            $sessionInfo.source_sha_matches_expected=$sessionData['source_sha'] -is [string] -and $sessionData['source_sha'] -ceq $priorSha
+            $statuses=@('PREFLIGHT_PENDING','TASK_PREFLIGHT','ATTACH_EXISTING','PREFLIGHT_PASS','STARTING_NOT_NATIVE_PROOF','EDITOR_RUNNING_NATIVE_NOT_VERIFIED','EDITOR_EXITED_NO_AUTORESTART','EDITOR_RETAINED_AFTER_STARTUP_ERROR',
+              'BLOCKED_RELEASE','BLOCKED_DESKTOP','BLOCKED_HOST','BLOCKED_RESERVE','BLOCKED_PROJECT','BLOCKED_CHECKPOINT','BLOCKED_MODULES','BLOCKED_HANDOFF','BLOCKED_SUPERVISING')
+            $sessionInfo.status=if ($sessionData['status'] -is [string] -and $sessionData['status'] -cin $statuses) { $sessionData['status'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.phase=if ($sessionData['phase'] -is [string] -and $sessionData['phase'] -cin @('RELEASE','DESKTOP','HOST','RESERVE','PROJECT','CHECKPOINT','MODULES','HANDOFF','SUPERVISING')) { $sessionData['phase'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.host_status=if ($sessionData['host_status'] -is [string] -and $sessionData['host_status'] -cin @('IDLE','CI_BUSY','LOCAL_BUSY','MIXED_BUSY')) { $sessionData['host_status'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.checked_at_utc=Get-L07SafeUtc $sessionData['checked_at_utc']
+            $sessionInfo.reason_code=if ($null -eq $sessionData['reason_code']) { $null } elseif ($sessionData['reason_code'] -is [string] -and $sessionData['reason_code'] -cin @('SYSTEM_EXCEPTION','START_REQUEST_EXPIRED','PRIOR_SESSION_RETAINED','CONSOLE_OWNER_CHANGED','DISK_RESERVE_CHANGED','TASK_CONSOLE_IDENTITY','CHECKPOINT_HASH_OR_SIZE','RELEASE_IDENTITY','RELEASE_FILE_HASH','TASK_SETTINGS_MISMATCH','INDEPENDENT_TASK_REQUIRED')) { $sessionData['reason_code'] } else { 'UNRECOGNIZED' }
+            foreach ($field in @('owner_sid_matches','checkpoint_bytes_verified','module_build_ids_verified','autosave_session_override','editor_stop_requested','package_save_requested','project_config_write_requested','native_world_verified','native_module_load_verified','performance_pass')) {
+              $sessionInfo.flags[$field]=if ($sessionData[$field] -is [bool]) { $sessionData[$field] } else { $null }
+            }
+            $priorEditor=$sessionData['editor']
+            if ($priorEditor -is [Collections.IDictionary]) {
+              $sessionInfo.editor=[ordered]@{
+                pid_matches_original=($priorEditor['editor_pid'] -is [int] -or $priorEditor['editor_pid'] -is [long]) -and $priorEditor['editor_pid'] -eq $priorEditorPid
+                start_filetime_matches_original=$priorEditor['editor_start_filetime_utc'] -is [string] -and $priorEditor['editor_start_filetime_utc'] -ceq $priorEditorStart
+                executable_matches_expected=$priorEditor['editor_executable_path'] -is [string] -and $priorEditor['editor_executable_path'] -ieq $editorExe
+                interactive_session_matches_original=($priorEditor['interactive_session_id'] -is [int] -or $priorEditor['interactive_session_id'] -is [long]) -and $priorEditor['interactive_session_id'] -eq $priorInteractiveSession
+                canonical_project_matches=$priorEditor['canonical_project_matches'] -is [bool] -and $priorEditor['canonical_project_matches']
+              }
+            }
+          } else { $failures.Add('SESSION_NOT_PARSED') }
+          $sourcePins=[ordered]@{
+            'scripts/ue/Install-YacsLesson07RemoteEditor.ps1'='e104537753a2a822315a949617c6cb6da70fe9cb4209bf21230e4609440dd0e9'
+            'scripts/ue/Start-YacsLesson07RemoteEditor.ps1'='8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91'
+            'scripts/runner/Get-YacsUnrealHostState.ps1'='73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346'
+            'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1'='2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2'
+          }
+          $sourceProofs=@(foreach ($relative in $sourcePins.Keys) {
+            $proof=(Read-L07PinnedEvidence (Join-Path $release $relative) 256KB).proof
+            $entries=@();if ($null -ne $installData) { $entries=@($installData['files'] | Where-Object { $_ -is [Collections.IDictionary] -and $_['path'] -is [string] -and $_['path'] -ceq $relative }) }
+            [ordered]@{path=$relative;expected_sha256=$sourcePins[$relative];file=$proof;file_matches_expected=$proof.status -ceq 'HASHED' -and $proof.sha256 -ceq $sourcePins[$relative];manifest_entry_count=$entries.Count;manifest_hash_matches_expected=$entries.Count -eq 1 -and $entries[0]['sha256'] -is [string] -and $entries[0]['sha256'] -ceq $sourcePins[$relative]}
+          })
+          $taskInfo=[ordered]@{exists=$false;state=$null;last_task_result=$null;last_run_utc=$null;action_count=$null;action_executable_matches=$null;action_arguments_match=$null;action_working_directory_matches=$null;principal_limited=$null;principal_interactive=$null;principal_sid_matches_console=$null;principal_sid_matches_installation=$null;settings_match_original=$null;settings=$null}
+          try {
+            $task=Get-ScheduledTask -TaskName $taskName -TaskPath '\' -ErrorAction SilentlyContinue
+            if ($null -ne $task) {
+              $taskInfo.exists=$true
+              $taskInfo.state=if ([string]$task.State -cin @('Unknown','Disabled','Queued','Ready','Running')) { [string]$task.State } else { 'UNRECOGNIZED' }
+              $timing=Get-ScheduledTaskInfo -TaskName $taskName -TaskPath '\'
+              $taskInfo.last_task_result=[long]$timing.LastTaskResult
+              $taskInfo.last_run_utc=$timing.LastRunTime.ToUniversalTime().ToString('o')
+              $actions=@($task.Actions);$taskInfo.action_count=$actions.Count
+              if ($actions.Count -eq 1) {
+                $expectedArguments='-NoLogo -NoProfile -File "'+(Join-Path $release 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1')+'" -ExpectedHead '+$priorSha
+                $taskInfo.action_executable_matches=[string]$actions[0].Execute -ieq $pwsh
+                $taskInfo.action_arguments_match=[string]$actions[0].Arguments -ceq $expectedArguments
+                $taskInfo.action_working_directory_matches=[string]$actions[0].WorkingDirectory -ieq $release
+              }
+              $taskInfo.principal_limited=[string]$task.Principal.RunLevel -ceq 'Limited'
+              $taskInfo.principal_interactive=[string]$task.Principal.LogonType -cin @('Interactive','InteractiveToken')
+              # Account representations and installation SID are compared only in memory.
+              $consoleSid=Get-L07PrivateSid ([string](Get-CimInstance Win32_ComputerSystem).UserName)
+              $taskSid=Get-L07PrivateSid ([string]$task.Principal.UserId)
+              $taskInfo.principal_sid_matches_console=$consoleSid -cnotin @('S-1-5-18','S-1-5-19','S-1-5-20') -and $taskSid -ceq $consoleSid
+              if ($null -ne $installData) {
+                $installInfo.desktop_sid_matches_console=$installData['desktop_sid'] -is [string] -and $installData['desktop_sid'] -ceq $consoleSid
+                $taskInfo.principal_sid_matches_installation=$installData['desktop_sid'] -is [string] -and $installData['desktop_sid'] -ceq $taskSid
+              }
+              $taskInfo.settings_match_original=@($task.Triggers | Where-Object { $null -ne $_ }).Count -eq 0 -and
+                [Xml.XmlConvert]::ToTimeSpan([string]$task.Settings.ExecutionTimeLimit) -eq [TimeSpan]::Zero -and
+                $task.Settings.RestartCount -eq 0 -and [string]$task.Settings.MultipleInstances -cin @('IgnoreNew','2') -and
+                $task.Settings.AllowHardTerminate -eq $false -and $task.Settings.StopIfGoingOnBatteries -eq $false -and
+                $task.Settings.DisallowStartIfOnBatteries -eq $false -and $task.Settings.IdleSettings.StopOnIdleEnd -eq $false
+              $taskInfo.settings=[ordered]@{
+                trigger_count=@($task.Triggers | Where-Object { $null -ne $_ }).Count
+                execution_limit_seconds=[Xml.XmlConvert]::ToTimeSpan([string]$task.Settings.ExecutionTimeLimit).TotalSeconds
+                restart_count=[int]$task.Settings.RestartCount
+                multiple_instances=if ([string]$task.Settings.MultipleInstances -cin @('Parallel','Queue','IgnoreNew','StopExisting','0','1','2','3')) { [string]$task.Settings.MultipleInstances } else { 'UNRECOGNIZED' }
+              }
+              foreach ($key in @('AllowHardTerminate','StopIfGoingOnBatteries','DisallowStartIfOnBatteries')) {
+                $taskInfo.settings[$key]=if ($task.Settings.$key -is [bool]) { $task.Settings.$key } else { $null }
+              }
+              $taskInfo.settings['idle_stop_on_end']=if ($task.Settings.IdleSettings.StopOnIdleEnd -is [bool]) { $task.Settings.IdleSettings.StopOnIdleEnd } else { $null }
+            }
+          } catch { $failures.Add('TASK_READ_FAILED:'+$_.Exception.GetType().Name) }
+          # OS-only liveness snapshot; no stored source or native Editor code is executed.
+          $hostInfo=[ordered]@{status='UNVERIFIED';live_editor_count=$null;stale_cim_count=0;original_process_alive=$false;editor_count_limit=8}
+          try {
+            $editors=@(Get-CimInstance -ClassName Win32_Process -Filter "Name='UnrealEditor.exe' OR Name='UnrealEditor-Cmd.exe'" | Select-Object -First 9)
+            if ($editors.Count -gt 8) { throw 'EDITOR_COUNT_LIMIT' }
+            $live=0
+            foreach ($editor in $editors) {
+              $native=Get-Process -Id ([int]$editor.ProcessId) -ErrorAction SilentlyContinue
+              if (-not $native -or $native.HasExited) { $hostInfo.stale_cim_count++;continue }
+              $live++
+              if ($native.Id -eq $priorEditorPid -and
+                  $native.StartTime.ToUniversalTime().ToFileTimeUtc().ToString() -ceq $priorEditorStart) {
+                $hostInfo.original_process_alive=$true
+              }
+            }
+            $hostInfo.live_editor_count=$live
+            $hostInfo.status=if ($live -eq 0) { 'IDLE' } else { 'EDITOR_PRESENT' }
+          } catch { $failures.Add('HOST_READ_FAILED:'+$_.Exception.GetType().Name) }
+          # Current saved arrays: independently verified retention 39643271947.
+          $checkpointPins=@(
+            @('Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap',1838638056,'d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset',40154,'dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset',208956,'53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset',25841089,'ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset',37576130,'a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset',18473310,'565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94')
+          )
+          $checkpointBytes=0L;$checkpointAttemptBytes=0L
+          $checkpointProofs=@(foreach ($pin in $checkpointPins) {
+            $remaining=[math]::Max(0L,2GB-$checkpointAttemptBytes)
+            $proof=(Read-L07PinnedEvidence (Join-Path $project $pin[0]) $remaining).proof
+            if ($proof.bytes -gt 0 -and $proof.bytes -le $remaining) { $checkpointAttemptBytes+=$proof.bytes }
+            if ($proof.status -ceq 'HASHED') { $checkpointBytes+=$proof.bytes }
+            [ordered]@{path=$pin[0];original_size_bytes=$pin[1];original_sha256=$pin[2];file=$proof;matches_original_checkpoint=$proof.status -ceq 'HASHED' -and $proof.bytes -eq $pin[1] -and $proof.sha256 -ceq $pin[2]}
+          })
+          $canaryPath='D:\yacs\work\lesson06-unified-20261019\final_unified_idmap.bgeo.sc'
+          $canaryItem=Get-Item -LiteralPath $canaryPath -Force -ErrorAction SilentlyContinue
+          $canaryCache=[ordered]@{path=$canaryPath;exists=$null -ne $canaryItem;bytes=$null;modified_utc=$null;contents_read=$false}
+          if ($null -ne $canaryItem -and -not $canaryItem.PSIsContainer -and -not ($canaryItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            $canaryCache.bytes=[long]$canaryItem.Length;$canaryCache.modified_utc=$canaryItem.LastWriteTimeUtc.ToString('o')
+          }
+          $report=[ordered]@{
+            schema_version=1;status='READ_ONLY_PRIOR_SESSION_AND_CHECKPOINT_NOT_START_ADMISSION'
+            source_commit='${{ github.sha }}';observed_utc=[DateTime]::UtcNow.ToString('o')
+            expected_prior_source_sha=$priorSha;expected_prior_run_token=$priorRun
+            expected_prior_editor_pid=$priorEditorPid;expected_prior_editor_start_filetime_utc=$priorEditorStart
+            expected_prior_interactive_session_id=$priorInteractiveSession
+            installation=$installInfo;session=$sessionInfo;task=$taskInfo;current_host=$hostInfo;source_closure=$sourceProofs
+            current_checkpoint=$checkpointProofs;checkpoint_bytes_hashed=$checkpointBytes;checkpoint_attempt_bytes=$checkpointAttemptBytes
+            final_unified_cache_metadata=$canaryCache
+            limits=[ordered]@{installation_bytes=64KB;session_bytes=256KB;source_files=4;source_file_bytes=256KB;checkpoint_files=6;checkpoint_total_bytes=2GB;output_bytes=64KB}
+            diagnostic_failures=@($failures.ToArray());native_requests_made=0
+            task_changed_or_started=$false;editor_started_or_stopped=$false;project_files_written=$false
+            startup_admitted=$false;performance_pass=$false
+          }
+          $json=$report | ConvertTo-Json -Depth 12
+          if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 64KB) { throw 'PRIOR_SESSION_REPORT_SIZE' }
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-prior-session-diagnostic.json'
+          $json | Set-Content -LiteralPath $out -Encoding utf8
+          Write-Host ('L07_PRIOR_SESSION_DIAGNOSTIC '+($report | ConvertTo-Json -Depth 12 -Compress))
+      - name: Retain minimal diagnostic
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-module-diagnostic-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/lesson07-editor-module-diagnostic.json
+            ${{ runner.temp }}/lesson07-editor-bridge-discovery.json
+            ${{ runner.temp }}/lesson07-prior-session-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 7

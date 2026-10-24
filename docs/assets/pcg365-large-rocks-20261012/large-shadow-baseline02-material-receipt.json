@@ -1,0 +1,369 @@
+{
+  "action": "material",
+  "binding": {
+    "code_sha": "39815d33190fe0fce10727e35d196081e6fc8d1a",
+    "dependency_query_status": "DIRECT_QUERIES_RETURNED_NOT_RECURSIVE_CLOSURE",
+    "dependency_scope": "registry references plus independently checked mesh slots, MI parent and texture bindings; query failures explicit; not recursive engine closure",
+    "derived_mesh": "/Game/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.SM_Boulder_ForgeDiagnostic",
+    "direct_dependency_queries": [
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor",
+        "references": [
+          "/Script/InterchangeEngine"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX",
+        "references": [
+          "/Script/InterchangeEngine"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM",
+        "references": [
+          "/Script/InterchangeEngine"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks",
+        "references": [
+          "/Script/InterchangeEngine"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge",
+        "references": [
+          "/Engine/EngineMaterials/BaseFlattenNormalMap",
+          "/Engine/EngineMaterials/DefaultDiffuse",
+          "/Engine/EngineMaterials/DefaultNormal_Uncompressed",
+          "/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient",
+          "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast",
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal",
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+          "/Engine/Functions/Engine_MaterialFunctions02/Math/CreateThirdOrthogonalVector",
+          "/Engine/Functions/Engine_MaterialFunctions02/Math/Transform3x3Matrix",
+          "/Engine/Functions/Engine_MaterialFunctions02/SafeNormalize",
+          "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components",
+          "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat3Components",
+          "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3",
+          "/Engine/Functions/Engine_MaterialFunctions02/WorldAlignedNormals_HighQuality",
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor",
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks",
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX",
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge",
+        "references": [
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge"
+        ],
+        "status": "RETURNED"
+      },
+      {
+        "package": "/Game/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic",
+        "references": [
+          "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge",
+          "/Script/InterchangeEngine",
+          "/Script/NavigationSystem"
+        ],
+        "status": "RETURNED"
+      }
+    ],
+    "direct_package_dependencies": [
+      {
+        "bytes": 3597,
+        "package": "/Engine/EngineMaterials/BaseFlattenNormalMap",
+        "sha256": "ca86290944fdceb66e6310a00ba70f77d4b60f5ca8361678569d2245cdd78ee8"
+      },
+      {
+        "bytes": 2135396,
+        "package": "/Engine/EngineMaterials/DefaultDiffuse",
+        "sha256": "fd14c140517022b577f8f22faca4f8fc10fe72f54db4ac27459415635c729ddc"
+      },
+      {
+        "bytes": 11634,
+        "package": "/Engine/EngineMaterials/DefaultNormal_Uncompressed",
+        "sha256": "f220778b1a9c7511486aea0aab9c40cbb2c2725784410f43c74955fc4be72531"
+      },
+      {
+        "bytes": 10891,
+        "package": "/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient",
+        "sha256": "2b2511ef16622a88c15292668f91d126c31df0d3b20a9fdad5d2f30097618c37"
+      },
+      {
+        "bytes": 14954,
+        "package": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast",
+        "sha256": "6b582665d7b8f420bb892d5957f3f0ba5ed2aecc6e0183718ce551b15265a591"
+      },
+      {
+        "bytes": 49217,
+        "package": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal",
+        "sha256": "3c59fc4c7f2ce54f81cbf1778a05c608339e0099958075c9d801add7b5dc14a9"
+      },
+      {
+        "bytes": 31651,
+        "package": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+        "sha256": "a0bd3a9d3762e4e7b3e70446f1bbd1cfbd6df37e25ec6e4f63d2cef5521f6c1a"
+      },
+      {
+        "bytes": 16023,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/Math/CreateThirdOrthogonalVector",
+        "sha256": "d2818fb2f1ee1df9e474a51688c13569aa80dadde67b371015c4a85b539a5624"
+      },
+      {
+        "bytes": 16564,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/Math/Transform3x3Matrix",
+        "sha256": "549ec9bed6b26413f535e1ba096b81d24ce754eab34440ea80e2cbfc8d14134e"
+      },
+      {
+        "bytes": 13254,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/SafeNormalize",
+        "sha256": "a42108b4959b5d30250555283beb596f1ee21208ab36d779b736e76a7d1e4cf3"
+      },
+      {
+        "bytes": 8272,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components",
+        "sha256": "972009533740f4f4b74b9ffc323f95fdb787e16a827e9cfcdd2cdb1d6afadadb"
+      },
+      {
+        "bytes": 9070,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat3Components",
+        "sha256": "ac57e83ad42c05d5388f4aacdac275b895d3f2fa75d7b0567e2c9172e6dc8228"
+      },
+      {
+        "bytes": 8623,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3",
+        "sha256": "2a6545af56b7c8372148b6676cf6143354ff61a2d53f6633ff8ff30b4bd6b23f"
+      },
+      {
+        "bytes": 72016,
+        "package": "/Engine/Functions/Engine_MaterialFunctions02/WorldAlignedNormals_HighQuality",
+        "sha256": "dd16f933b813875bf765a869e91718dd594296c995eaa7db5cc837927c14a72b"
+      },
+      {
+        "bytes": 2817,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge.uasset",
+        "sha256": "2288287d24e2f53e7141293d17d02221f408fd71b0785e17775812266f3a3032"
+      },
+      {
+        "bytes": 28079,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge.uasset",
+        "sha256": "76a8599318c57bc5913a508c9e2356362083494fa7c34a8c52e7f9891c5b46ca"
+      },
+      {
+        "bytes": 2625058,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor.uasset",
+        "sha256": "11be1a7e7b6535bb5fdac05b28b41ab1cb66fe7372ac9cd4c04cc3d14a2b546b"
+      },
+      {
+        "bytes": 3112833,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks.uasset",
+        "sha256": "9f054304f96b96d9f7e4e6e0ed8330894d601396f4282c8a9b5ed7546b7f6d30"
+      },
+      {
+        "bytes": 8061263,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX.uasset",
+        "sha256": "f43c80138678b1316189fe6ae12b6cbe61fc95053c6127ca7f86617dcceb63d1"
+      },
+      {
+        "bytes": 1570691,
+        "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM",
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM.uasset",
+        "sha256": "d693db38cddf21f1bfd84196445387c00e2f921d5c076f11aae2ee58c732378d"
+      },
+      {
+        "kind": "native_script_module",
+        "package": "/Script/InterchangeEngine"
+      },
+      {
+        "kind": "native_script_module",
+        "package": "/Script/NavigationSystem"
+      }
+    ],
+    "forge_import": {
+      "assets": {
+        "instance": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge.MI_MaterialForge",
+        "master": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge.M_MaterialForge",
+        "textures": {
+          "BaseColor": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor.T_MF_BaseColor",
+          "DetailMasks": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks.T_MF_DetailMasks",
+          "Normal_DX": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX.T_MF_NormalDX",
+          "ORM": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM.T_MF_ORM"
+        }
+      },
+      "family": "regional_limestone",
+      "geometry_changed": false,
+      "graph_sha256": "d134fc13d2f519f86ba020be7496bc7db1f562ce9aba4cdb2d222070fb3050c4",
+      "landscape_mutated": false,
+      "local_mask_channels": {
+        "B": "mineral_variation",
+        "G": "pores_pits",
+        "R": "fractures"
+      },
+      "normal_convention": "DirectX",
+      "saved": false,
+      "semantic_owner": "PCG/PCGEx",
+      "status": "IMPORTED_UE_REVIEW_PENDING",
+      "tile_metres": 4.0,
+      "variant": "base",
+      "world_semantics_generated": false
+    },
+    "issue": 365,
+    "native_binding_dependency_packages": [
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge",
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge",
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor",
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks",
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX",
+      "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM"
+    ],
+    "performance_pass": false,
+    "placement": false,
+    "qualified_assets": [],
+    "readback": {
+      "component_checked": false,
+      "derived_mesh": "/Game/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.SM_Boulder_ForgeDiagnostic",
+      "material": {
+        "TileSizeCm": 400.0,
+        "displacement_connected": null,
+        "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
+        "instance": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge.MI_MaterialForge",
+        "max_displacement_world_m": null,
+        "nanite_tessellation_enabled": false,
+        "normal_space_readback": {
+          "function_interior_branch_semantics": "NOT_VERIFIED",
+          "function_package_identity": "BOUND_BY_SAVED_DIRECT_DEPENDENCIES",
+          "master_tangent_space_normal": true,
+          "world_aligned_normal_world_space_input": false
+        },
+        "parent": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge.M_MaterialForge",
+        "projection": "native_world_aligned_4m",
+        "protected_constant_and_displacement_readback": "UNAVAILABLE",
+        "rock_appearance": {
+          "physical_tile_cm": 400.0,
+          "recipe": "LEGACY_BASELINE"
+        },
+        "shader_gpu_compilation_verified": false,
+        "source_audited_geometry_readback": {
+          "basis": "UE5.8.2 WPO fallback and tessellation compiler guard with loaded master/instance readback; not GPU parity or all-deformer proof",
+          "displacement_connected": null,
+          "displacement_default_scalar": 0.5,
+          "displacement_root_readback": "UNAVAILABLE_PYTHON_ENUM",
+          "instance_tessellation_override": false,
+          "max_displacement_world_m": 0.0,
+          "nanite_tessellation_enabled": false,
+          "status": "SOURCE_AUDITED_ZERO_WPO_TESSELLATION_DISPLACEMENT_READBACK",
+          "use_material_attributes": false,
+          "wpo_default_world_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "world_aligned_functions": [
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal",
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+          "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture"
+        ],
+        "wpo_connected": false
+      },
+      "performance_pass": false,
+      "placement": false,
+      "qualification_status": "PENDING",
+      "status": "ISOLATED_NATIVE_MATERIAL_BINDING_READBACK",
+      "terrain_contact": "NOT_RUN",
+      "visual_accepted": false
+    },
+    "saved_packages": [
+      {
+        "bytes": 2625058,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_BaseColor.uasset",
+        "sha256": "11be1a7e7b6535bb5fdac05b28b41ab1cb66fe7372ac9cd4c04cc3d14a2b546b"
+      },
+      {
+        "bytes": 8061263,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_NormalDX.uasset",
+        "sha256": "f43c80138678b1316189fe6ae12b6cbe61fc95053c6127ca7f86617dcceb63d1"
+      },
+      {
+        "bytes": 1570691,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_ORM.uasset",
+        "sha256": "d693db38cddf21f1bfd84196445387c00e2f921d5c076f11aae2ee58c732378d"
+      },
+      {
+        "bytes": 3112833,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/T_MF_DetailMasks.uasset",
+        "sha256": "9f054304f96b96d9f7e4e6e0ed8330894d601396f4282c8a9b5ed7546b7f6d30"
+      },
+      {
+        "bytes": 28079,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/M_MaterialForge.uasset",
+        "sha256": "76a8599318c57bc5913a508c9e2356362083494fa7c34a8c52e7f9891c5b46ca"
+      },
+      {
+        "bytes": 2817,
+        "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/bdea67dab86d/MI_MaterialForge.uasset",
+        "sha256": "2288287d24e2f53e7141293d17d02221f408fd71b0785e17775812266f3a3032"
+      },
+      {
+        "bytes": 6321345,
+        "path": "Content/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.uasset",
+        "sha256": "9377a2c0066a02d0c40e162df76997facd020eb9decb9edd77778c40e5ca105e"
+      }
+    ],
+    "schema_version": 1,
+    "slot_count": 1,
+    "source_material": {
+      "family": "regional_limestone",
+      "files": {
+        "export/YACS_Material_BaseColor.png": "a397b418d316763afcb4fd0b8a80670bd9fad3080b8495b7e8259b6fb8303bb0",
+        "export/YACS_Material_DetailMasks.png": "40bc6bf1d71bf5fcffccf457f9afad1e6f3a52da3ad9ef768c81e4d58e9df7fc",
+        "export/YACS_Material_Height.exr": "13df224ee533162ae91ca7ca11504dc242bb09355928f0ebd16571de18d96c19",
+        "export/YACS_Material_Normal_DX.png": "90c78d7cc53a02a6ca2e052643712b7065b7b05e9300e9dc493263786183a034",
+        "export/YACS_Material_ORM.png": "99ed7cada4a03578495fe9f179fadcb7f7d7df7bea578c49b09ff0b64284d032",
+        "provenance.json": "e05fc44a876959b0692d4bd3faf3c49e70ccaa4ed74d9b88a674a7e104a8cdf9",
+        "validation.json": "2da21368e9dd52a0528cfcf3926fa3f6464a287913186f660c13b44f8cb629fa"
+      },
+      "graph_sha256": "d134fc13d2f519f86ba020be7496bc7db1f562ce9aba4cdb2d222070fb3050c4",
+      "height_imported_or_displaced": false,
+      "tile_metres": 4,
+      "variant": "base"
+    },
+    "source_mesh": {
+      "material_slots": [
+        "/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial"
+      ],
+      "package": {
+        "bytes": 6321181,
+        "path": "Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.uasset",
+        "sha256": "f92b34bd1bd7a0e2b5a8060468d5d04eea763b2ab150fbbcad7371e14c964e91"
+      }
+    },
+    "status": "ISOLATED_MATERIAL_BINDING_SAVED_RENDER_PENDING",
+    "terrain_contact": "NOT_RUN",
+    "visual_accepted": false
+  },
+  "code_sha": "39815d33190fe0fce10727e35d196081e6fc8d1a",
+  "issue": 365,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "schema_version": 1,
+  "status": "MATERIAL_BINDING_SAVED",
+  "terrain_contact": "NOT_RUN"
+}

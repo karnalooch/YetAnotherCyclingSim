@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — Materiały i wygląd"
+  short_description: "Materiały PBR, IDMap i weryfikacja wyglądu świata"
+  default_prompt: "Użyj $yacs-materials-visual, aby wykonać zadanie YACS na podstawie aktualnych źródeł i zweryfikować wynik."

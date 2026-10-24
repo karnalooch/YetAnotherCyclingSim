@@ -55,6 +55,26 @@ URLs and checksums into an ignored `download-index.json` before import.
 CC0 does not require attribution, but YACS keeps this notice and source metadata
 for provenance and reproducibility.
 
+The 2026-10-21 Lesson07 ready-material comparison separately includes unchanged
+1K Diffuse source samples of `rock_01` and `rock_3` by Rob Tuytel, and
+`gray_rocks` and `seaside_rock` by Dimitrios Savva, all supplied by Poly Haven
+under CC0-1.0. Exact download URLs, hashes and metadata are retained in
+[`docs/assets/lesson07-ready-materials-20261021/acquisition.json`](docs/assets/lesson07-ready-materials-20261021/acquisition.json).
+They are review samples, not accepted production limestone. No Poly Haven
+website example render or Fab source package is redistributed by this comparison.
+
+The subsequent Lesson07 surface repair acquired complete 2K Diffuse, DirectX
+Normal, Roughness, AO and Displacement sets for `dark_rock_02` by Amal Kumar,
+and `rock_boulder_dry` by Dimitrios Savva (photography) and Rico Cilliers
+(processing), under CC0-1.0. Source files remain outside Git. Exact official
+URLs, source dimensions, bit depths and SHA-256 hashes are retained in
+[`docs/assets/lesson07-surface-repair-20261021/provenance.json`](docs/assets/lesson07-surface-repair-20261021/provenance.json).
+The dark candidate's derived albedo removes chroma while preserving linear
+luminance; its normal and scalar maps come from the same source family.
+The provider does not authenticate either scan as limestone. Acquisition and
+offline preparation do not establish native import or visual acceptance; see
+the [repair evidence](docs/assets/lesson07-surface-repair-20261021/README.md).
+
 ## TINITALY 1.1 terrain data
 
 Dataset: TINITALY 1.1  
@@ -254,4 +274,9 @@ municipal payload is not redistributed in Git. Native Base_DTM/CNIG derivatives
 retain IGN attribution; SIOSE retains IGN-SITIBSA-GOIB attribution; Catastro
 mapped-footprint derivatives retain INSPIRE transformed-data terms. Receipts
 pin these local candidates without redistributing original source geometry.
+
+
+## SideFX Houdini Engine for Unreal 22.0.466
+
+Local editor plugin from the official installed Houdini distribution. Copyright (c) 2021 Side Effects Software Inc. All rights reserved. Complete copyright, redistribution conditions and disclaimer are retained in Plugins/Runtime/HoudiniEngine/LICENSE.md. Houdini runtime remains separately installed and licensed.
 

@@ -1,0 +1,317 @@
+{
+  "input": {
+    "bytes": 508,
+    "sha256": "acc02e351a2a9f8a333fe2b8d2b5e6181df33c54ea31dce6160a462b3e946a5b"
+  },
+  "map_saved": false,
+  "placement": false,
+  "readback": {
+    "intent": "preview",
+    "native_readback": {
+      "active_site": "W0067_R03",
+      "atomic_native_geometry_guarantee": false,
+      "cases": [
+        {
+          "asset_id": "namaqualand_boulder_06_01",
+          "decision": {
+            "continuous_support_verified": false,
+            "convergence_semantics": "NUMERICAL_SAMPLE_STABILITY_NOT_DTM_ACCURACY_OR_CONTINUOUS_PROOF",
+            "full_qualification": false,
+            "metrics": {
+              "embedding_delta_cm": 0.042075232850038446,
+              "embedding_fraction": 0.15276926858315493,
+              "exposed_height_fraction": 0.9165771072283608,
+              "exposed_ray_fraction": 1.0,
+              "root_delta_cm": 0.0,
+              "valid_ground_fraction": 1.0
+            },
+            "placement": false,
+            "policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2",
+            "proof_authenticity": "NOT_VERIFIED",
+            "reasons": [],
+            "status": "PASS_SAMPLED_CONTACT_ONLY"
+          },
+          "ground_exclusion_control": "PASS",
+          "measurement": {
+            "coverage_status": "COMPLETE_SAMPLED_MESH_FOOTPRINT",
+            "fit": {
+              "continuous_support_verified": false,
+              "exposed_count": 12454,
+              "exposure_max_cm": 53.610565072053404,
+              "exposure_mean_cm": 42.00995908094305,
+              "exposure_min_cm": 14.889716688572264,
+              "max_penetration_cm": 8.935469530930277,
+              "max_positive_bottom_gap_cm": 0.0,
+              "penetrating_count": 12428,
+              "placement": false,
+              "required_embedding_cm": 8.935469530930277,
+              "root_nonpenetrating_cm": 69153.60940075398,
+              "root_zero_sampled_air_cm": 69144.67393122305,
+              "sample_count": 12454,
+              "status": "SAMPLED_VERTICAL_FIT_DIAGNOSTIC_ONLY"
+            },
+            "ground_class": "LandscapeHeightfieldCollisionComponent",
+            "height_cm": 58.489967346191406,
+            "max_local_slope_deg": 8.282856189873891,
+            "refinement": {
+              "coarse_embedding_cm": 8.893394298080239,
+              "coarse_grid": 65,
+              "coarse_root_cm": 69144.67393122305,
+              "fine_embedding_cm": 8.935469530930277,
+              "fine_grid": 129,
+              "fine_root_cm": 69144.67393122305
+            },
+            "sample_count": 12454,
+            "tilt_deg": 0.0,
+            "uniform_scale": 1.0,
+            "valid_ground_count": 12454,
+            "yaw_deg": 0.0
+          },
+          "site": "W0067_R01"
+        },
+        {
+          "asset_id": "namaqualand_boulder_05_01",
+          "decision": {
+            "continuous_support_verified": false,
+            "convergence_semantics": "NUMERICAL_SAMPLE_STABILITY_NOT_DTM_ACCURACY_OR_CONTINUOUS_PROOF",
+            "full_qualification": false,
+            "metrics": {
+              "embedding_delta_cm": 0.03905138705158606,
+              "embedding_fraction": 0.22684731812939055,
+              "exposed_height_fraction": 0.8349077732039681,
+              "exposed_ray_fraction": 1.0,
+              "root_delta_cm": 0.03905138705158606,
+              "valid_ground_fraction": 1.0
+            },
+            "placement": false,
+            "policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2",
+            "proof_authenticity": "NOT_VERIFIED",
+            "reasons": [
+              "EXCESSIVE_LOCAL_SLOPE",
+              "EXCESSIVE_EMBEDDING"
+            ],
+            "status": "REJECTED"
+          },
+          "ground_exclusion_control": "PASS",
+          "measurement": {
+            "coverage_status": "COMPLETE_SAMPLED_MESH_FOOTPRINT",
+            "fit": {
+              "continuous_support_verified": false,
+              "exposed_count": 11580,
+              "exposure_max_cm": 40.076729239895485,
+              "exposure_mean_cm": 31.960444860596102,
+              "exposure_min_cm": 12.097217048639806,
+              "max_penetration_cm": 10.888985393656185,
+              "max_positive_bottom_gap_cm": 0.0,
+              "penetrating_count": 11579,
+              "placement": false,
+              "required_embedding_cm": 10.888985393656185,
+              "root_nonpenetrating_cm": 69137.78969069656,
+              "root_zero_sampled_air_cm": 69126.9007053029,
+              "sample_count": 11580,
+              "status": "SAMPLED_VERTICAL_FIT_DIAGNOSTIC_ONLY"
+            },
+            "ground_class": "LandscapeHeightfieldCollisionComponent",
+            "height_cm": 48.00138473510742,
+            "max_local_slope_deg": 11.989487153316865,
+            "refinement": {
+              "coarse_embedding_cm": 10.849934006604599,
+              "coarse_grid": 65,
+              "coarse_root_cm": 69126.93975668996,
+              "fine_embedding_cm": 10.888985393656185,
+              "fine_grid": 129,
+              "fine_root_cm": 69126.9007053029
+            },
+            "sample_count": 11580,
+            "tilt_deg": 0.0,
+            "uniform_scale": 1.0,
+            "valid_ground_count": 11580,
+            "yaw_deg": 0.0
+          },
+          "site": "W0067_R02"
+        },
+        {
+          "asset_id": "namaqualand_boulder_06_01",
+          "decision": {
+            "continuous_support_verified": false,
+            "convergence_semantics": "NUMERICAL_SAMPLE_STABILITY_NOT_DTM_ACCURACY_OR_CONTINUOUS_PROOF",
+            "full_qualification": false,
+            "metrics": {
+              "embedding_delta_cm": 0.0211957940045977,
+              "embedding_fraction": 0.10434203827263845,
+              "exposed_height_fraction": 0.9214684345033151,
+              "exposed_ray_fraction": 1.0,
+              "root_delta_cm": 0.0211957940045977,
+              "valid_ground_fraction": 1.0
+            },
+            "placement": false,
+            "policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2",
+            "proof_authenticity": "NOT_VERIFIED",
+            "reasons": [],
+            "status": "PASS_SAMPLED_CONTACT_ONLY"
+          },
+          "ground_exclusion_control": "PASS",
+          "measurement": {
+            "coverage_status": "COMPLETE_SAMPLED_MESH_FOOTPRINT",
+            "fit": {
+              "continuous_support_verified": false,
+              "exposed_count": 12454,
+              "exposure_max_cm": 53.896658644645015,
+              "exposure_mean_cm": 43.59458835184761,
+              "exposure_min_cm": 13.44831934690552,
+              "max_penetration_cm": 6.102962411401677,
+              "max_positive_bottom_gap_cm": 0.0,
+              "penetrating_count": 12453,
+              "placement": false,
+              "required_embedding_cm": 6.102962411401677,
+              "root_nonpenetrating_cm": 69107.81249603558,
+              "root_zero_sampled_air_cm": 69101.70953362418,
+              "sample_count": 12454,
+              "status": "SAMPLED_VERTICAL_FIT_DIAGNOSTIC_ONLY"
+            },
+            "ground_class": "LandscapeHeightfieldCollisionComponent",
+            "height_cm": 58.489967346191406,
+            "max_local_slope_deg": 5.580431717070897,
+            "refinement": {
+              "coarse_embedding_cm": 6.081766617397079,
+              "coarse_grid": 65,
+              "coarse_root_cm": 69101.73072941818,
+              "fine_embedding_cm": 6.102962411401677,
+              "fine_grid": 129,
+              "fine_root_cm": 69101.70953362418
+            },
+            "sample_count": 12454,
+            "tilt_deg": 0.0,
+            "uniform_scale": 1.0,
+            "valid_ground_count": 12454,
+            "yaw_deg": 0.0
+          },
+          "site": "W0067_R03"
+        }
+      ],
+      "continuous_support_verified": false,
+      "current_grid": null,
+      "current_native_road_exclusions": {
+        "W0067_R01": {
+          "clearance_cm": 50.0,
+          "half_extent_cm": 122.87660274856968,
+          "method": "ALL559_NATIVE_MESHES_WORLD_XY_TRIANGLE_SQUARE_SAT",
+          "production_domain_admitted": false,
+          "status": "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+        },
+        "W0067_R02": {
+          "clearance_cm": 50.0,
+          "half_extent_cm": 130.69398475575653,
+          "method": "ALL559_NATIVE_MESHES_WORLD_XY_TRIANGLE_SQUARE_SAT",
+          "production_domain_admitted": false,
+          "status": "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+        },
+        "W0067_R03": {
+          "clearance_cm": 50.0,
+          "half_extent_cm": 122.87660274856968,
+          "method": "ALL559_NATIVE_MESHES_WORLD_XY_TRIANGLE_SQUARE_SAT",
+          "production_domain_admitted": false,
+          "status": "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+        }
+      },
+      "footprint_exclusions": {
+        "W0067_R01": {
+          "clearance_cm": 50,
+          "clearance_lower_bound_cm": 318.198037147522,
+          "radius_cm": 72.87660274856968,
+          "regional_footprint": {
+            "edge_clearance_cm": 77.12339725143032,
+            "radius_cm": 72.87660274856968,
+            "status": "PASS_BOUNDED_REGIONAL_FOOTPRINT_ONLY",
+            "surface_id": "window0067-landscape-v1"
+          },
+          "regional_rock_domain_admitted": false,
+          "source_cell": [
+            2329,
+            2260
+          ],
+          "status": "PASS_AUTHENTICATED_FULL_RADIUS_EXCLUSIONS_ONLY"
+        },
+        "W0067_R02": {
+          "clearance_cm": 50,
+          "clearance_lower_bound_cm": 170.7999348640442,
+          "radius_cm": 80.69398475575653,
+          "regional_footprint": {
+            "edge_clearance_cm": 69.30601524424347,
+            "radius_cm": 80.69398475575653,
+            "status": "PASS_BOUNDED_REGIONAL_FOOTPRINT_ONLY",
+            "surface_id": "window0067-landscape-v1"
+          },
+          "regional_rock_domain_admitted": false,
+          "source_cell": [
+            2327,
+            2266
+          ],
+          "status": "PASS_AUTHENTICATED_FULL_RADIUS_EXCLUSIONS_ONLY"
+        },
+        "W0067_R03": {
+          "clearance_cm": 50,
+          "clearance_lower_bound_cm": 164.64464664459229,
+          "radius_cm": 72.87660274856968,
+          "regional_footprint": {
+            "edge_clearance_cm": 127.12339725143032,
+            "radius_cm": 72.87660274856968,
+            "status": "PASS_BOUNDED_REGIONAL_FOOTPRINT_ONLY",
+            "surface_id": "window0067-landscape-v1"
+          },
+          "regional_rock_domain_admitted": false,
+          "source_cell": [
+            2335,
+            2267
+          ],
+          "status": "PASS_AUTHENTICATED_FULL_RADIUS_EXCLUSIONS_ONLY"
+        }
+      },
+      "full_qualification": false,
+      "manifest_sha256": "fc49334f9ceb77ed963d882524073c1c512a8f875569c5b7213b3673f20304e1",
+      "map_saved": false,
+      "maximum_grid_positions": 62598,
+      "memory_imports": [
+        "namaqualand_boulder_05_01",
+        "namaqualand_boulder_06_01"
+      ],
+      "mesh_edit_guard_bound_meshes": 559,
+      "mesh_edit_guard_cleanup_complete": true,
+      "mutation_guard_scope": "MeshModifiedBPEvent plus synchronous final owner/transform metadata; direct/deferred/realtime native bypass not proven observable; exclusive quiescent Editor required",
+      "native_geometry_actor_count": 559,
+      "native_geometry_snapshot_sha256": "dc50d362959bccdcb52f1d9d2af33f3071b8ebf12dab6f8368f6647e524df865",
+      "native_geometry_triangle_ids_per_scan": 2911650,
+      "native_geometry_triangle_ids_read": 3524897,
+      "native_guard_bindings_processed": 559,
+      "native_mesh_dirty": false,
+      "native_mesh_dirty_owners": [],
+      "operation_status": "CONTACT_JOB_CANCELLED_ROLLED_BACK",
+      "performance_pass": false,
+      "phase": "VERIFY_CURRENT_NATIVE_GEOMETRY",
+      "preview_placed": 0,
+      "production_admitted": false,
+      "qualified_assets": [],
+      "request_id": "4240d06c31ee4b969cf2",
+      "rollback_complete": true,
+      "sampled_positions": 62598,
+      "status": "APPLIED_PREVIEW",
+      "tick_native_geometry_budget": 1024,
+      "tick_position_budget": 64,
+      "tick_unregistered": true,
+      "tick_wall_budget_ms": 8,
+      "wall_budget_semantics": "BEST_EFFORT_SINGLE_NATIVE_CALL_CANNOT_BE_PREEMPTED"
+    },
+    "performance_pass": false,
+    "placement": false,
+    "preexisting_assets": {},
+    "recipe": "rock_contact_scatter",
+    "recipe_revision": "c7f3d5228f9858d79f9d950d2fae831f5769ef71",
+    "recipe_source_sha256": "18943c260ed4096575ad4b2abdf4800f9d6c95219d2378fdea0b145a6e43dc98",
+    "status": "APPLIED_PREVIEW",
+    "undo_backup": {}
+  },
+  "recorded_utc": "2026-10-13T16:09:11.442+00:00",
+  "request_id": "d3a1ca3026034a6d85bc",
+  "sequence": 58,
+  "status": "COMPLETED_VISUAL_ONLY"
+}

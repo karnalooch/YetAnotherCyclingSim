@@ -1,0 +1,214 @@
+{
+  "status": "PARTIAL_PREFIX_SOURCE_TUPLES_AND_REFERENCES_MATCH_NEW_TERRAIN_SCALE_GUID_DIFF",
+  "source_run": 39672674724,
+  "source_attempt": 1,
+  "source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+  "capture_artifact": {
+    "file": "artifact.zip",
+    "size_bytes": 63720,
+    "sha256": "111a7a381e0e6fa5cbc508dcf5d2c13717d38dd7e22c82bf0ea801357fd6c8b5"
+  },
+  "capture_manifest": {
+    "file": "candidate-assets.json",
+    "size_bytes": 935,
+    "sha256": "5642d6d027e331661aea633582c1d279d9fc6a6bad20a892d689331dc38a1fc7"
+  },
+  "candidate": {
+    "file": "MI_Pegasus_Source_YACS.uasset",
+    "size_bytes": 39927,
+    "sha256": "ca3ac78c351850a369fbed7e9bb77d7deeaaa2f9cf08ed17922b6dca81b1e38e"
+  },
+  "backup": {
+    "file": "MI_BeforePegasusSource_20261021.uasset",
+    "size_bytes": 39836,
+    "sha256": "f16485ebabe662fc26a3c9548e2c77e737df48b599f7680694c48acb6cebf70a"
+  },
+  "source_original_mi_sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7",
+  "current_persisted_baseline_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+  "frozen_pair_verdict": {
+    "file": "preparation-39672674724-1-validation/validation.json",
+    "sha256": "59c6b3ad62c0ff92c33db3f51c24678e0c7ea9eb045e18ac628d007734baefcd",
+    "status": "OFFLINE_PARAMETER_CONTRACT_UNVERIFIED",
+    "unchanged": true
+  },
+  "backup_parameter_and_nonparameter_contract_matches": true,
+  "partial_prefix": {
+    "decoded_json": {
+      "file": "candidate-parameter-prefix.json",
+      "size_bytes": 430579,
+      "sha256": "11ebcd0b94a63fc6c71c9a8b82d7c4dad1dc2bfd2a61059d720b6bbdf90ec1e8"
+    },
+    "serialized_prefix": {
+      "file": "serialized-property-prefix.bin",
+      "size_bytes": 16184,
+      "sha256": "b4d7dcd8ca31039c3209e367c9bd1719252cda0621bf74d120d38a1cd706f0d3"
+    },
+    "unique_original_file_offset": 21227,
+    "root_export_start": 21226,
+    "root_export_size_bytes": 17729,
+    "all_11_completed_properties_byte_identical": true,
+    "properties": [
+      {
+        "name": "ParameterStateId",
+        "serialized_offset": 0,
+        "serialized_bytes": 65,
+        "original_file_offset": 21227,
+        "byte_identical": true,
+        "sha256": "8be906ab9fb5726002692da003b27732fc02bce9a40bac8753bf420ebf5abfe6"
+      },
+      {
+        "name": "Parent",
+        "serialized_offset": 65,
+        "serialized_bytes": 29,
+        "original_file_offset": 21292,
+        "byte_identical": true,
+        "sha256": "c4640edc6927569ea5d2f95b8710321b7bb7471335a22478c5413d46f380e97d"
+      },
+      {
+        "name": "bHasStaticPermutationResource",
+        "serialized_offset": 94,
+        "serialized_bytes": 25,
+        "original_file_offset": 21321,
+        "byte_identical": true,
+        "sha256": "2db8a3cf6b667dda026a4f07e43aaad2882344b4fcb9107914ba0cc702c7f441"
+      },
+      {
+        "name": "ScalarParameterValues",
+        "serialized_offset": 119,
+        "serialized_bytes": 12605,
+        "original_file_offset": 21346,
+        "byte_identical": true,
+        "sha256": "3eaddbf7e3131376cd91a5811d0d5ba7bf4da7f038e2fbbb4fc61e32c18781f1"
+      },
+      {
+        "name": "VectorParameterValues",
+        "serialized_offset": 12724,
+        "serialized_bytes": 379,
+        "original_file_offset": 33951,
+        "byte_identical": true,
+        "sha256": "44672382815387304885314aeb8885d8a056e29f8822eea9cbb065e6df0b3098"
+      },
+      {
+        "name": "TextureParameterValues",
+        "serialized_offset": 13103,
+        "serialized_bytes": 1455,
+        "original_file_offset": 34330,
+        "byte_identical": true,
+        "sha256": "ec57e1f7a154ef2e20905482b1b61b7b5a378cc831ecba95f1ee4812af47a88b"
+      },
+      {
+        "name": "BasePropertyOverrides",
+        "serialized_offset": 14558,
+        "serialized_bytes": 172,
+        "original_file_offset": 35785,
+        "byte_identical": true,
+        "sha256": "be161a0545fdb3ad02b2b220043cd92f75ba18dba02456b30c6fe528beacbdd4"
+      },
+      {
+        "name": "StaticParametersRuntime",
+        "serialized_offset": 14730,
+        "serialized_bytes": 1219,
+        "original_file_offset": 35957,
+        "byte_identical": true,
+        "sha256": "a2608c5f272fd16eb379c2f2eeba0a2653e071fc0c81ae7ee2a7260f81ab4e0f"
+      },
+      {
+        "name": "ReferencedTextureGuids",
+        "serialized_offset": 15949,
+        "serialized_bytes": 177,
+        "original_file_offset": 37176,
+        "byte_identical": true,
+        "sha256": "72a8404e97b8f3847103b3c1e9d065634dc841ca67575ae74eccdda6a561d868"
+      },
+      {
+        "name": "EditorOnlyData",
+        "serialized_offset": 16126,
+        "serialized_bytes": 29,
+        "original_file_offset": 37353,
+        "byte_identical": true,
+        "sha256": "49718577f23529756a8f1bced01862bef5f11232ae87a78b5d1b9e6eaebd4be3"
+      },
+      {
+        "name": "TextureStreamingDataVersion",
+        "serialized_offset": 16155,
+        "serialized_bytes": 29,
+        "original_file_offset": 37382,
+        "byte_identical": true,
+        "sha256": "e633078c8e8fc1395e3b2c739dee90727924326fca688b30ea1cd71d8d95b000"
+      }
+    ]
+  },
+  "actual_tuple_counts": {
+    "scalar": 30,
+    "vector": 1,
+    "texture": 5,
+    "switch": 3
+  },
+  "all_29_original_scalar_expression_guids_preserved": true,
+  "all_8_original_layer_blend_scalar_tuples_preserved": true,
+  "runtime_layers_blends_and_static_switches_preserved": true,
+  "five_zip_global_values": {
+    "Global Brightness": {
+      "value": 0.5,
+      "expression_guid": "{66EC90C2-4AF0-2BAD-7864-C89BEBEE4FE9}"
+    },
+    "Global Colour Strength": {
+      "value": 0.5,
+      "expression_guid": "{F9DB5509-40C8-4611-89C7-32B5940806AD}"
+    },
+    "Global Normal Flatten": {
+      "value": 0.0,
+      "expression_guid": "{BC33238D-4506-0D92-6FCE-2599C032B63E}"
+    },
+    "Global Saturation": {
+      "value": 0.5,
+      "expression_guid": "{4B5775F7-4E42-933E-B7BD-7A96E6D0E086}"
+    },
+    "Global Specular Scale": {
+      "value": 1.0,
+      "expression_guid": "{422D04CC-4A3F-0673-0B85-3AB80A45C709}"
+    }
+  },
+  "zip_profile_not_final_video": {
+    "Detail Brightness": 1.0,
+    "UV Distort": 4.0,
+    "Specular Falloff Exponent": 0.5
+  },
+  "candidate_parent_geo_and_five_texture_values_match": true,
+  "strict_expected_parameter_metadata_differences": [
+    {
+      "path": "/scalar/[\"Terrain Scale\",\"GlobalParameter\",-1]/expression_guid",
+      "expected": "{B3456312-4894-2757-9D5C-FF8EDB3BFA78}",
+      "actual": "{00000000-0000-0000-0000-000000000000}"
+    }
+  ],
+  "other_serialized_property_differences_from_source": [
+    {
+      "path": "/base_property_overrides/BlendMode",
+      "expected": null,
+      "actual": "BLEND_Masked",
+      "missing_or_extra": true
+    },
+    {
+      "path": "/base_property_overrides/UsageFlags",
+      "expected": null,
+      "actual": 4587520,
+      "missing_or_extra": true
+    }
+  ],
+  "scope_notes": [
+    "The new Terrain Scale tuple was absent in the source MI. Its value50,GlobalParameter,index-1 match; captured ExpressionGUID is zero rather than the existing current-MI B345... GUID. This is an observed metadata mismatch, not proof of incorrect runtime evaluation.",
+    "Candidate BasePropertyOverrides adds BlendMode=BLEND_Masked and UsageFlags4587520, equal to current MI values; no explicit bOverrideBlendMode property is decoded. PhysMaterial remains absent like the original source.",
+    "Pinned parser fails later in TextureStreamingData with Unknown property type at37733; this supplementary evidence does not decode or repair that field or prove a complete MIC export roundtrip.",
+    "EditorOnly MaterialLayers/LayerNames/LayerGuids and scalar atlas auxiliary data remain opaque and are excluded. Full-package parse and cache validation are not claimed.",
+    "The frozen pair validator and raw capture remain unchanged. This report records a narrower byte-backed property-prefix observation, not a replacement PASS."
+  ],
+  "native_invoked_by_validator": false,
+  "input_bytes_modified": false,
+  "full_candidate_parse_verified": false,
+  "editor_cache_verified": false,
+  "strict_parameter_contract_matches": false,
+  "technical_pass": false,
+  "visual_acceptance": false,
+  "actor_binding_verified": false
+}

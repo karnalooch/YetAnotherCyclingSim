@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "status": "LOCAL_REUSABLE_ASSET_BUNDLE_ONLY",
+  "native_code_sha": "9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53",
+  "native_stage": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01",
+  "native_save_and_fresh_reload": "FIVE_ACTIONS_CLEAN_EXIT_ZERO",
+  "file_count": 18,
+  "native_asset_count": 12,
+  "rock_mesh_count": 6,
+  "source_fbx_count": 6,
+  "files": [
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s100.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_02_s100.uasset",
+      "bytes": 3235390,
+      "sha256": "49b27d912da217a22a49379a1577ed2aecd8e681b173f5da6d915929eb709e69"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s125.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_02_s125.uasset",
+      "bytes": 3234667,
+      "sha256": "ec4f972bbeedb7d46b9759667c7cc1754bb7edfc0da050b86e22c4cb6874f860"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s75.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_02_s75.uasset",
+      "bytes": 3233256,
+      "sha256": "4fb62fbcf136928ab567d0f16d132b08846128e7a7c4f1bc0f43ebbbda364e96"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s100.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_06_s100.uasset",
+      "bytes": 4077685,
+      "sha256": "694403b99529b6d00a5e943060f1280db9f75e434a91ddbcd7f8ed26b17d1c94"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s125.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_06_s125.uasset",
+      "bytes": 4078988,
+      "sha256": "3247c8016ba9a7547a897bab34b48d9371dfd0200ff2c9741f31dd46e22ba4f6"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s75.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365RockVariants\\SM_namaqualand_boulder_06_s75.uasset",
+      "bytes": 4079707,
+      "sha256": "8471f6454503821531b25af0329fd509b2c420920d7b2fa46c21bf52d6e0c1c7"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_BaseColor.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\T_MF_BaseColor.uasset",
+      "bytes": 2625037,
+      "sha256": "cbf8d7ed0a82d47399a65f82353001859c7ac786a8a55ffab3daea42c55f282e"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_NormalDX.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\T_MF_NormalDX.uasset",
+      "bytes": 8061242,
+      "sha256": "31c9a30f8cc7289ead3eff8e390380d43ca7850033ff95583efa33158ef3479a"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_ORM.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\T_MF_ORM.uasset",
+      "bytes": 1570670,
+      "sha256": "e878774c58a5d445edc570469f4263efc6492876d4db0f5870dae448e1afe8aa"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_DetailMasks.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\T_MF_DetailMasks.uasset",
+      "bytes": 3112812,
+      "sha256": "f44639aabf6eef3bbef73d910389e96a634ee026e3dc5a67dd860bf857b651bf"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/M_MaterialForge.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\M_MaterialForge.uasset",
+      "bytes": 40084,
+      "sha256": "286a61fe763bc39e72c4dcd1cec746d64b4145e4110f504c2c67c056d1fd5290"
+    },
+    {
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.uasset",
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\Content\\Generated\\YACS\\PCG365Qualification\\MaterialForge\\regional_limestone\\base\\05669b651e24\\MI_MaterialForge.uasset",
+      "bytes": 2817,
+      "sha256": "f88209b35edcfd8520ffbbd80ede5a4292949abbb8336973fdd983a0b34380fc"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_02_s75.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s75.fbx",
+      "bytes": 2936748,
+      "sha256": "1514a16a3d1bbced06148d66d7b478c521c7ba79dbdd018075bb5a4dbcbefe9f"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_02_s100.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s100.fbx",
+      "bytes": 2934844,
+      "sha256": "1cf2045bb157b722e743365436f6309c48fa459b1cd6a6f2528b88ae848e5621"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_02_s125.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s125.fbx",
+      "bytes": 2938316,
+      "sha256": "4ef19c5377a7b503f8032a0d80d5d0292514b1b3e7a3e56c0916c11a738e4001"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_06_s75.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s75.fbx",
+      "bytes": 3656892,
+      "sha256": "0598e61b029696e000d79f6f3484502d3aa550e7b35cdb0ed0c172b70c086e71"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_06_s100.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s100.fbx",
+      "bytes": 3658524,
+      "sha256": "d9ebe5fd71ed003cb8cb4d7fbe9e179ee82c793a0f8c1dbf9c1b48b973dd18d0"
+    },
+    {
+      "path": "Sources/namaqualand_boulder_06_s125.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s125.fbx",
+      "bytes": 3658012,
+      "sha256": "992232870bb6b00bf6883c388e4f7b75b5e89921a240b344df0b9a099608890a"
+    }
+  ],
+  "material_recipe": "ROCK_APPEARANCE_V2",
+  "physical_tile_cm": 400,
+  "engine_version": "5.8.2 CL56702186",
+  "catalog_sha256": "7873b26d27a128d8be082e7791896f044b9b7d2e31e3bc2c7da51fc74eafa333",
+  "source_provenance": [
+    "https://polyhaven.com/a/namaqualand_boulder_02",
+    "https://polyhaven.com/a/namaqualand_boulder_06",
+    "https://polyhaven.com/license"
+  ],
+  "license": "CC0-1.0 for scanned geometry; authored YACS Material Forge appearance remains separately identified",
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "terrain_modified": false,
+  "map_saved": false,
+  "bundle_copy_proof": "BYTE_IDENTICAL_COPY; fresh native readback verified in source stage, portable bundle itself not opened as a project",
+  "runtime_collision_qualified": false
+}

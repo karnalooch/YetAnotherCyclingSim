@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_FINAL_GRASS_MASK_RESTORED_SOURCE_REPLAY_NOT_RUN",
+  "owner_direction": "Exact Pegasus configuration and assets, reaffirmed 2026-10-22",
+  "source_commit_before_change": "9105e46fe9dde22e60d2947b65046f6f6bb9e262",
+  "source": {
+    "lesson": "PEG-02-04 Heightfield Materials Workflow",
+    "official_tutorial": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+    "official_player": "https://player.vimeo.com/video/888568278",
+    "caption_bytes": 23661,
+    "caption_sha256": "0a1b906617532bc3b9dc9daefca9cc6a12bf9632e515474de4684730a38c9ed6",
+    "caption_matches_retained_catalog": true,
+    "catalog": "docs/tooling/sidefx/catalog/PEG-02.md",
+    "inspected_cues": [
+      {
+        "start": "00:00:00.615",
+        "end": "00:00:34.595",
+        "observation": "The grass material is added after the previous lesson's material, not as the first colour source."
+      },
+      {
+        "start": "00:03:31.765",
+        "end": "00:03:36.425",
+        "observation": "The earlier rocky material remains visible on cliffs while the new masked grass covers other terrain."
+      },
+      {
+        "start": "00:04:20.575",
+        "end": "00:04:27.765",
+        "observation": "The author disables masking temporarily to inspect grass distortion."
+      },
+      {
+        "start": "00:04:46.985",
+        "end": "00:04:59.655",
+        "observation": "The author re-enables the mask after the preview."
+      }
+    ],
+    "reviewed_frame": {
+      "file": "lesson04-frame-295.000.png",
+      "bytes": 2019252,
+      "sha256": "545b7931798070e1f18c17feccf4e51f8ef160d17f6144b059af98b80320790e",
+      "time_seconds": 295,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "observation": "PE_heightfield_material3 mask checkbox is enabled; height scale is 0; the preceding material2 remains connected upstream. Roughness is default.pic."
+    },
+    "titlebar_hip": "D:/PegasusDemo/Promotional/Landscapes/Main/Landscape_Workflow_03_Detailing.hip",
+    "root_independent_caption_and_frame_review": true
+  },
+  "change": {
+    "source_file": "scripts/houdini/lesson06_unified_pipeline.py",
+    "before_sha256": "867e8986511c89403173d47ccf87f6f966438f394086f7c64d799bb15269e32b",
+    "after_sha256": "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37",
+    "only_ast_change": "stage4a_grass.MAT_GRASS.use_mask:0->1",
+    "function": "stage4a_grass",
+    "node": "MAT_GRASS",
+    "parameter": "use_mask",
+    "before": 0,
+    "after": 1,
+    "all_other_recipe_ast_unchanged": true,
+    "canary_recipe_pin_updated_exactly": true,
+    "strict_recipe_parameter_test_expected_mask": 1,
+    "canary_ab_modes_unchanged": [
+      1,
+      0
+    ],
+    "existing_canary_inputs_still_substitutes": true,
+    "native_canary_run": false
+  },
+  "supersedes": {
+    "evidence": "docs/assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json",
+    "scope": "The proposed use_mask=0 coverage recipe is withdrawn as a reproduction of the author's final grass configuration. Its original HDA-default observation remains true and the old receipt is retained as history.",
+    "original_receipt_overwritten": false
+  },
+  "limitations": [
+    "This restores one verified author setting. The current stage4a still lacks the author's preceding rocky material and still uses substitute inputs.",
+    "No full-original recipe, original asset acquisition, black-RGB cause or global-colour repair is established.",
+    "No Houdini import, HIP load, native canary, cook, cache invalidation, cache overwrite, UE import or material application occurred.",
+    "The source-crop/canary using substitutes remains paused under the owner's exact-source requirement."
+  ],
+  "validation": {
+    "recipe_ast_change_verified": true,
+    "existing_canary_cpu_tests": 10,
+    "existing_canary_cpu_tests_result": "PASS",
+    "native_result": "NOT RUN"
+  },
+  "lesson07_technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

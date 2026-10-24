@@ -1,0 +1,4819 @@
+{
+  "status": "LESSON06_PARTIAL",
+  "native_domains_status": "PASS",
+  "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "delivery": "LOCAL_UNCOMMITTED_CANDIDATE",
+  "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06_Reviewed.hiplc",
+  "hip_sha256": "f0a7738268770c11aa1d0b95038d362e56939e4b3217868fe6f024f2c0db7008",
+  "areas": {
+    "context": {
+      "repair_receipt": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\repair.json",
+      "repair_receipt_sha256": "32a22348e71231d0798d2d5eb0921ebbde498e560380457c1c9020eb488142b0",
+      "fresh_reopen": {
+        "status": "NATIVE_AREA_PASS",
+        "area": "context",
+        "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+        "input_hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06_Reviewed.hiplc",
+        "input_hip_sha256": "f0a7738268770c11aa1d0b95038d362e56939e4b3217868fe6f024f2c0db7008",
+        "hda": [
+          {
+            "original": "C:\\Users\\akarn\\OneDrive\\Dokumenty\\Codex\\2026-10-16\\referenced-chatgpt-conversation-this-is-an\\outputs\\Pegasus_Komplet\\P1_02_Landscape_Workflow\\Materialy\\ProjectFiles_LandscapeWorkflow3\\ProjectFiles_LandscapeWorkflow\\Houdini\\Packages\\PegasusDemo\\otls\\sop_PE_heightield_idmap_layers.hda",
+            "original_sha256": "6cf536de60b0dd03ba34b6d77e77a4e1ab08f2b7fb44eb653bed6b8a335535ba",
+            "loaded": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\lesson06_reviewed\\sop_PE_heightield_idmap_layers.hda",
+            "loaded_sha256": "a64be4b05a2c732c1d8faa6a2578e6486061d59d5abf5e04936f83300d6aceb0",
+            "contents_identical": true
+          },
+          {
+            "original": "C:\\Users\\akarn\\OneDrive\\Dokumenty\\Codex\\2026-10-16\\referenced-chatgpt-conversation-this-is-an\\outputs\\Pegasus_Komplet\\P1_02_Landscape_Workflow\\Materialy\\ProjectFiles_LandscapeWorkflow3\\ProjectFiles_LandscapeWorkflow\\Houdini\\Packages\\PegasusDemo\\otls\\sop_PE_Heightfield_id_to_layer.hda",
+            "original_sha256": "942745e96651194140c2822d31cec3eb29e0591c35d762f7df8950c006cc4f5e",
+            "loaded": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\lesson06_reviewed\\sop_PE_Heightfield_id_to_layer.hda",
+            "loaded_sha256": "9b1b7c592b5cacd12505c894de2f8474fb53717974cadeef807f7459a01581f4",
+            "contents_identical": true
+          }
+        ],
+        "baseline": "D:\\yacs\\work\\lesson05-tail-repair-20261018\\context\\final.bgeo.sc",
+        "baseline_sha256": "b39fb5495bffdb9caed4948278a991ab117f8dde43a45c32377accc2f18e4251",
+        "lattice": {
+          "resolution": [
+            2048,
+            2048,
+            1
+          ],
+          "origin": [
+            -3998.046875,
+            0.0,
+            3998.046875
+          ],
+          "x": [
+            3.90625,
+            0.0,
+            0.0
+          ],
+          "y": [
+            0.0,
+            0.0,
+            -3.90625
+          ]
+        },
+        "masks": {
+          "grass": {
+            "producer": "/obj/SA_CALOBRA/OUT_CONTEXT_MASK_GRASS",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc",
+            "sha256": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754"
+          },
+          "grass 2": {
+            "producer": "/obj/SA_CALOBRA/OUT_CONTEXT_GRASS2_TINT",
+            "source_layer": "ramp_layer",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc",
+            "sha256": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f"
+          },
+          "sand": {
+            "producer": "/obj/SA_CALOBRA/OUT_CONTEXT_MASK_SAND",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc",
+            "sha256": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c"
+          },
+          "cliffs": {
+            "producer": "/obj/SA_CALOBRA/OUT_CONTEXT_MASK_CLIFF",
+            "source_layer": "cliff",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc",
+            "sha256": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94"
+          },
+          "scree": {
+            "producer": "/obj/LESSON05_CONTEXT/OUT_CONTEXT_MASK_SCREE",
+            "source_layer": "scree",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc",
+            "sha256": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b"
+          }
+        },
+        "materials": {
+          "grass": {
+            "code": 0,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 1706907,
+            "decoded_spatial_mismatches": 0,
+            "count": 1751119,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              0,
+              1402,
+              256,
+              256
+            ]
+          },
+          "grass 2": {
+            "code": 64,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 2139739,
+            "decoded_spatial_mismatches": 0,
+            "count": 1084096,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              1792,
+              367,
+              256,
+              256
+            ]
+          },
+          "sand": {
+            "code": 128,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 98712,
+            "decoded_spatial_mismatches": 0,
+            "count": 98707,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              1241,
+              1511,
+              256,
+              256
+            ]
+          },
+          "cliffs": {
+            "code": 191,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 1260259,
+            "decoded_spatial_mismatches": 0,
+            "count": 1259945,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              983,
+              731,
+              256,
+              256
+            ]
+          },
+          "scree": {
+            "code": 255,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 437,
+            "decoded_spatial_mismatches": 0,
+            "count": 437,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              1385,
+              675,
+              256,
+              256
+            ]
+          }
+        },
+        "encoder": {
+          "original_sha256": "9ff14ed0d6e43fe38cde69dd286197f7bd8ed3396de7132042d21d7d8d3a58ac",
+          "contents_identical": true,
+          "adaptation": "Inherited empty-metadata menu guard only"
+        },
+        "native_cook_seconds": 1.2300383999972837,
+        "raw_voxel_threshold_mismatches": 6,
+        "native_sampling_checks": [
+          {
+            "index": 186089,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.29577529430389404,
+              "grass 2": 0.9751397371292114,
+              "sand": 0.0,
+              "cliffs": 0.5000119805335999,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 353730,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.29599106311798096,
+              "grass 2": 0.8190280795097351,
+              "sand": 0.0,
+              "cliffs": 0.5000107884407043,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 513380,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000090599060059,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 1765553,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.99993896484375,
+              "grass 2": 0.5000112056732178,
+              "sand": 0.0,
+              "cliffs": 6.103515625e-05,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2150400,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.002896652789786458,
+              "sand": 0.4999980330467224,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2246958,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.028958022594451904,
+              "grass 2": 0.36609506607055664,
+              "sand": 0.0,
+              "cliffs": 0.500016450881958,
+              "scree": 0.0
+            }
+          }
+        ],
+        "placement_mismatches": 0,
+        "invariants": {
+          "height": "BIT_EXACT",
+          "r": "BIT_EXACT",
+          "g": "BIT_EXACT",
+          "b": "BIT_EXACT",
+          "roughness": "BIT_EXACT",
+          "Alpha": "BIT_EXACT"
+        },
+        "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc",
+        "cache_sha256": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2",
+        "fresh_native_id_matches_cache": true,
+        "mask_source_layers": {
+          "grass": "mask",
+          "grass 2": "ramp_layer",
+          "sand": "mask",
+          "cliffs": "cliff",
+          "scree": "scree"
+        }
+      }
+    },
+    "working": {
+      "repair_receipt": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\repair.json",
+      "repair_receipt_sha256": "b20d22bb786fe9181759c1f2f00d111955841f40a7a2c6711131a45420997474",
+      "fresh_reopen": {
+        "status": "NATIVE_AREA_PASS",
+        "area": "working",
+        "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+        "input_hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06_Reviewed.hiplc",
+        "input_hip_sha256": "f0a7738268770c11aa1d0b95038d362e56939e4b3217868fe6f024f2c0db7008",
+        "hda": [
+          {
+            "original": "C:\\Users\\akarn\\OneDrive\\Dokumenty\\Codex\\2026-10-16\\referenced-chatgpt-conversation-this-is-an\\outputs\\Pegasus_Komplet\\P1_02_Landscape_Workflow\\Materialy\\ProjectFiles_LandscapeWorkflow3\\ProjectFiles_LandscapeWorkflow\\Houdini\\Packages\\PegasusDemo\\otls\\sop_PE_heightield_idmap_layers.hda",
+            "original_sha256": "6cf536de60b0dd03ba34b6d77e77a4e1ab08f2b7fb44eb653bed6b8a335535ba",
+            "loaded": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\lesson06_reviewed\\sop_PE_heightield_idmap_layers.hda",
+            "loaded_sha256": "a64be4b05a2c732c1d8faa6a2578e6486061d59d5abf5e04936f83300d6aceb0",
+            "contents_identical": true
+          },
+          {
+            "original": "C:\\Users\\akarn\\OneDrive\\Dokumenty\\Codex\\2026-10-16\\referenced-chatgpt-conversation-this-is-an\\outputs\\Pegasus_Komplet\\P1_02_Landscape_Workflow\\Materialy\\ProjectFiles_LandscapeWorkflow3\\ProjectFiles_LandscapeWorkflow\\Houdini\\Packages\\PegasusDemo\\otls\\sop_PE_Heightfield_id_to_layer.hda",
+            "original_sha256": "942745e96651194140c2822d31cec3eb29e0591c35d762f7df8950c006cc4f5e",
+            "loaded": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\lesson06_reviewed\\sop_PE_Heightfield_id_to_layer.hda",
+            "loaded_sha256": "9b1b7c592b5cacd12505c894de2f8474fb53717974cadeef807f7459a01581f4",
+            "contents_identical": true
+          }
+        ],
+        "baseline": "D:\\yacs\\work\\lesson05-tail-repair-20261018\\working\\final.bgeo.sc",
+        "baseline_sha256": "e55fcd9c1638853dcf18e0cf9a5fe4cda66dfa047516a8fade2c587c3a2c8d46",
+        "lattice": {
+          "resolution": [
+            7154,
+            9829,
+            1
+          ],
+          "origin": [
+            -1771.25,
+            0.0,
+            3144.25
+          ],
+          "x": [
+            0.5,
+            0.0,
+            0.0
+          ],
+          "y": [
+            0.0,
+            0.0,
+            -0.5
+          ]
+        },
+        "masks": {
+          "grass": {
+            "producer": "/obj/SA_CALOBRA/OUT_WORKING_MASK_GRASS",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc",
+            "sha256": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9"
+          },
+          "grass 2": {
+            "producer": "/obj/SA_CALOBRA/OUT_WORKING_GRASS2_TINT",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc",
+            "sha256": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d"
+          },
+          "sand": {
+            "producer": "/obj/SA_CALOBRA/OUT_WORKING_MASK_SAND",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc",
+            "sha256": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757"
+          },
+          "cliffs": {
+            "producer": "/obj/SA_CALOBRA/OUT_WORKING_MASK_CLIFF",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc",
+            "sha256": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b"
+          },
+          "scree": {
+            "producer": "/obj/LESSON05_WORKING/OUT_WORKING_MASK_SCREE",
+            "source_layer": "mask",
+            "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc",
+            "sha256": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e"
+          }
+        },
+        "materials": {
+          "grass": {
+            "code": 0,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 35695563,
+            "decoded_spatial_mismatches": 0,
+            "count": 23114119,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              2229,
+              6183,
+              256,
+              256
+            ]
+          },
+          "grass 2": {
+            "code": 64,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 37355862,
+            "decoded_spatial_mismatches": 0,
+            "count": 16345709,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              4516,
+              2690,
+              256,
+              256
+            ]
+          },
+          "sand": {
+            "code": 128,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 749104,
+            "decoded_spatial_mismatches": 0,
+            "count": 730512,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              2723,
+              9278,
+              256,
+              256
+            ]
+          },
+          "cliffs": {
+            "code": 191,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 1.0,
+            "source_selected": 30126337,
+            "decoded_spatial_mismatches": 0,
+            "count": 30125723,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              1953,
+              5407,
+              256,
+              256
+            ]
+          },
+          "scree": {
+            "code": 255,
+            "threshold": 0.5,
+            "source_min": 0.0,
+            "source_max": 0.7987728714942932,
+            "source_selected": 603,
+            "decoded_spatial_mismatches": 0,
+            "count": 603,
+            "native_ramp": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "native_isolate": {
+              "errors": [],
+              "warnings": [],
+              "detail_attributes": [
+                "id",
+                "volvis"
+              ]
+            },
+            "detail_window_xy": [
+              6898,
+              5538,
+              256,
+              256
+            ]
+          }
+        },
+        "encoder": {
+          "original_sha256": "9ff14ed0d6e43fe38cde69dd286197f7bd8ed3396de7132042d21d7d8d3a58ac",
+          "contents_identical": true,
+          "adaptation": "Inherited empty-metadata menu guard only"
+        },
+        "native_cook_seconds": 13.990061199998308,
+        "raw_voxel_threshold_mismatches": 380,
+        "native_sampling_checks": [
+          {
+            "index": 192849,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.9999370574951172,
+              "grass 2": 0.6636269092559814,
+              "sand": 0.0,
+              "cliffs": 0.5000180006027222,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 697541,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999967217445374,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 894844,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.999955415725708,
+              "grass 2": 0.9141252636909485,
+              "sand": 0.0,
+              "cliffs": 0.5000065565109253,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 955438,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.999970018863678,
+              "grass 2": 0.8300452828407288,
+              "sand": 0.0,
+              "cliffs": 0.5000008344650269,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 1285338,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000035762786865,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 1294651,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000105500221252,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 1366160,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000078082084656,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 1478838,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000001788139343,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2001114,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000029802322388,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2145627,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000007152557373,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2198509,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.9169212579727173,
+              "sand": 0.0,
+              "cliffs": 0.49998939037323,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2394556,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000078678131104,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2752928,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000085830688477,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2801002,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000064969062805,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 2988399,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999961256980896,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 3282959,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5474337935447693,
+              "sand": 0.0,
+              "cliffs": 0.49999862909317017,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 3453757,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999985098838806,
+              "sand": 0.0,
+              "cliffs": 0.2552695870399475,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 4339342,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000103116035461,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 4383101,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500001847743988,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 5047685,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000045299530029,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 5056225,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999963343143463,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 5412646,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000044703483582,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 5940236,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.6412276029586792,
+              "grass 2": 0.9647468328475952,
+              "sand": 0.0,
+              "cliffs": 0.4999837577342987,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 6349813,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.7922024726867676,
+              "sand": 0.0,
+              "cliffs": 0.4998825788497925,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 6394112,
+            "code": 0.0,
+            "samples": {
+              "grass": 4.2319297790527344e-05,
+              "grass 2": 0.4999963641166687,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7088182,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999868869781494,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7216711,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000389218330383,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7273950,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999864399433136,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7661317,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000049471855164,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7724980,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.49995821714401245,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 7900751,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.9359614849090576,
+              "sand": 0.0,
+              "cliffs": 0.5000010132789612,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 8035681,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7095702886581421,
+              "sand": 0.0,
+              "cliffs": 0.49999505281448364,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 8547314,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999982714653015,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9010778,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.7005152106285095,
+              "sand": 0.0,
+              "cliffs": 0.4999249279499054,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9106725,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000021457672119,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9268019,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.9999516606330872,
+              "grass 2": 0.7672075629234314,
+              "sand": 0.0,
+              "cliffs": 0.5000184774398804,
+              "scree": 2.0687002688646317e-07
+            }
+          },
+          {
+            "index": 9390263,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999939203262329,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9426432,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999627470970154,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9725888,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000051856040955,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 9935573,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999475479125977,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 10029393,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999956786632538,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 10515472,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000060796737671,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 10950170,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000017285346985,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11151311,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4768323600292206,
+              "sand": 0.0,
+              "cliffs": 0.500001072883606,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11260275,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999876320362091,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11280159,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500001847743988,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11553121,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999773502349854,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11647521,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.12494805455207825,
+              "grass 2": 0.8493875861167908,
+              "sand": 0.0,
+              "cliffs": 0.4999964237213135,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 11663882,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.8969992995262146,
+              "grass 2": 0.8525383472442627,
+              "sand": 0.0,
+              "cliffs": 0.5000032186508179,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 12020666,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000041127204895,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 12337480,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999965727329254,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 12503359,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500000536441803,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 12624843,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000012516975403,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 12976818,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5794092416763306,
+              "sand": 0.0,
+              "cliffs": 0.4999964237213135,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13549003,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.999817430973053,
+              "grass 2": 0.5000190734863281,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13599376,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49998313188552856,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13785629,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999985694885254,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13800927,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.13251416385173798,
+              "grass 2": 0.7065662145614624,
+              "sand": 0.0,
+              "cliffs": 0.4999966323375702,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13930875,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000011324882507,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 13937966,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.8285695314407349,
+              "sand": 0.0,
+              "cliffs": 0.49998313188552856,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14094643,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.662578284740448,
+              "grass 2": 0.8462168574333191,
+              "sand": 0.0,
+              "cliffs": 0.4999995827674866,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14178120,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999934434890747,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14300845,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.4998597800731659,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14729981,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7650233507156372,
+              "sand": 0.0,
+              "cliffs": 0.5000790357589722,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14887242,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.3950706720352173,
+              "grass 2": 0.4999814033508301,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 14922255,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000132322311401,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15023239,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0004524241667240858,
+              "grass 2": 0.4999900460243225,
+              "sand": 0.0,
+              "cliffs": 0.4668245017528534,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15052168,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000021457672119,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15152303,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000022649765015,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15159366,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000028610229492,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15164206,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999886751174927,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15418884,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.012670278549194336,
+              "grass 2": 0.6739111542701721,
+              "sand": 0.0,
+              "cliffs": 0.500006914138794,
+              "scree": 0.0106605039909482
+            }
+          },
+          {
+            "index": 15750605,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999997615814209,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 15753773,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999889731407166,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 16403449,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.28705495595932007,
+              "sand": 0.0,
+              "cliffs": 0.5001732110977173,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 16460712,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.500004768371582,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 16676370,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500001072883606,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 16811265,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999767541885376,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17165007,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.8008847236633301,
+              "sand": 0.0,
+              "cliffs": 0.5000052452087402,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17169844,
+            "code": 0.0,
+            "samples": {
+              "grass": 2.8833746910095215e-06,
+              "grass 2": 0.49999576807022095,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 1.391395926475525e-06
+            }
+          },
+          {
+            "index": 17242100,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000061988830566,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17271585,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.499997615814209,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17496257,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999865889549255,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17505688,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5246985554695129,
+              "sand": 0.0,
+              "cliffs": 0.49998173117637634,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 17613769,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.500000536441803,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.015918754041194916
+            }
+          },
+          {
+            "index": 17619867,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.38717755675315857,
+              "sand": 0.0,
+              "cliffs": 0.500015139579773,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18157312,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999141693115234,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18308052,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000007152557373,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18341089,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18448887,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000061392784119,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18655101,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.708649218082428,
+              "sand": 0.0,
+              "cliffs": 0.4999926686286926,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18885401,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000063180923462,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 18971271,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999959170818329,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 19300845,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000023245811462,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 19389256,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.6461015343666077,
+              "grass 2": 0.5000049471855164,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 19587274,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.3419772585621104e-05,
+              "grass 2": 0.6404832601547241,
+              "sand": 0.0,
+              "cliffs": 0.500003457069397,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 19824500,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999701976776123,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 19925749,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999959170818329,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20060251,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999893307685852,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20075857,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000078678131104,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20358150,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999964237213135,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20466331,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000017881393433,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20548168,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000000596046448,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20739445,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.49998629093170166,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20748837,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000014901161194,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20782697,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9999773502349854,
+              "grass 2": 0.575015664100647,
+              "sand": 0.0,
+              "cliffs": 0.4999953508377075,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 20948828,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000132918357849,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21146184,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.20976601541042328,
+              "grass 2": 0.6973736882209778,
+              "sand": 0.0,
+              "cliffs": 0.4999972879886627,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21625252,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999914765357971,
+              "sand": 0.0,
+              "cliffs": 0.03567103296518326,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21632043,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999951422214508,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21732240,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000006556510925,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21782753,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000044107437134,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21892798,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 21975411,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000016093254089,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 22048627,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.4999757409095764,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 22606426,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000039339065552,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 22742176,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.5000266432762146,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 7.487303264497314e-06
+            }
+          },
+          {
+            "index": 22854895,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999457597732544,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 22917464,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9999595880508423,
+              "grass 2": 0.4999907910823822,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 22919300,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999963343143463,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 23868360,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000012516975403,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 23883304,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000004768371582,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 23995416,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999993145465851,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 24252059,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.499929279088974,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 24347477,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999893009662628,
+              "sand": 0.0,
+              "cliffs": 0.2727835178375244,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 24758774,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999743700027466,
+              "sand": 0.0,
+              "cliffs": 0.4145892262458801,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 24797785,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.3469804525375366,
+              "grass 2": 0.7872890830039978,
+              "sand": 0.0,
+              "cliffs": 0.4999970495700836,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 24876866,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.1269296258687973,
+              "grass 2": 0.5205604434013367,
+              "sand": 0.0,
+              "cliffs": 0.49995243549346924,
+              "scree": 0.07974670827388763
+            }
+          },
+          {
+            "index": 25003524,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5358090996742249,
+              "sand": 0.0,
+              "cliffs": 0.5000002980232239,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25385751,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000191330909729,
+              "sand": 0.0,
+              "cliffs": 0.36041638255119324,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25474182,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999731779098511,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25534368,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999701976776123,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25684307,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999988079071045,
+              "sand": 0.0,
+              "cliffs": 0.23657278716564178,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25779124,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999904930591583,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 25897347,
+            "code": 191.0,
+            "samples": {
+              "grass": 7.544322579633445e-05,
+              "grass 2": 0.47749990224838257,
+              "sand": 0.0,
+              "cliffs": 0.5000092387199402,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 26062279,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.999755859375,
+              "grass 2": 0.5000070333480835,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 26092799,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9999608993530273,
+              "grass 2": 0.5000017285346985,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 27091556,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999788999557495,
+              "sand": 0.0,
+              "cliffs": 0.39397066831588745,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 27112228,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000211000442505,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 27333333,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.000244140625,
+              "grass 2": 0.49997618794441223,
+              "sand": 0.0,
+              "cliffs": 0.30408722162246704,
+              "scree": 0.050132960081100464
+            }
+          },
+          {
+            "index": 27411200,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999980926513672,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 27764021,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500011682510376,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 27889327,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999526143074036,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28097480,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999216198921204,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28386451,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49996042251586914,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28440575,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7406041026115417,
+              "sand": 0.0,
+              "cliffs": 0.5000008940696716,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28442954,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.6381421089172363,
+              "sand": 0.0,
+              "cliffs": 0.5000080466270447,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28671281,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000094175338745,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28755764,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.000244140625,
+              "grass 2": 0.720004677772522,
+              "sand": 0.0,
+              "cliffs": 0.4999917149543762,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28832034,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.48192867636680603,
+              "grass 2": 0.4954424500465393,
+              "sand": 0.0,
+              "cliffs": 0.49996939301490784,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28860664,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999621510505676,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 28940932,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.5464881062507629,
+              "grass 2": 0.5000038146972656,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 29038522,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.99993896484375,
+              "grass 2": 0.3585045337677002,
+              "sand": 0.0,
+              "cliffs": 0.49998489022254944,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 29156347,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999910593032837,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 29330574,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9996023178100586,
+              "grass 2": 0.5000396966934204,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 29578687,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.022500991821289062,
+              "grass 2": 0.7168728113174438,
+              "sand": 0.0,
+              "cliffs": 0.49999070167541504,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 29658699,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000008940696716,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 30133674,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999934434890747,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 30209623,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9999983906745911,
+              "grass 2": 0.4999980628490448,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 30461085,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000084042549133,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 30689499,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4813987612724304,
+              "sand": 0.0,
+              "cliffs": 0.4998539984226227,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 30917031,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.8314534425735474,
+              "sand": 0.0,
+              "cliffs": 0.4998319149017334,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 31184512,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49997860193252563,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 31532900,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9998762011528015,
+              "grass 2": 0.4999919533729553,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 31628066,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0001220703125,
+              "grass 2": 0.41773152351379395,
+              "sand": 0.0,
+              "cliffs": 0.4999989867210388,
+              "scree": 0.04064266011118889
+            }
+          },
+          {
+            "index": 32001909,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00018769502639770508,
+              "grass 2": 0.4999958872795105,
+              "sand": 0.0,
+              "cliffs": 0.30900272727012634,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32077772,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.999640941619873,
+              "grass 2": 0.500046968460083,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32145206,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.023951636627316475,
+              "grass 2": 0.49999916553497314,
+              "sand": 0.0,
+              "cliffs": 0.4781439006328583,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32253234,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.999755859375,
+              "grass 2": 0.5000042915344238,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32337560,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000007152557373,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32485550,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000025033950806,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 32815192,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000099539756775,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 33380849,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999675154685974,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 33603733,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999943673610687,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 33713733,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.6081200242042542,
+              "sand": 0.0,
+              "cliffs": 0.49999862909317017,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 34837996,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49991652369499207,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35044270,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.000244140625,
+              "grass 2": 0.49999377131462097,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35302051,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.3001975119113922,
+              "grass 2": 0.5000072121620178,
+              "sand": 0.0,
+              "cliffs": 5.7441724493401125e-05,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35354559,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500024139881134,
+              "sand": 0.0,
+              "cliffs": 0.04905258119106293,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35440191,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000031590461731,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35577763,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000004172325134,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35691265,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000160336494446,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35760755,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000081658363342,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35791105,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.911912202835083,
+              "grass 2": 0.4999796450138092,
+              "sand": 0.0,
+              "cliffs": 0.3726596236228943,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35799708,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.1473894119262695e-06,
+              "grass 2": 0.49999895691871643,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35828118,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500005304813385,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35839241,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000045895576477,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35906896,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.6580761075019836,
+              "sand": 0.0,
+              "cliffs": 0.4999668300151825,
+              "scree": 1.3981805295770755e-06
+            }
+          },
+          {
+            "index": 35935860,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000013709068298,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 35993059,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.916597843170166,
+              "grass 2": 0.4999904930591583,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36041691,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4390551745891571,
+              "sand": 0.0,
+              "cliffs": 0.49999111890792847,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36148862,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5761278867721558,
+              "sand": 0.0,
+              "cliffs": 0.49997326731681824,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36155705,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9933075904846191,
+              "grass 2": 0.6064394116401672,
+              "sand": 0.0,
+              "cliffs": 0.4999535083770752,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36242238,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000010132789612,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36384521,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.6233316659927368,
+              "sand": 0.0,
+              "cliffs": 0.5000064373016357,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36430099,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.329348087310791,
+              "sand": 0.0,
+              "cliffs": 0.5000180006027222,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36435314,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.8000222444534302,
+              "grass 2": 0.49999338388442993,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36556267,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49999454617500305,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36618045,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7142032980918884,
+              "sand": 0.0,
+              "cliffs": 0.4999675452709198,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36927872,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500008761882782,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 36936338,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9999740123748779,
+              "grass 2": 0.5000251531600952,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37022994,
+            "code": 0.0,
+            "samples": {
+              "grass": 6.917119026184082e-05,
+              "grass 2": 0.4998875856399536,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.022708632051944733
+            }
+          },
+          {
+            "index": 37186448,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5943275094032288,
+              "sand": 0.0,
+              "cliffs": 0.5000330209732056,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37418402,
+            "code": 0.0,
+            "samples": {
+              "grass": 7.231922063510865e-05,
+              "grass 2": 0.4999985992908478,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37574152,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00023349473485723138,
+              "grass 2": 0.49999260902404785,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37578939,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999869167804718,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37687758,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9999058246612549,
+              "grass 2": 0.5000004768371582,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37736500,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000314712524414,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37813017,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.6706688404083252,
+              "sand": 0.0,
+              "cliffs": 0.4997599124908447,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37900276,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999696612358093,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 37972411,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000081062316895,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38493959,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3756096661090851,
+              "sand": 0.0,
+              "cliffs": 0.4999557435512543,
+              "scree": 0.04853332042694092
+            }
+          },
+          {
+            "index": 38550283,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.47146013379096985,
+              "grass 2": 0.634850800037384,
+              "sand": 0.0,
+              "cliffs": 0.5000104308128357,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38604330,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49998292326927185,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38690798,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.3891284167766571,
+              "sand": 0.0,
+              "cliffs": 0.5000950694084167,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38768195,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000052452087402,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38840962,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.7785516977310181,
+              "grass 2": 0.5000039935112,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38918779,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.500010073184967,
+              "sand": 0.0,
+              "cliffs": 4.0040180465439335e-05,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 38941094,
+            "code": 0.0,
+            "samples": {
+              "grass": 5.4395045481214765e-06,
+              "grass 2": 0.4999995231628418,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 39000202,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9998720288276672,
+              "grass 2": 0.5000008344650269,
+              "sand": 0.0,
+              "cliffs": 0.26764607429504395,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 39080092,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.8520371317863464,
+              "sand": 0.0,
+              "cliffs": 0.49990442395210266,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 39801937,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.24853813648223877,
+              "grass 2": 0.7503636479377747,
+              "sand": 0.0,
+              "cliffs": 0.4999653398990631,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 39879569,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999406933784485,
+              "sand": 0.0,
+              "cliffs": 0.18345551192760468,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 39879570,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999954104423523,
+              "sand": 0.0,
+              "cliffs": 7.430091500282288e-06,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40096660,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000085234642029,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40181777,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49996042251586914,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40218260,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000205039978027,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40273174,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000019669532776,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40319250,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.5000362396240234,
+              "sand": 0.0,
+              "cliffs": 0.00013966188998892903,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40329086,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.4748710095882416,
+              "grass 2": 0.4970754086971283,
+              "sand": 0.0,
+              "cliffs": 0.499999463558197,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40342215,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.49983295798301697,
+              "grass 2": 0.49997738003730774,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40344652,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.31879135966300964,
+              "sand": 0.0,
+              "cliffs": 0.5000295639038086,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40347401,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000038743019104,
+              "sand": 0.0,
+              "cliffs": 0.11707056313753128,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40355071,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000250935554504,
+              "sand": 0.0,
+              "cliffs": 0.1144912838935852,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40428617,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9830638766288757,
+              "grass 2": 0.49999502301216125,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40506090,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999678134918213,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40527770,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9999308586120605,
+              "grass 2": 0.5000009536743164,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 40591011,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.42508095502853394,
+              "sand": 0.0,
+              "cliffs": 0.5000341534614563,
+              "scree": 1.8120044842362404e-07
+            }
+          },
+          {
+            "index": 41069513,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3686073422431946,
+              "sand": 0.0,
+              "cliffs": 0.4999186098575592,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 41415048,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999362230300903,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 41477658,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.6737938523292542,
+              "grass 2": 0.6462286114692688,
+              "sand": 0.0,
+              "cliffs": 0.5000433325767517,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 41722689,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000020265579224,
+              "sand": 0.0,
+              "cliffs": 4.17931005358696e-07,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 41932894,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.3246968984603882,
+              "sand": 0.0,
+              "cliffs": 0.5000057220458984,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 41935103,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7310505509376526,
+              "sand": 0.0,
+              "cliffs": 0.49994799494743347,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 42016299,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9997010827064514,
+              "grass 2": 0.5000083446502686,
+              "sand": 0.0,
+              "cliffs": 0.49941837787628174,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 42171236,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49999767541885376,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 42278531,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.6454824805259705,
+              "sand": 0.0,
+              "cliffs": 0.4999997615814209,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 42604499,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 3.0174851417541504e-06,
+              "sand": 0.0,
+              "cliffs": 0.49992915987968445,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 42729188,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00023028254508972168,
+              "grass 2": 0.4999849498271942,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 43032096,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999980032444,
+              "sand": 0.0,
+              "cliffs": 0.17958670854568481,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 43200074,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000308156013489,
+              "sand": 0.0,
+              "cliffs": 7.659466791665182e-05,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 43432104,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.634544849395752,
+              "grass 2": 0.4999953806400299,
+              "sand": 0.0,
+              "cliffs": 5.558133125305176e-06,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 43610176,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999692440032959,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 43898292,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.44309481978416443,
+              "sand": 0.0,
+              "cliffs": 0.4999983012676239,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 44160540,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9996656179428101,
+              "grass 2": 0.41032832860946655,
+              "sand": 0.0,
+              "cliffs": 0.49999234080314636,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 44305136,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000027418136597,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 44550605,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.000244140625,
+              "grass 2": 0.4999963641166687,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 45610761,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999925494194031,
+              "sand": 0.0,
+              "cliffs": 0.40096285939216614,
+              "scree": 0.1111254021525383
+            }
+          },
+          {
+            "index": 45988506,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9999028444290161,
+              "grass 2": 0.29162806272506714,
+              "sand": 0.0,
+              "cliffs": 0.4999455213546753,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 46421223,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.99989253282547,
+              "grass 2": 0.29450035095214844,
+              "sand": 0.0,
+              "cliffs": 0.5000824928283691,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 46769563,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7050784826278687,
+              "sand": 0.0,
+              "cliffs": 0.5000225305557251,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 46771669,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999796152114868,
+              "sand": 0.0,
+              "cliffs": 0.3456476330757141,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 46849654,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9998990893363953,
+              "grass 2": 0.5000060796737671,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47010929,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49999523162841797,
+              "sand": 0.0,
+              "cliffs": 0.4800976514816284,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47011563,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.49998605251312256,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47087023,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.5166901350021362,
+              "grass 2": 0.0,
+              "sand": 0.0,
+              "cliffs": 0.500016987323761,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47152457,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5463250875473022,
+              "sand": 0.0,
+              "cliffs": 0.4999960660934448,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47642683,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.8175743818283081,
+              "grass 2": 0.6340811252593994,
+              "sand": 0.0,
+              "cliffs": 0.4999084770679474,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47649246,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.9285358190536499,
+              "grass 2": 0.5000137090682983,
+              "sand": 0.0,
+              "cliffs": 2.2124499082565308e-05,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47656326,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.13665109872817993,
+              "sand": 0.0,
+              "cliffs": 0.5000193119049072,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47751348,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.8482444882392883,
+              "grass 2": 0.30063390731811523,
+              "sand": 0.0,
+              "cliffs": 0.49997884035110474,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47883861,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.3683848977088928,
+              "sand": 0.0,
+              "cliffs": 0.5000396966934204,
+              "scree": 0.15500754117965698
+            }
+          },
+          {
+            "index": 47891407,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.24340146780014038,
+              "sand": 0.0,
+              "cliffs": 0.5001639723777771,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 47935982,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.6162600517272949,
+              "sand": 0.0,
+              "cliffs": 0.500106155872345,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 48116340,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.8815479278564453,
+              "grass 2": 0.1076158806681633,
+              "sand": 0.0,
+              "cliffs": 0.5000336170196533,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 48836989,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5479072332382202,
+              "sand": 0.0,
+              "cliffs": 0.5000317096710205,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 48861588,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999716877937317,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 49147500,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.30997762084007263,
+              "sand": 0.0,
+              "cliffs": 0.5000503659248352,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 49474764,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49993884563446045,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 4.537403583526611e-05
+            }
+          },
+          {
+            "index": 49484189,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.999953031539917,
+              "grass 2": 0.4999769628047943,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 49619035,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999921917915344,
+              "sand": 0.0,
+              "cliffs": 0.12305062264204025,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 49856492,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 6.766081810383184e-07,
+              "sand": 0.0,
+              "cliffs": 0.4998480975627899,
+              "scree": 0.01574103906750679
+            }
+          },
+          {
+            "index": 50175433,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.15225161612033844,
+              "sand": 0.0,
+              "cliffs": 0.500044047832489,
+              "scree": 0.020457709208130836
+            }
+          },
+          {
+            "index": 50496664,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.49999672174453735,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 50506587,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.37386634945869446,
+              "grass 2": 0.1952185034751892,
+              "sand": 0.0,
+              "cliffs": 0.5000123977661133,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 50661486,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.40675410628318787,
+              "sand": 0.0,
+              "cliffs": 0.4997250735759735,
+              "scree": 1.5240281754813623e-05
+            }
+          },
+          {
+            "index": 50965022,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.49996882677078247,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 51229015,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.19495777785778046,
+              "grass 2": 0.12362395972013474,
+              "sand": 0.0,
+              "cliffs": 0.49985945224761963,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 51371015,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3981736898422241,
+              "sand": 0.0,
+              "cliffs": 0.4999796748161316,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 51761475,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.057069581001996994,
+              "sand": 0.0,
+              "cliffs": 0.4998798370361328,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 51765614,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.3515855669975281,
+              "grass 2": 0.3582291901111603,
+              "sand": 0.0,
+              "cliffs": 0.5000060200691223,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 51839126,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.3116424083709717,
+              "sand": 0.0,
+              "cliffs": 0.5000602006912231,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 52330974,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.4320724308490753,
+              "grass 2": 0.4999890625476837,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 52758976,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.500018298625946,
+              "sand": 0.0,
+              "cliffs": 0.40917283296585083,
+              "scree": 0.028556501492857933
+            }
+          },
+          {
+            "index": 52882299,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5223183035850525,
+              "sand": 0.0,
+              "cliffs": 0.4998834729194641,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53053429,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.40761950612068176,
+              "sand": 0.0,
+              "cliffs": 0.49998828768730164,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53186737,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000016093254089,
+              "sand": 0.0,
+              "cliffs": 0.42303964495658875,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53289481,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5613259077072144,
+              "sand": 0.0,
+              "cliffs": 0.5000912547111511,
+              "scree": 0.028697116300463676
+            }
+          },
+          {
+            "index": 53508956,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3977160155773163,
+              "sand": 0.0,
+              "cliffs": 0.5000749826431274,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53745533,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000157952308655,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53820698,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.2623889744281769,
+              "sand": 0.0,
+              "cliffs": 0.5000696778297424,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 53860780,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5986976623535156,
+              "sand": 0.0,
+              "cliffs": 0.49987679719924927,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 54226659,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.2420186698436737,
+              "sand": 0.0,
+              "cliffs": 0.500064492225647,
+              "scree": 0.1029750406742096
+            }
+          },
+          {
+            "index": 55011908,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999940097332001,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 55571935,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.15322092175483704,
+              "sand": 0.0,
+              "cliffs": 0.49994704127311707,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 55820221,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4612948000431061,
+              "sand": 0.0,
+              "cliffs": 0.500125527381897,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 55962030,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.24725951254367828,
+              "sand": 0.0,
+              "cliffs": 0.4999258816242218,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 56680452,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.7953175902366638,
+              "sand": 0.0,
+              "cliffs": 0.5000174045562744,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 56838531,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49997761845588684,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 56853616,
+            "code": 0.0,
+            "samples": {
+              "grass": 8.707225788384676e-05,
+              "grass 2": 0.49995914101600647,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 56910548,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5259971618652344,
+              "sand": 0.0,
+              "cliffs": 0.5000281929969788,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57388935,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.500007152557373,
+              "sand": 0.0,
+              "cliffs": 0.29839444160461426,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57553716,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000014305114746,
+              "sand": 0.0,
+              "cliffs": 0.3563854396343231,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57646857,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3271595537662506,
+              "sand": 0.0,
+              "cliffs": 0.5000219941139221,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57799044,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.29991158843040466,
+              "sand": 0.0,
+              "cliffs": 0.5000446438789368,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57896475,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.3277323544025421,
+              "sand": 0.0,
+              "cliffs": 0.49992379546165466,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 57958921,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.2955927848815918,
+              "sand": 0.0,
+              "cliffs": 0.5000064373016357,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58001113,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.999755859375,
+              "grass 2": 0.24196428060531616,
+              "sand": 0.0,
+              "cliffs": 0.5000065565109253,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58029997,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.999741792678833,
+              "grass 2": 0.11987806856632233,
+              "sand": 0.0,
+              "cliffs": 0.5001816749572754,
+              "scree": 9.676441550254822e-07
+            }
+          },
+          {
+            "index": 58076311,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3723732829093933,
+              "sand": 0.0,
+              "cliffs": 0.499994158744812,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58192253,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.28873997926712036,
+              "grass 2": 0.20236018300056458,
+              "sand": 0.0,
+              "cliffs": 0.4999082684516907,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58211297,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0003605527163017541,
+              "grass 2": 0.49996158480644226,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58344488,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.30130642652511597,
+              "sand": 0.0,
+              "cliffs": 0.4999893605709076,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 58369027,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.42659205198287964,
+              "sand": 0.0,
+              "cliffs": 0.49995020031929016,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 59327574,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.49998411536216736,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 59369543,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4974134862422943,
+              "sand": 0.0,
+              "cliffs": 0.4998171031475067,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 59571471,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.8667232394218445,
+              "grass 2": 0.3758370578289032,
+              "sand": 0.0,
+              "cliffs": 0.49999937415122986,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 60171680,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4134637117385864,
+              "sand": 0.0,
+              "cliffs": 0.4999236762523651,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 60171968,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00028278352692723274,
+              "grass 2": 0.4539007246494293,
+              "sand": 0.0,
+              "cliffs": 0.49996718764305115,
+              "scree": 0.008348463103175163
+            }
+          },
+          {
+            "index": 60651194,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000174641609192,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 61037392,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.4999907314777374,
+              "sand": 0.0,
+              "cliffs": 0.4238608777523041,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 61227984,
+            "code": 128.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.5001095533370972,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 61480954,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.18256613612174988,
+              "sand": 0.0,
+              "cliffs": 0.4999297857284546,
+              "scree": 0.0027340338565409184
+            }
+          },
+          {
+            "index": 61731778,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.4999973475933075,
+              "sand": 0.0,
+              "cliffs": 0.19868189096450806,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62072123,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.49998900294303894,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62117448,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.41545918583869934,
+              "sand": 0.0,
+              "cliffs": 0.4999799132347107,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62129229,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999196231365204,
+              "cliffs": 0.3520946502685547,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62182480,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.6265222430229187,
+              "sand": 0.0,
+              "cliffs": 0.4999721944332123,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62313320,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.08880700170993805,
+              "grass 2": 0.0,
+              "sand": 0.49999934434890747,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62461638,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.627562403678894,
+              "grass 2": 0.4143078923225403,
+              "sand": 0.0,
+              "cliffs": 0.5000085830688477,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62894474,
+            "code": 128.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.5001207590103149,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 62900314,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.03278050199151039,
+              "grass 2": 0.4046229124069214,
+              "sand": 0.0,
+              "cliffs": 0.5000821948051453,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 63043148,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.12453077733516693,
+              "grass 2": 0.029460284858942032,
+              "sand": 0.0,
+              "cliffs": 0.5000218152999878,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 63183349,
+            "code": 64.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.5000048875808716,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 64249901,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.3594388961791992,
+              "sand": 0.0,
+              "cliffs": 0.5001046061515808,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 64506182,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000181198120117,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 64841424,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.0,
+              "sand": 0.0,
+              "cliffs": 0.49983230233192444,
+              "scree": 0.017283426597714424
+            }
+          },
+          {
+            "index": 64953350,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0888071060180664,
+              "grass 2": 0.0,
+              "sand": 0.49999740719795227,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 65551257,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.99951171875,
+              "grass 2": 0.5000120997428894,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 65983541,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.006570789497345686,
+              "sand": 0.4999379515647888,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66260345,
+            "code": 0.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3738040328025818,
+              "sand": 0.0,
+              "cliffs": 0.49990755319595337,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66561674,
+            "code": 64.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5000019073486328,
+              "sand": 0.0,
+              "cliffs": 0.13083986937999725,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66615932,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.4999682605266571,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 3.235412805224769e-05
+            }
+          },
+          {
+            "index": 66753688,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.4565315246582031,
+              "grass 2": 0.0,
+              "sand": 0.0,
+              "cliffs": 0.4999277889728546,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66777632,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.007758745923638344,
+              "sand": 0.49999725818634033,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66777774,
+            "code": 128.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.5000270009040833,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 66999780,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.004249353893101215,
+              "sand": 0.49996599555015564,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67006793,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.379840224981308,
+              "sand": 0.0,
+              "cliffs": 0.5000598430633545,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67169243,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.9533505439758301,
+              "grass 2": 0.17240795493125916,
+              "sand": 0.0,
+              "cliffs": 0.49997252225875854,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67171121,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999004006385803,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67172638,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.820444643497467,
+              "grass 2": 0.23760226368904114,
+              "sand": 0.0,
+              "cliffs": 0.5001046657562256,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67211690,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.4999867379665375,
+              "sand": 0.0,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67228225,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.006066255737096071,
+              "sand": 0.4999265670776367,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67755354,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.00048828125,
+              "grass 2": 0.499991238117218,
+              "sand": 0.0,
+              "cliffs": 0.44034796953201294,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67919349,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.3940492570400238,
+              "sand": 0.0,
+              "cliffs": 0.49994853138923645,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 67993537,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.49998268485069275,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68244771,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.006120287347584963,
+              "sand": 0.49999886751174927,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68521469,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.5299155712127686,
+              "sand": 0.0,
+              "cliffs": 0.5000260472297668,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68523644,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.003745991038158536,
+              "sand": 0.49979647994041443,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68601714,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 1.0106612080562627e-07,
+              "sand": 0.4999328553676605,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68601899,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999762177467346,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68602081,
+            "code": 128.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.5000175833702087,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68609487,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999733865261078,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 68678401,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0007996353087946773,
+              "sand": 0.49988454580307007,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 69151168,
+            "code": 191.0,
+            "samples": {
+              "grass": 1.0,
+              "grass 2": 0.3805885314941406,
+              "sand": 0.0,
+              "cliffs": 0.5000134110450745,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 69167413,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.005648516118526459,
+              "sand": 0.49997007846832275,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 69510142,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.49999624490737915,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 69717602,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999966621398926,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          },
+          {
+            "index": 70223465,
+            "code": 191.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 4.286039620637894e-05,
+              "sand": 0.0,
+              "cliffs": 0.5002309679985046,
+              "scree": 0.23705679178237915
+            }
+          },
+          {
+            "index": 70254231,
+            "code": 0.0,
+            "samples": {
+              "grass": 0.0,
+              "grass 2": 0.0,
+              "sand": 0.4999934434890747,
+              "cliffs": 0.0,
+              "scree": 0.0
+            }
+          }
+        ],
+        "placement_mismatches": 0,
+        "invariants": {
+          "height": "BIT_EXACT",
+          "r": "BIT_EXACT",
+          "g": "BIT_EXACT",
+          "b": "BIT_EXACT",
+          "roughness": "BIT_EXACT",
+          "Alpha": "BIT_EXACT"
+        },
+        "cache": "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc",
+        "cache_sha256": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+        "fresh_native_id_matches_cache": true,
+        "mask_source_layers": {
+          "grass": "mask",
+          "grass 2": "ramp_layer",
+          "sand": "mask",
+          "cliffs": "cliff",
+          "scree": "scree"
+        }
+      }
+    }
+  },
+  "boundary": {
+    "comparison": "nearest Context cell at each Working rectangular perimeter sample; corners counted twice",
+    "samples": 33966,
+    "disagree": 12049,
+    "disagree_percent": 35.47370900312077,
+    "registration": "both Houdini metre lattices verified; Context covers full Working perimeter",
+    "interpretation": "Different resolutions and retained source masks; this is a material seam assessment, not a demand for resampling height.",
+    "boundary_acceptance": "REQUIRES_REVIEW"
+  },
+  "unreal": "NOT_TOUCHED",
+  "lesson02_05": "Outputs retained; no terrain/detail rebuild",
+  "merge": "NOT_PERFORMED",
+  "visual_acceptance": "PENDING",
+  "performance_pass": false,
+  "remaining_gap": "Working and Context retained source masks select different materials at 12049/33966 rectangular perimeter samples. No claim of seamless consumer transition; no masks changed to hide this.",
+  "scripts": {
+    "scripts\\houdini\\repair_lesson06_idmap.py": "f4d2f31b11e2632ff8bf621c21f6468db1c9d9a397fac9807877c161c130091d",
+    "scripts\\houdini\\verify_lesson06_reopen.py": "895b037cf884104dc01431e3e9418e97ad309b8f46312f794ad88c7d3977c02d",
+    "scripts\\houdini\\render_lesson06_review.py": "3a8d5cad528f7805d1654161e9f90b6e7adcf81bdc88f25bdca3963b74f9daa8"
+  },
+  "validation": {
+    "docs_index": "PASS: links/i18n/structure/freshness",
+    "catalog_status_persistence": "PASS",
+    "python_compile": "PASS",
+    "evidence_storage": "FAIL: pre-existing observations.json 1440278 bytes in HEAD exceeds 1 MiB",
+    "protected_ci": "NOT_RUN"
+  }
+}

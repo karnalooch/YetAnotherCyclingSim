@@ -1,0 +1,20 @@
+{
+  "id": "runner-evidence-retention",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Self-hosted per-run directories accumulate while broad cleanup risks active tasks and unique runtime evidence.",
+  "invariant": "Post-job cleanup owns only exact run/attempt paths; global maintenance requires idle admission and a hash-bound reviewed plan. Preserve shared Git owners, protected refs, active caches and byte-verifiable rollback before pruning.",
+  "evidence": [
+    "scripts/runner/test_archive_stale_probe_runs.py",
+    "scripts/runner/test_job_completed_retention.py",
+    "scripts/runner/test_compress_retained_probe_runs.py",
+    "docs/ci/RUNNER_WORKSPACE_RETENTION.md"
+  ],
+  "do_not_copy": [
+    "YACS host paths",
+    "YACS protected release version",
+    "YACS run-directory names"
+  ],
+  "failure_behavior": "Unknown ownership, drift, reparse points, insufficient archive space or failed archive readback stop mutation and retain original bytes.",
+  "status": "candidate"
+}

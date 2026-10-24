@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_BEFORE_CAPTURE_SUCCEEDED_IMPORT_SOURCE_COMPILE_FAILED",
+  "source_commit": "a65a3d22f562080e7ab91ee9c2699215675e5f4c",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711/attempts/2",
+  "run_attempt": 2,
+  "job_id": 119338262904,
+  "artifact": {
+    "id": 12358919687,
+    "bytes": 69112,
+    "sha256": "9d53aaa16ab928c6cadc8f381b501c29974a00092414a249841f56d1bc85bcb0"
+  },
+  "reports": [
+    {
+      "path": "import-39627916711-attempt2-bridge.json",
+      "artifact_entry": "bridge.json",
+      "bytes": 7852,
+      "sha256": "fab164895f910dd79d9e4d4e5dfe6bff0ee32ab26605ed55001fcf757e273786"
+    },
+    {
+      "path": "import-39627916711-attempt2-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "2585efd57fa58348160bacb6a7b5c34d434d5c8f13434454509836bdd975bfca"
+    },
+    {
+      "path": "import-39627916711-attempt2-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3875,
+      "sha256": "eb6bbec322def0516b2355caf6015271e796dac8f7a6e37a97267c270ad65892"
+    },
+    {
+      "path": "import-39627916711-attempt2-surface-before.jpg",
+      "artifact_entry": "surface-before.jpg",
+      "bytes": 63466,
+      "sha256": "3685277ab68ca397d049c615033c406a6e782bc84cbdad74258ef5a91ac335ef"
+    }
+  ],
+  "unchanged_package_manifest": {
+    "path": "surface-repair-package.json",
+    "bytes": 4053,
+    "sha256": "e8e0ae6cbd752b6b564a67b830aa16a5c4dbb01db3af9792963e8c6121bc88a6"
+  },
+  "native_tool_call_attempts": 2,
+  "before_capture_received": true,
+  "before_camera_restored": true,
+  "world_name": "L_SaCalobra_Lesson07",
+  "is_pie_running": false,
+  "identity_stable_across_probe": true,
+  "last_identity_utc": "2026-10-21T16:21:23.8647524Z",
+  "pid": 34848,
+  "process_start_filetime_utc": "134370724521531735",
+  "importer_sha256": "7ee7e8d598918231df0a171059c496bed3099daea0aeb2dde6761060ed04af21",
+  "error": "SyntaxError: from __future__ imports must occur at the beginning of the file (<string>, line 17)",
+  "policy_denial_observed": false,
+  "native_tool_completed_raw": null,
+  "live_import_receipt_present": false,
+  "after_capture_received": false,
+  "saved_assets_verified": false,
+  "interpretation": "The screenshot proves a connected native Lesson07 world and restored camera. The import call returned a Python compilation error, before the submitted source body could execute. The generic bridge completion field remains null; no importer save receipt or post-import checkpoint readback is claimed. Old shutdown lines in the attached tool log are historical, not evidence of this Editor exiting. The same owner process/listener was verified afterwards. A corrected source may proceed only through a new run, original disk/in-memory guards and the unchanged normal tool gate; the failed source is not retried.",
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

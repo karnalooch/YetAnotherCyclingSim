@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "status": "SOURCE_DCC_INSPECTION_ONLY",
+  "blender_version": "4.5.9 LTS",
+  "background": true,
+  "request_sha256": "ed4e4831e6097d7c8c2c1cd41b6ef8da00811b471febfdd4c8b6a4a95f3eb182",
+  "script_sha256": "d72bf1057b5b96268190144621df1b914ade2be4e975d23a4c8cb159ca6f52f3",
+  "selection_sha256": null,
+  "import_settings": {
+    "global_scale": 1.0,
+    "use_manual_orientation": false,
+    "bake_space_transform": false,
+    "use_anim": false,
+    "use_image_search": false,
+    "use_custom_normals": true
+  },
+  "parser_sha256": "8252e933c94934b2271b72b31045683fcb56ead4804ff1d8f3a851ae2dad6241",
+  "assets": [
+    {
+      "id": "namaqualand_boulder_02",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_02\\namaqualand_boulder_02_2k.fbx",
+      "bytes": 3095484,
+      "sha256_before": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "sha256_after": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "fbx_version": 7400,
+      "declared_global_settings": {
+        "UpAxis": [
+          1
+        ],
+        "UpAxisSign": [
+          1
+        ],
+        "FrontAxis": [
+          2
+        ],
+        "FrontAxisSign": [
+          1
+        ],
+        "CoordAxis": [
+          0
+        ],
+        "CoordAxisSign": [
+          1
+        ],
+        "UnitScaleFactor": [
+          1.0
+        ],
+        "OriginalUnitScaleFactor": [
+          1.0
+        ]
+      },
+      "missing_declared_settings": [],
+      "mesh_count": 1,
+      "all_imported_objects": [
+        {
+          "name": "namaqualand_boulder_02_LOD0",
+          "type": "MESH",
+          "parent": null
+        }
+      ],
+      "meshes": [
+        {
+          "object": "namaqualand_boulder_02_LOD0",
+          "geometry_sha256": "338818fd87f5c81ceaad8f2e6e32b05ff1e9649ec3ebab1d4147b314ce9d7388",
+          "modifiers": [],
+          "has_animation": false,
+          "vertices": 49173,
+          "polygons": 97964,
+          "triangles": 97964,
+          "local_bounds_m": {
+            "min": [
+              -1.1840065717697144,
+              -0.6255689859390259,
+              -0.059473201632499695
+            ],
+            "max": [
+              1.3481357097625732,
+              0.6086939573287964,
+              0.8231645822525024
+            ]
+          },
+          "world_bounds_m": {
+            "min": [
+              -1.1840065717697144,
+              -0.6255689859390259,
+              -0.05947322025895119
+            ],
+            "max": [
+              1.3481357097625732,
+              0.6086939573287964,
+              0.8231645822525024
+            ]
+          },
+          "object_matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "origin_world_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "uv_layers": [
+            "UVMap"
+          ],
+          "topology": {
+            "connected_components": 1,
+            "inconsistent_winding_edges": 0,
+            "signed_volume_local_m3": 0.8342284862780718,
+            "degenerate_faces": 0,
+            "boundary_edges": 396,
+            "nonmanifold_edges": 396,
+            "wire_edges": 0
+          }
+        }
+      ],
+      "combined_world_bounds_m": {
+        "min": [
+          -1.1840065717697144,
+          -0.6255689859390259,
+          -0.05947322025895119
+        ],
+        "max": [
+          1.3481357097625732,
+          0.6086939573287964,
+          0.8231645822525024
+        ]
+      },
+      "derived_lod0_fbx": null
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_06\\namaqualand_boulder_06_2k.fbx",
+      "bytes": 3421948,
+      "sha256_before": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "sha256_after": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "fbx_version": 7400,
+      "declared_global_settings": {
+        "UpAxis": [
+          1
+        ],
+        "UpAxisSign": [
+          1
+        ],
+        "FrontAxis": [
+          2
+        ],
+        "FrontAxisSign": [
+          1
+        ],
+        "CoordAxis": [
+          0
+        ],
+        "CoordAxisSign": [
+          1
+        ],
+        "UnitScaleFactor": [
+          1.0
+        ],
+        "OriginalUnitScaleFactor": [
+          1.0
+        ]
+      },
+      "missing_declared_settings": [],
+      "mesh_count": 1,
+      "all_imported_objects": [
+        {
+          "name": "namaqualand_boulder_06_LOD0",
+          "type": "MESH",
+          "parent": null
+        }
+      ],
+      "meshes": [
+        {
+          "object": "namaqualand_boulder_06_LOD0",
+          "geometry_sha256": "a24de8ad4340e81b36fd40762f7dbec6d50050f57893771dad32f86ef4d4a9d8",
+          "modifiers": [],
+          "has_animation": false,
+          "vertices": 54559,
+          "polygons": 109114,
+          "triangles": 109114,
+          "local_bounds_m": {
+            "min": [
+              -0.32072713971138,
+              -0.551062285900116,
+              -0.018452346324920654
+            ],
+            "max": [
+              0.3542558550834656,
+              0.6608133912086487,
+              0.6331791281700134
+            ]
+          },
+          "world_bounds_m": {
+            "min": [
+              -0.32072713971138,
+              -0.551062285900116,
+              -0.01845235377550125
+            ],
+            "max": [
+              0.3542558550834656,
+              0.6608133912086487,
+              0.6331791281700134
+            ]
+          },
+          "object_matrix_world": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              4.371138828673793e-08,
+              0.0
+            ],
+            [
+              0.0,
+              -4.371138828673793e-08,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "origin_world_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "uv_layers": [
+            "UVMap"
+          ],
+          "topology": {
+            "connected_components": 1,
+            "inconsistent_winding_edges": 0,
+            "signed_volume_local_m3": 0.25550428093273303,
+            "degenerate_faces": 0,
+            "boundary_edges": 0,
+            "nonmanifold_edges": 0,
+            "wire_edges": 0
+          }
+        }
+      ],
+      "combined_world_bounds_m": {
+        "min": [
+          -0.32072713971138,
+          -0.551062285900116,
+          -0.01845235377550125
+        ],
+        "max": [
+          0.3542558550834656,
+          0.6608133912086487,
+          0.6331791281700134
+        ]
+      },
+      "derived_lod0_fbx": null
+    }
+  ],
+  "units": "Blender scene metres after standard FBX declared-unit/axis conversion",
+  "comparison_policy": "Compare UE cm to Blender metres*100 only after documenting UE import axis mapping; world/local bounds and object origins are distinct",
+  "limitations": "Topology/winding/volume diagnostics do not establish non-self-intersection, continuous support, underside suitability or visual acceptance. Explicit selection is not automatic LOD identification. No underside preparation performed.",
+  "source_modified": false,
+  "assets_saved": false,
+  "derived_source_files_exported": false,
+  "placement": false,
+  "qualified_assets": [],
+  "native_unreal_execution": "NOT_RUN"
+}

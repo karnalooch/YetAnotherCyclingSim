@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — drogi i BOB"
+  short_description: "Drogi, nawrotki, cut/fill i kontakt z terenem"
+  default_prompt: "Użyj $yacs-road-bob, aby zdiagnozować wskazany problem drogi i przygotować ograniczoną, sprawdzalną naprawę."

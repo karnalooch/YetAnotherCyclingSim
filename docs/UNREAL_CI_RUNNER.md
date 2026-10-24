@@ -19,6 +19,19 @@ authoring/final-proof **mechanism** is also proven: PR #155 / workflow run
 Automation, Map Check, visual capture and cleanup. This infrastructure proof does
 not by itself satisfy the reopened Stage 3G visual/asset acceptance in #80.
 
+**2026-10-20, L06/L07 consumer repair:** the ordinary Editor built the new L07
+component-layout getter at `e2aed213870a7151106049a7b56953eaba919d6f` and passed
+28/28 Automation tests, with zero failed/skipped/errors and two warnings:
+[run 39413855349, job 118599568420](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413855349/job/118599568420).
+[Artifact 12261661100](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413855349/artifacts/12261661100)
+has SHA256 `efcd65f69bbfdbec6d66d1fa05e3441c3bf696945a4cb92ab7e1ef57abf2a064`.
+The optional PCG365 target remains unverified. The subsequent L07 readback
+stopped at the first disk-reserve guard before candidate creation, map hashing
+or Editor launch; the later host diagnostic measured 22.04 GiB free on D:.
+See the [exact readback receipts and limits](tooling/sidefx/LESSON07_MATERIAL_SETUP.md#isolated-consumer-readback-and-remaining-transfer-contract).
+This is build/test evidence, not map or collision acceptance. Houdini leads
+L06/L07 authoring; the accepted source/cache and the 30 GiB reserve remain protected.
+
 ## Required host
 
 - Windows x64.
@@ -155,9 +168,12 @@ Standalone proof wrappers remain self-contained when no prepared-workspace stamp
 
 ## Workspace hygiene
 
-The reusable job checks out with clean: true and runs git reset --hard plus
-git clean -ffdx after artifact upload. No source-tree state from a previous job
-is trusted. Build/test logs are retained for seven days.
+The [reusable job](../.github/workflows/reusable-unreal.yml) checks out the
+selected persistent cache with `clean: false`, then applies its explicit tracked
+reset and build-state-preserving clean contract. Previous state requires fresh
+source, fingerprint and environment checks. Its per-run evidence cleanup is
+separate from retirement of inactive caches; it is not permission to delete an
+entire historical worktree. Build/test artifact retention remains seven days.
 
 ## Clean Windows host recovery and bounded disk cleanup
 
@@ -347,6 +363,14 @@ The administrative `Clear-YacsRunnerWorkspace.ps1` preview/apply also protects
 the selected build's generated directories. A malformed/missing active target
 blocks administrative cleanup; a pointer change during apply requires a new preview.
 
+The prepared 2026-10-20 repair to
+[`unreal_ci_workspace.py select`](../scripts/ci/unreal_ci_workspace.py) also
+restricts inactive-cache retirement to direct `Intermediate`/`DerivedDataCache`
+subdirectories. It preserves the complete source/Git/Binaries/Saved/proof/Content/LFS
+trees and leaves incomplete roots without `.git` in place. The active pointer is
+rechecked before deletion. This follows the [retention boundary](ci/RUNNER_WORKSPACE_RETENTION.md);
+native execution and recovered disk space remain unverified.
+
 ## Long generated-asset paths in isolated CI
 
 The reusable Unreal job enables `core.longpaths=true` in its job-local
@@ -361,3 +385,13 @@ failed before compilation on `M_SC_Limestone_ExposedRock.uasset` with
 `Filename too long`. A successful checkout at the corrected revision is required
 before claiming this runner failure resolved. Material Forge render, import,
 visual acceptance and performance remain separate proof gates.
+
+The separate [L07 readback workflow](../.github/workflows/yacs-lesson07-unreal-readonly.yml)
+also sets `core.autocrlf=false` and `core.eol=lf` in its own isolated Git config,
+checking each command's exit code. A real local checkout fixture reproduced CRLF
+drift and then verified raw LF bytes against the Git blob. The committed-byte
+guard is unchanged; the blocked native L07 attempt did not reach that guard.
+
+## Stale runner session retention
+
+See the [workspace retention contract](ci/RUNNER_WORKSPACE_RETENTION.md) for owner-authorized local cleanup, main/v0.3.1 and active-session protections, hash-bound review plans and reversible evidence retention. The recovery workflow now previews candidates only; it never performs a global sweep from an active runner worker.

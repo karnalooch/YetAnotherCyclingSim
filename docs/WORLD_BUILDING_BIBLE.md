@@ -16,19 +16,35 @@ Architecture and workflow diagrams in this document follow the shared [YACS Blue
 
 ---
 
+## Current executor decision — Houdini / SideFX, 2026-10-16
+
+**Owner extension, 2026-10-24 — `MA2141_ROADS_CLIFFS_20261024`:** the owner accepts the current appearance and explicitly authorizes source-led cliff/rock-form implementation along the roads and real Ma-2141 road construction, with delegated research and execution. This supersedes the terrain-only scope below for these M3 workstreams (#368, #337 and related #459 contact work), not geographic truth. Continue the existing L06/L07 source and caches. Original Pegasus cliff HDAs and supported SideFX road tools remain the starting point. Unknown road widths, vertical separation and unsourced rock forms remain explicit gaps, not invented measurements. Current appearance acceptance does not claim acceptance of newly generated assets. The owner also authorizes justified revisions to earlier project safeguards and agreements; record the replacement and reason, preserve recoverable sources, and keep actual verification results distinct from permission. Regenerable intermediate junk may be removed after identifying its dependencies; accepted source/checkpoints and active editor state remain protected.
+
+Same-session clarification: the requested Polish “sople” means **rock spires and overhangs**, not artificial terrain spikes to remove. Include those forms where geographic evidence supports their placement; a regional karst description alone does not establish individual roadside geometry.
+
+**Same-session correction:** after the retained 300 m road was proposed as a rehearsal, the owner instructed to forget that road. Do not use the historical 300 m profile/mesh as the new authoring baseline. Build from real full-route inputs and the current Houdini terrain; retain historical files only as history.
+
+**Houdini is the primary procedural world-authoring executor.** The [Houdini/SideFX workflow](tooling/sidefx/README.md) and [complete lesson/material concordance](tooling/sidefx/catalog/README.md) implement this Bible's methodology. New Landscape, road and environment recipes start from the original supplied SideFX HIP/HDA and exact tutorial steps; official SideFX solutions fill named gaps. If a gap remains, stop rather than invent a replacement algorithm.
+
+**Owner reaffirmation, 2026-10-20:** Houdini leads the workflow. Material Forge, Blender and Unreal Engine complement it through surface appearance, preparation/inspection and engine consumption respectively. Complete Pegasus lessons 06 and 07 using the accepted Houdini source and cache, with the remaining material/transfer work and native consumer checks. Repairing an optional UE diagnostic dependency does not change the selected authoring executor or open later road/environment scope.
+
+The immediate owner-authorized task is a fresh independent Houdini Landscape for the full Ma-2141 with a 500 m working corridor on each side and wider background; no road or rest of the world yet. The owner's latest clarification is **original Sa Calobra using Pegasus methods**. Real relief/elevations and route geometry take precedence over the fictional island's noise/erosion values. Use the demonstrated import, curve, mask, layer and cache methods without inventing different macro terrain. The earlier deformed trial is rejected as real Sa Calobra; retain it separately as negative evidence, never as the current/default terrain or an admitted physics/Unreal input. The latest owner clarification permits delicate deformation in a separate reversible Houdini layer while preserving macro relief. Keep a source baseline, an adjustable/disableable detail layer and measured displacement evidence. Validate every source-relative adaptation; a proposed tuning value is not an owner-approved accuracy standard.
+
+This decision supersedes earlier native-UE/PCG/Blender-first generator selection and the blanket freeze for this fresh candidate. It preserves original data, accepted checkpoints, active user sessions, source/physics authority and proof requirements. Historical diagrams, implementation trials and receipts below retain evidence value but cannot restore the superseded producer preference. The 8 km source raster is context coverage, not a mandatory full-detail output footprint.
+
 ## 1. The 12-year-old mental model
 
 Think of the world as a model made from clay.
 
 - **DTM / DEM** is the mold that tells the clay where the mountains and valleys are.
-- **Unreal Landscape** is the big piece of clay.
+- **Houdini HeightField** is the editable procedural terrain; **Unreal Landscape** is its engine consumer.
 - **Landscape Edit Layers** are transparent sheets placed on top of the clay. One sheet keeps the real terrain, another can contain the road earthworks, another manual corrections.
 - **Road spline** is a string showing where the road goes.
 - **Landscape Spline / road earthworks layer** is a small bulldozer that cuts or fills the clay around that string.
 - **Road mesh** is the actual asphalt placed on the prepared corridor.
 - **Static meshes / Nanite meshes** are rocks, cliffs, retaining walls and other shapes that a heightfield cannot represent well.
 - **Landscape Material** paints grass, dirt, scree and rock.
-- **PCG** is the gardener that places trees, grass, rocks and roadside props according to rules.
+- **Houdini tutorial recipes** perform procedural world construction. **PCG/PCGEx** may consume their outputs where the selected integration recipe requires it.
 - **RVT** helps different surfaces visually blend together. It is makeup, not geometry.
 - **World Partition / HLOD / culling** make sure the computer does not render the whole mountain range at full cost all the time.
 
@@ -91,11 +107,7 @@ technical admission, alongside separate human visual acceptance. An MCP response
 cannot manufacture PASS, promote a BOB learning case or turn Actor transforms
 into route truth.
 
-**Native PCG is the procedural foundation; PCGEx is an extension for identified
-spatial/path/filter needs.** Preserve pinned, proven PCGEx work and the existing
-Embark-first evidence ladder. Neither procedural system owns geography. Load
-Epic's PCG graph-generation skill and inspect example graphs before later PCG
-authoring; Primitives/shape grammar remain scoped tools, not source evidence.
+**Houdini is the procedural authoring foundation under the 2026-10-16 decision.** PCG/PCGEx are retained integration/consumer options only where a selected recipe requires them. Preserve their existing proof history without treating it as authorization for a competing new generator. No procedural tool owns geography.
 
 From world-finishing step 3 onward, do not create custom generic Unreal-control
 workarounds when the official Epic MCP supports the operation within YACS safety
@@ -416,6 +428,10 @@ A road mesh must never be snapped to Landscape vertices just because that makes 
 
 ## 3. Core technology stack
 
+### SideFX recipe and installed-version rule
+
+For new authoring, first read the original SideFX lesson/project from the [concordance](tooling/sidefx/catalog/README.md). Resolve exact Houdini and Houdini Engine versions, inspect actual node definitions and parameters, record inputs/adaptations, and verify a bounded cook before promoting the recipe. Houdini 22.0.466 is the inspected local authoring version; that inspection is not automatic compatibility proof for older tutorial files. Do not guess missing nodes or create replacement algorithms.
+
 ### API-first authoring rule
 
 World-building tools are allowed to change quickly; YACS architecture must not be
@@ -462,7 +478,13 @@ decides whether the integration is accepted.
 - Metric CRS before metric operations.
 - Immutable hashes for canonical external source packages.
 
-**Unreal Engine**
+**Houdini / SideFX**
+- Original tutorial HIP/HDA as the authoring starting point; explicit source-to-recipe mapping.
+- HeightFields, curves, masks, noise, erosion and procedural assets through demonstrated nodes.
+- Reproducible working projects, caches and export contracts; exact adaptation and source-delta records.
+- Missing required stages use verified official SideFX solutions or stop.
+
+**Unreal Engine — consumer/runtime; the entries below describe supported integration, not a competing generator preference**
 - Landscape for macro terrain.
 - Landscape Edit Layers for non-destructive world authoring.
 - Landscape Splines or an equivalent controlled spline-earthwork path for road corridor deformation.
@@ -481,7 +503,7 @@ These can accelerate production but are not architecture:
 - Brushify or similar packs: materials, brushes, cliffs, road dressing.
 - Megascans / Fab content: rocks, cliffs, surfaces and vegetation.
 - Ultra Dynamic Sky or similar weather/sky packages.
-- Houdini: advanced procedural world production if later justified by scale.
+- Houdini is required for the current authoring workflow and is not an optional tool in this list.
 
 Do not adopt an optional tool merely because it is fashionable or appears in a tutorial. Prefer it when a bounded evaluation shows that it solves a real YACS production problem better than a smaller or more native solution.
 
@@ -493,52 +515,37 @@ The default rule is:
 
 > **No custom world-building system before a tool audit.**
 
-Before creating a new terrain, road-earthwork, biome, vegetation, snow, erosion, scatter or world-generation subsystem, evaluate the problem in this order:
+For new terrain, road-earthwork, biome, vegetation, erosion, scatter or world-generation work, follow the 2026-10-16 owner decision:
 
-1. **Embark production-pattern review first** — inspect the closest public Embark tool or documented workflow and extract the relevant production boundary, data-flow and authoring lessons. This is evidence review, not automatic dependency adoption.
-2. **Epic-native capability second** — use current Unreal systems and official Epic samples/reference implementations such as Landscape Edit Layers, Landscape Splines, Landscape Patch, PCG, World Partition, HLOD and material layers when they satisfy the contract.
-3. **Proven external / open-source / DCC tooling third** — evaluate established tools such as Houdini Engine or reviewed OSS when Epic-native capabilities leave a concrete gap. Reuse source only after license/provenance review.
-4. **Custom YACS last** — write bespoke code only for the smallest remaining gap that is specific to YACS or cannot meet the required quality, determinism, provenance, performance or automation contract with the options above.
-
-The intended architecture is:
+1. Locate the exact original SideFX tutorial and supplied HIP/HDA in the complete concordance.
+2. Inspect its real nodes, inputs, parameters and dependencies; keep the original unchanged.
+3. Adapt admitted YACS source inputs and record every difference in a versioned Houdini recipe.
+4. For a missing behavior, research and verify an official SideFX solution. Stop the dependent stage if it remains unresolved; do not invent a replacement algorithm.
+5. Cook, save/reopen and inspect the actual Houdini result before engine integration. Distinguish source, authored variation and admitted consumer.
 
 ```mermaid
 flowchart LR
-    SRC["SOURCE<br/>Real-world data"] --> AUTH["YACS AUTHORITY<br/>Route · physics · provenance"]
-    AUTH --> EMBARK["REVIEW<br/>Embark public pattern"]
-    EMBARK --> AUDIT["AUDIT<br/>Smallest capable tool"]
-
-    AUDIT --> NATIVE["EPIC NATIVE<br/>Landscape · Patch · PCG"]
-    AUDIT -.-> EXT["PROVEN TOOL<br/>OSS · Houdini · DCC"]
-    AUDIT -.-> CUSTOM["YACS GAP<br/>Minimal custom"]
-
-    NATIVE --> ADAPT["INTEGRATE<br/>Thin YACS adapter"]
-    EXT --> ADAPT
-    CUSTOM --> ADAPT
-
-    ADAPT --> GEN["GENERATE<br/>Deterministic presentation"]
-    GEN --> VERIFY["VERIFY<br/>Visual · technical · performance"]
-    VERIFY -->|"PASS"| WORLD["OUTPUT<br/>Accepted world slice"]
-    VERIFY -->|"FAIL"| FIX["FAIL CLOSED<br/>Change tool or contract"]
-
+    SRC["SOURCE<br/>DTM · route · provenance"] --> AUTH["YACS AUTHORITY<br/>Geography · physics"]
+    LESSON["REFERENCE<br/>Original SideFX HIP / HDA"] --> HOU["EXECUTE<br/>Houdini recipe"]
+    AUTH --> HOU
+    HOU --> CHECK["VERIFY<br/>Cook · reload · spatial delta"]
+    CHECK -->|"bounded result"| UE["CONSUME<br/>Unreal integration"]
+    CHECK -->|"missing / failed"| STOP["STOP<br/>Research official solution"]
+    UE --> PROOF["EVIDENCE<br/>Native · visual · delivery"]
     classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
     classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
     classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
     classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
-    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
-    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:2px;
     classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
     classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
-
     class SRC input;
     class AUTH owned;
-    class EMBARK evidence;
-    class AUDIT decision;
-    class NATIVE,EXT,CUSTOM tool;
-    class ADAPT,GEN,VERIFY exec;
-    class WORLD success;
-    class FIX danger;
-
+    class LESSON,PROOF evidence;
+    class HOU exec;
+    class CHECK decision;
+    class UE tool;
+    class STOP danger;
     linkStyle default stroke-width:2px;
 ```
 
@@ -682,6 +689,8 @@ flowchart LR
 This is an **implementation proof target**, not permission to pre-design a universal world schema. The concrete data contract should emerge from this slice and then be generalized only when a second real consumer or producer demonstrates the need.
 
 #### Tools-first decision flow
+
+> Historical selection flow: superseded for new world generation by the Houdini/SideFX decision above. Retained to explain prior implementation choices; do not use the native-first branches to select a new generator.
 
 A tools audit is itself a fail-closed architecture decision:
 
@@ -1920,6 +1929,8 @@ Julka profiles; the full profile fails closed while these layers are missing.
 
 ## 6. Landscape Edit Layers contract
 
+**2026-10-16 scope override:** the owner authorized a separate fresh Houdini Landscape candidate. The freeze below still protects existing source/checkpoint/live consumer assets, but does not block that independent candidate. Preserve source-versus-experimental outputs, adaptation records and delta proof; this is not admission to overwrite the existing Unreal scene. See the [active workflow](tooling/sidefx/README.md).
+
 Worlds intended for production must use non-destructive Landscape Edit Layers unless a documented engine limitation blocks them.
 
 ### Project-wide Landscape freeze with local repair and simplification
@@ -2262,6 +2273,14 @@ Materials cannot fix incorrect geometry. If a silhouette is wrong, fix geometry 
 ---
 
 ## 11. PCG vegetation and rocks
+
+The current #365 [execution plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md),
+[primary research](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
+[LLM handoff](tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md) apply this methodology
+to the existing Sa Calobra Landscape. They are supporting documents;
+the later owner-authorized [rollout handoff](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md)
+resumes bounded #365 implementation. Planning documents alone do not admit native
+graph/contact, PCGEx availability, persistence or production vegetation.
 
 PCG is the default for repeated **presentation content**, but it is not the default authority for real-world geography.
 
@@ -3811,13 +3830,13 @@ second world-generation system.
 Ownership is explicit:
 
 - **BOB** owns road/terrain geometry, cut/fill and earthworks;
-- **PCG/PCGEx** owns world semantics, classification, placement and authoritative
+- **World/domain authorities** own source semantics; **Houdini** executes current procedural classification and placement from admitted
   spatial masks;
 - **Material Forge** owns PBR surface appearance and material-local detail masks.
 
 The rule is:
 
-> **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
+> **World/domain authorities own source meaning and location; Houdini executes the selected authoring recipe. Material Forge remains a supporting surface tool.**
 
 Material Forge may consume authoritative masks and produce local appearance
 breakup such as asphalt cracks, patches, rock pores or soil pebbles. It may not

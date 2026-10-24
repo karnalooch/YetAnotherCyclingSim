@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_commit": "de903a85e67540f451ea86743ea981fb7eb79f18",
+  "startup_run_id": 39625318792,
+  "startup_job_id": 119312665132,
+  "source_ci_run_id": 39625331286,
+  "source_ci_result": "success_compatible_proof_reuse",
+  "artifact_id": 12357721337,
+  "artifact_bytes": 6503,
+  "artifact_sha256": "afcbead8ea1d07bfff365e24047e6cef050293487b6457c8b63ebe2411f67b1d",
+  "local_archive_sha256_verified": true,
+  "files": {
+    "startup-install.json": {
+      "bytes": 8370,
+      "sha256": "dfa15f5878d9002afe6cb8d103347c80231d5b5a44caf155209bfe74bb7e8189"
+    },
+    "startup-identity.json": {
+      "bytes": 616,
+      "sha256": "c5c7cc641ee4a1a9259f873f8d34ef1e2ff370368e013d5ea6a9e9f6fa5cf78c"
+    },
+    "startup-bridge.json": {
+      "bytes": 190,
+      "sha256": "589477bfd2cb74d8f51b76bab3934d71149bee700f3105c8dc2f17784c26177a"
+    },
+    "startup-probe.json": {
+      "bytes": 2955,
+      "sha256": "d6de282f4b94d8cf28b28052dee1b3782382d518d4168e4178829338a3e2762e"
+    },
+    "startup-session.json": {
+      "bytes": 6738,
+      "sha256": "4c8c1541c6463d2efc094089b5209d239659fe9b5f6f3e9f38fc922507e0aa08"
+    }
+  },
+  "summary": {
+    "editor_pid": 24984,
+    "native_start_filetime_utc": "134370703459789397",
+    "listener_owner_verified": true,
+    "client_error": "REQUEST_TIMEOUT",
+    "native_tool_calls": 0,
+    "native_world_verified": false,
+    "native_import_verified": false,
+    "lesson07_closed": false
+  }
+}

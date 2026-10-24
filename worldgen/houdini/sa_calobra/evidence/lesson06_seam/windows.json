@@ -1,0 +1,34 @@
+{
+  "north": {
+    "center_index": 4172,
+    "length_m": 512,
+    "across_m": 128,
+    "boundary_row": 128,
+    "outside": "bilinear diagnostic Context RGB",
+    "inside": "native Working cache RGB"
+  },
+  "south": {
+    "center_index": 2940,
+    "length_m": 512,
+    "across_m": 128,
+    "boundary_row": 128,
+    "outside": "bilinear diagnostic Context RGB",
+    "inside": "native Working cache RGB"
+  },
+  "west": {
+    "center_index": 4045,
+    "length_m": 512,
+    "across_m": 128,
+    "boundary_row": 128,
+    "outside": "bilinear diagnostic Context RGB",
+    "inside": "native Working cache RGB"
+  },
+  "east": {
+    "center_index": 4796,
+    "length_m": 512,
+    "across_m": 128,
+    "boundary_row": 128,
+    "outside": "bilinear diagnostic Context RGB",
+    "inside": "native Working cache RGB"
+  }
+}

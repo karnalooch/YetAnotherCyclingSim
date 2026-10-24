@@ -1,0 +1,718 @@
+{
+  "scope": "Issue #365 / M3 / PR #474; owner-authorized separate geometry transition",
+  "status": "REJECTED_SOURCE_RELIEF_DEFORMATION; DISABLED_IN_ACTIVE_UE",
+  "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "native_candidate": {
+    "status": "NATIVE_GEOMETRY_PASS",
+    "houdini_version": "22.0.466",
+    "target_map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05",
+    "output_mode": 1,
+    "height_only": true,
+    "scale_z": 585.9375,
+    "quantization_step_m": 0.0457763671875,
+    "delta_layer": "Lesson06_Boundary_Transition",
+    "fresh_replay": false,
+    "source_hashes": {
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_0_0.bgeo.sc": "58f13cb628700e1acad943044f090497191e9e7dc533a40b68e7db4515c55e3e",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_1_0.bgeo.sc": "3aa576ae99987024f700f9766c68b2b1db7fede95899e964159591c80595bde0",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_0_1.bgeo.sc": "d99f994f47d6243ed30b1fc9d51ddef8b3094c9eb193543701d86cb0a406166f",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_1_1.bgeo.sc": "dcf60c0b722125e32ffb0432807fd537a9d58ba9809f99edfa2df25a00cc9a96",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Context_Valid.bgeo.sc": "fe4a516346f9124f30adc8319b9a7c37075b85fcb939e09e7596f272a03c8fa2"
+    },
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.7467375993728638,
+        "max_m": 576.3699951171875,
+        "expected_codes_sha256": "420b73e98fe64f4e0082758284734f1dfd7f583986c5e7e92a4e37811879b34c",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_0_0_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "8a1f43256b2f2726c3014cdff63bd1284607d45e1907619c572c3041f123826b"
+        },
+        "albedo": "SaCalobra_Detail_0_0_Albedo.png",
+        "albedo_sha256": "58e4f6df60b93b381b0967f1667a8b7536cc58842ec3b23373d33e2a1392cb5c",
+        "changed_codes_from_l04": 10077,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_0_0_HEIGHT_TRANSITION",
+        "final_cache_sha256": "c2c797534c479c41a73c50c17190d41eab47ece59371dc6851b5c80ce71bb05d",
+        "band_samples": 3136783,
+        "changed_samples": 3087947,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -75.34963989257812,
+        "delta_max_m": 112.81654357910156,
+        "delta_max_abs_m": 112.81654357910156,
+        "delta_mean_abs_within_band_m": 0.4445381776992924
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.028533488512039185,
+        "max_m": 751.6400146484375,
+        "expected_codes_sha256": "c8f614e9c29bd3d49994db4fb94d4af62879c9bd32464b3f9b2adc5a0419ade0",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_1_0_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "25084f208a1aaec6d588e7e46bda641d31352c15ba359bd7b9d5685924f36210"
+        },
+        "albedo": "SaCalobra_Detail_1_0_Albedo.png",
+        "albedo_sha256": "797e0fca54e5c33c028387a6c5d2fff78b357f30a0b3e8910a21bd55c1973900",
+        "changed_codes_from_l04": 20325,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_1_0_HEIGHT_TRANSITION",
+        "final_cache_sha256": "6078e5b09fb0cae39074304b5948b705ca33fd101884924406751e64e02d91f1",
+        "band_samples": 2900211,
+        "changed_samples": 2899979,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -83.14205932617188,
+        "delta_max_m": 55.9881591796875,
+        "delta_max_abs_m": 83.14205932617188,
+        "delta_mean_abs_within_band_m": 0.6347724523009802
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 325.010009765625,
+        "max_m": 1414.9599609375,
+        "expected_codes_sha256": "8c5f12b954c388b03ebbf1e2bb076eaa046208359aa0e3ad6df110dc287dfd37",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_0_1_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "c275d23b60df6d4c82f0fbd43ae5e83164c471e7b2bbc9cac00676040aaf642c"
+        },
+        "albedo": "SaCalobra_Detail_0_1_Albedo.png",
+        "albedo_sha256": "264b0a6e2cd7978550cfe46b3637dd0b6638ad2cefc52624373625f6c49d54d4",
+        "changed_codes_from_l04": 10746,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_0_1_HEIGHT_TRANSITION",
+        "final_cache_sha256": "a240b09bba8710848d11d16c9bb4bbcf12d450fdf7fb60a21ab4745bcf3d39d0",
+        "band_samples": 3842593,
+        "changed_samples": 3841895,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -37.3909912109375,
+        "delta_max_m": 36.92431640625,
+        "delta_max_abs_m": 37.3909912109375,
+        "delta_mean_abs_within_band_m": 0.4624408988084475
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 300.8800048828125,
+        "max_m": 906.1655883789062,
+        "expected_codes_sha256": "86a13095f8eb6b68894d648b1721bd658208564d131f8b6abff80b59c5cbe786",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_1_1_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "c3ac448b21eb9b60267b03785c507f35072800f6a171729fac9eafb829603a47"
+        },
+        "albedo": "SaCalobra_Detail_1_1_Albedo.png",
+        "albedo_sha256": "8fd690972f0b5e02356340bd718bf7e22c23b6a10740be728ab588635abca928",
+        "changed_codes_from_l04": 7317,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_1_1_HEIGHT_TRANSITION",
+        "final_cache_sha256": "e18bfd28cae2b2ce806eeb9e112c3f86f2715dcedbb0d078bfe370bba9df0da9",
+        "band_samples": 3616311,
+        "changed_samples": 3615404,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -28.900146484375,
+        "delta_max_m": 36.3485107421875,
+        "delta_max_abs_m": 36.3485107421875,
+        "delta_mean_abs_within_band_m": 0.4300758692158079
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "resolution": [
+          2017,
+          2017,
+          1
+        ],
+        "index0": [
+          -3935.546875,
+          0.0,
+          3939.453125
+        ],
+        "spacing_m": 3.90625,
+        "uv_origin_cm": [
+          -393750.0,
+          394140.625,
+          0
+        ],
+        "uv_inverse_cm": [
+          1.2692117005453644e-06,
+          -1.2692117005453644e-06,
+          0
+        ],
+        "min_m": -0.8825892806053162,
+        "max_m": 1436.796142578125,
+        "expected_codes_sha256": "57332136fe7502977612afbca12e594e82662065cd572cb5ada6b8dc1c0591cd",
+        "files": {},
+        "file_sha256": {},
+        "albedo": "SaCalobra_Context_Valid_Albedo.png",
+        "albedo_sha256": "93ef10b71602ee65f545c341aa2ef88df98e2f88acf76ec37482be41e8fad91f",
+        "changed_codes_from_l04": 1605,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Context_Valid_SOURCE",
+        "final_cache_sha256": "a1f81d26be60e65375f368731224828e809e87b6abb6a54cc2e951c42559498d",
+        "band_samples": 0,
+        "changed_samples": 0,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": 0.0,
+        "delta_max_m": 0.0,
+        "delta_max_abs_m": 0.0,
+        "delta_mean_abs_within_band_m": 0
+      }
+    ],
+    "band": {
+      "inner_rectangle_inset_from_native_working_m": 64,
+      "native_boxblur_radius_m": 32,
+      "extent": "Outside the inset rectangle, including existing UE padding; Context unchanged",
+      "parameter_authority": "Local candidate tuning, not SideFX tutorial constants"
+    },
+    "shared_edge_code_mismatches": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "hip_sha256": "94abfee6b5d5e0410ab52b089e16a890755c9681231120f1b84c22739e3cf5bb"
+  },
+  "reopen": {
+    "status": "NATIVE_GEOMETRY_PASS",
+    "houdini_version": "22.0.466",
+    "target_map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05",
+    "output_mode": 1,
+    "height_only": true,
+    "scale_z": 585.9375,
+    "quantization_step_m": 0.0457763671875,
+    "delta_layer": "Lesson06_Boundary_Transition",
+    "fresh_replay": true,
+    "source_hashes": {
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_0_0.bgeo.sc": "58f13cb628700e1acad943044f090497191e9e7dc533a40b68e7db4515c55e3e",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_1_0.bgeo.sc": "3aa576ae99987024f700f9766c68b2b1db7fede95899e964159591c80595bde0",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_0_1.bgeo.sc": "d99f994f47d6243ed30b1fc9d51ddef8b3094c9eb193543701d86cb0a406166f",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Detail_1_1.bgeo.sc": "dcf60c0b722125e32ffb0432807fd537a9d58ba9809f99edfa2df25a00cc9a96",
+      "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06GeometryRemote\\before\\SaCalobra_Context_Valid.bgeo.sc": "fe4a516346f9124f30adc8319b9a7c37075b85fcb939e09e7596f272a03c8fa2"
+    },
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.7467375993728638,
+        "max_m": 576.3699951171875,
+        "expected_codes_sha256": "420b73e98fe64f4e0082758284734f1dfd7f583986c5e7e92a4e37811879b34c",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_0_0_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "8a1f43256b2f2726c3014cdff63bd1284607d45e1907619c572c3041f123826b"
+        },
+        "albedo": "SaCalobra_Detail_0_0_Albedo.png",
+        "albedo_sha256": "58e4f6df60b93b381b0967f1667a8b7536cc58842ec3b23373d33e2a1392cb5c",
+        "changed_codes_from_l04": 10077,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_0_0_HEIGHT_TRANSITION",
+        "final_cache_sha256": "c2c797534c479c41a73c50c17190d41eab47ece59371dc6851b5c80ce71bb05d",
+        "band_samples": 3136783,
+        "changed_samples": 3087947,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -75.34963989257812,
+        "delta_max_m": 112.81654357910156,
+        "delta_max_abs_m": 112.81654357910156,
+        "delta_mean_abs_within_band_m": 0.4445381776992924
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          739.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          74000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": -0.028533488512039185,
+        "max_m": 751.6400146484375,
+        "expected_codes_sha256": "c8f614e9c29bd3d49994db4fb94d4af62879c9bd32464b3f9b2adc5a0419ade0",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_1_0_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "25084f208a1aaec6d588e7e46bda641d31352c15ba359bd7b9d5685924f36210"
+        },
+        "albedo": "SaCalobra_Detail_1_0_Albedo.png",
+        "albedo_sha256": "797e0fca54e5c33c028387a6c5d2fff78b357f30a0b3e8910a21bd55c1973900",
+        "changed_codes_from_l04": 20325,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_1_0_HEIGHT_TRANSITION",
+        "final_cache_sha256": "6078e5b09fb0cae39074304b5948b705ca33fd101884924406751e64e02d91f1",
+        "band_samples": 2900211,
+        "changed_samples": 2899979,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -83.14205932617188,
+        "delta_max_m": 55.9881591796875,
+        "delta_max_abs_m": 83.14205932617188,
+        "delta_mean_abs_within_band_m": 0.6347724523009802
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          -1900.25,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          -190050.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 325.010009765625,
+        "max_m": 1414.9599609375,
+        "expected_codes_sha256": "8c5f12b954c388b03ebbf1e2bb076eaa046208359aa0e3ad6df110dc287dfd37",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_0_1_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "c275d23b60df6d4c82f0fbd43ae5e83164c471e7b2bbc9cac00676040aaf642c"
+        },
+        "albedo": "SaCalobra_Detail_0_1_Albedo.png",
+        "albedo_sha256": "264b0a6e2cd7978550cfe46b3637dd0b6638ad2cefc52624373625f6c49d54d4",
+        "changed_codes_from_l04": 10746,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_0_1_HEIGHT_TRANSITION",
+        "final_cache_sha256": "a240b09bba8710848d11d16c9bb4bbcf12d450fdf7fb60a21ab4745bcf3d39d0",
+        "band_samples": 3842593,
+        "changed_samples": 3841895,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -37.3909912109375,
+        "delta_max_m": 36.92431640625,
+        "delta_max_abs_m": 37.3909912109375,
+        "delta_mean_abs_within_band_m": 0.4624408988084475
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "resolution": [
+          3811,
+          5081,
+          1
+        ],
+        "index0": [
+          4.75,
+          0.0,
+          3279.75
+        ],
+        "spacing_m": 0.5,
+        "uv_origin_cm": [
+          450.0,
+          328000.0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0
+        ],
+        "min_m": 300.8800048828125,
+        "max_m": 906.1655883789062,
+        "expected_codes_sha256": "86a13095f8eb6b68894d648b1721bd658208564d131f8b6abff80b59c5cbe786",
+        "files": {
+          "Lesson06_Boundary_Transition": "SaCalobra_Detail_1_1_increment.bgeo.sc"
+        },
+        "file_sha256": {
+          "Lesson06_Boundary_Transition": "c3ac448b21eb9b60267b03785c507f35072800f6a171729fac9eafb829603a47"
+        },
+        "albedo": "SaCalobra_Detail_1_1_Albedo.png",
+        "albedo_sha256": "8fd690972f0b5e02356340bd718bf7e22c23b6a10740be728ab588635abca928",
+        "changed_codes_from_l04": 7317,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Detail_1_1_HEIGHT_TRANSITION",
+        "final_cache_sha256": "e18bfd28cae2b2ce806eeb9e112c3f86f2715dcedbb0d078bfe370bba9df0da9",
+        "band_samples": 3616311,
+        "changed_samples": 3615404,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": -28.900146484375,
+        "delta_max_m": 36.3485107421875,
+        "delta_max_abs_m": 36.3485107421875,
+        "delta_mean_abs_within_band_m": 0.4300758692158079
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "resolution": [
+          2017,
+          2017,
+          1
+        ],
+        "index0": [
+          -3935.546875,
+          0.0,
+          3939.453125
+        ],
+        "spacing_m": 3.90625,
+        "uv_origin_cm": [
+          -393750.0,
+          394140.625,
+          0
+        ],
+        "uv_inverse_cm": [
+          1.2692117005453644e-06,
+          -1.2692117005453644e-06,
+          0
+        ],
+        "min_m": -0.8825892806053162,
+        "max_m": 1436.796142578125,
+        "expected_codes_sha256": "57332136fe7502977612afbca12e594e82662065cd572cb5ada6b8dc1c0591cd",
+        "files": {},
+        "file_sha256": {},
+        "albedo": "SaCalobra_Context_Valid_Albedo.png",
+        "albedo_sha256": "93ef10b71602ee65f545c341aa2ef88df98e2f88acf76ec37482be41e8fad91f",
+        "changed_codes_from_l04": 1605,
+        "producer": "/obj/LESSON06_GEOMETRY/SaCalobra_Context_Valid_SOURCE",
+        "final_cache_sha256": "a1f81d26be60e65375f368731224828e809e87b6abb6a54cc2e951c42559498d",
+        "band_samples": 0,
+        "changed_samples": 0,
+        "outside_band": "BIT_EXACT",
+        "original_masks": "BIT_EXACT",
+        "delta_min_m": 0.0,
+        "delta_max_m": 0.0,
+        "delta_max_abs_m": 0.0,
+        "delta_mean_abs_within_band_m": 0
+      }
+    ],
+    "band": {
+      "inner_rectangle_inset_from_native_working_m": 64,
+      "native_boxblur_radius_m": 32,
+      "extent": "Outside the inset rectangle, including existing UE padding; Context unchanged",
+      "parameter_authority": "Local candidate tuning, not SideFX tutorial constants"
+    },
+    "shared_edge_code_mismatches": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "hip_sha256": "94abfee6b5d5e0410ab52b089e16a890755c9681231120f1b84c22739e3cf5bb"
+  },
+  "source_mapping": {
+    "height_composite": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_layer.html",
+    "band": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_maskbyobject.html",
+    "layer_separation": "PEG-02-02 03:03-04:30; original source/manual/procedural separation; new boundary branch is a YACS adaptation"
+  },
+  "owner_visual_acceptance": "PENDING",
+  "merge": false,
+  "live_apply": {
+    "status": "APPLIED_ACTIVE_UNSAVED",
+    "pid": 31408,
+    "completed": [
+      "SaCalobra_Detail_0_0",
+      "SaCalobra_Detail_1_0",
+      "SaCalobra_Detail_0_1",
+      "SaCalobra_Detail_1_1"
+    ],
+    "map_saved": false,
+    "restart": false,
+    "masks_imported": false,
+    "map_sha256_before": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+    "tile": "SaCalobra_Detail_1_1",
+    "layer": "Lesson06_Boundary_Transition",
+    "map_sha256_after": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+    "native_readback": "PENDING"
+  },
+  "native_verification": {
+    "status": "NATIVE_UE_GEOMETRY_PASS",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "samples": 19363691,
+        "all_expected_codes_match": true,
+        "masks": {
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        },
+        "outside_band": "BIT_EXACT",
+        "changed_height_codes": 2577743,
+        "max_abs_delta_m": 112.8387451171875,
+        "native_export_sha256": "0c5a4ad1f3257d093f025bf5081010fdd6ee4fb3078a411e7f10ce20989c3174"
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "samples": 19363691,
+        "all_expected_codes_match": true,
+        "masks": {
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        },
+        "outside_band": "BIT_EXACT",
+        "changed_height_codes": 2654197,
+        "max_abs_delta_m": 83.1298828125,
+        "native_export_sha256": "8ca71dd6c6b18f6c7454a3a7e35c684802383e90bb79f73d4e873d50a23ff755"
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "samples": 19363691,
+        "all_expected_codes_match": true,
+        "masks": {
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        },
+        "outside_band": "BIT_EXACT",
+        "changed_height_codes": 3528050,
+        "max_abs_delta_m": 37.3992919921875,
+        "native_export_sha256": "2ae1c2129e0eb60777cd69c3d86ab65cac06a1463c02f741f7375c4da0a79026"
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "samples": 19363691,
+        "all_expected_codes_match": true,
+        "masks": {
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        },
+        "outside_band": "BIT_EXACT",
+        "changed_height_codes": 3278700,
+        "max_abs_delta_m": 36.346435546875,
+        "native_export_sha256": "255eff0151e979e7dbf35c93a1e5bb4695164b57c03ce73ee13223a533482645"
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "samples": 4068289,
+        "all_expected_codes_match": true,
+        "masks": {
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        },
+        "outside_band": "BIT_EXACT",
+        "changed_height_codes": 0,
+        "max_abs_delta_m": 0.0,
+        "native_export_sha256": "699b4005afaf8836f75ee11f21f8e7c70f34b5257ae8dcffee1d81da57dd19df"
+      }
+    ],
+    "source_retention": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2"
+    },
+    "merge": false,
+    "restart": false,
+    "shared_edge_code_mismatches": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "total_samples": 81523053
+  },
+  "visual_review": {
+    "views": [
+      "north",
+      "south",
+      "west",
+      "east",
+      "maximum_delta"
+    ],
+    "result": "Height transition applied and inspected; resolution/detail contrast remains visible. No seamless whole-world visual PASS.",
+    "context_resolution_m": 3.90625,
+    "working_resolution_m": 0.5
+  },
+  "persistence": "Separate HIP and cached payloads saved; UE layer active in unsaved current map. Original map bytes retained.",
+  "validation": {
+    "python_compile": "PASS",
+    "docs_index": "PASS: i18n, structure, links, freshness",
+    "protected_ci": "NOT_RUN",
+    "merge": "NOT_PERFORMED"
+  },
+  "screenshots": {
+    "worldgen/houdini/sa_calobra/evidence/lesson06_geometry_remote/east_after.png": "870a577450fc032967338a3dff0d581da895708a7c4b1e7f4c2ceeefc940ceaf",
+    "worldgen/houdini/sa_calobra/evidence/lesson06_geometry_remote/maximum_delta_after.png": "637f97e20f33b0b2fea7e9efd5e05579e617319efc4805099e3cee5b9aa314c3",
+    "worldgen/houdini/sa_calobra/evidence/lesson06_geometry_remote/north_after.png": "1c26c8c43cd3de47f8e5087a9a4795c1d8a31086c07447b7814f920e042b85fe",
+    "worldgen/houdini/sa_calobra/evidence/lesson06_geometry_remote/south_after.png": "5efb54e395d500111c4a0c67d3865f4ef61431d51e1fbf1710fb7b09c03a00fa",
+    "worldgen/houdini/sa_calobra/evidence/lesson06_geometry_remote/west_after.png": "a5de73805f4a9f1804988b38a1a8afe33ff7f55c547dca769c7845e421685ddb"
+  },
+  "progress_panel_removed": {
+    "original_viewer_sha256": "de5a211a655ca83759c4242a719e5e700b46ba4b3714c32cf5d82bbcc782eaaa",
+    "method": "Restored verified original HTML; browser reconnect only, no UE restart"
+  },
+  "disabled_verification": {
+    "status": "PRE_TRANSITION_HEIGHTS_AND_MASKS_RESTORED",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      }
+    ],
+    "total_height_samples": 81523053
+  },
+  "peak_audit": "lesson06-peak-audit-20261018.json"
+}

@@ -1,11 +1,15 @@
 """Discover all script tests, isolate modules and retain complete failure evidence.
 
 No Unreal, source downloads or GPU jobs are launched by this hosted suite.
+Scoped Draft plans are visibly non-full and the merge-ready gate runs every
+discovered module. Processes run in parallel with separate receipts and logs.
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import importlib.util
 import json
 import os
@@ -19,12 +23,43 @@ ROOT = Path(__file__).resolve().parents[2]
 # This existing assertion-based entrypoint is not a unittest module.
 STANDALONE = {"scripts/ci/test_final_architecture_contract.py"}
 MIN_MODULES = 49
+MAX_WORKERS = 4
 
 
 def discover(root: Path) -> list[str]:
     return sorted(
         p.relative_to(root).as_posix() for p in (root / "scripts").rglob("test_*.py")
     )
+
+
+def native_unreal_entrypoint(root: Path, relative: str) -> bool:
+    """Recognize editor-only invocation scripts, not Python unittest modules.
+
+    These legacy scripts are named test_*.py but execute Unreal API calls at
+    import time; executing them on a Linux Python host is not a valid test.
+    Classification is fail closed if any unittest-style test method exists.
+    """
+    if not relative.startswith("scripts/ue/"):
+        return False
+    path = root / relative
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative)
+    imports_unreal = any(
+        isinstance(node, ast.Import)
+        and any(alias.name == "unreal" for alias in node.names)
+        or isinstance(node, ast.ImportFrom)
+        and node.module == "unreal"
+        for node in tree.body
+    )
+    has_unittests = any(
+        isinstance(node, ast.ClassDef)
+        and any(
+            isinstance(part, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and part.name.startswith("test_")
+            for part in node.body
+        )
+        for node in ast.walk(tree)
+    )
+    return imports_unreal and not has_unittests
 
 
 def run_module(root: Path, relative: str) -> dict:
@@ -61,11 +96,134 @@ def run_module(root: Path, relative: str) -> dict:
     }
 
 
+def validate_plan(root: Path, plan_path: Path) -> tuple[str, str, list[str], int]:
+    """Never trust a scope file without exact SHA and full-inventory validation."""
+    discovered = discover(root)
+    if len(discovered) < MIN_MODULES:
+        raise ValueError("Full script test discovery is truncated")
+    if plan_path is None:
+        return "FULL", "no plan specified", discovered, len(discovered)
+
+    plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    actual_head = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=root, text=True
+    ).strip()
+    if not isinstance(plan, dict) or plan.get("schema_version") != 1:
+        raise ValueError("Invalid script test plan schema")
+    if plan.get("head") != actual_head:
+        raise ValueError("Script test plan SHA does not match checkout")
+    if plan.get("full_module_count") != len(discovered):
+        raise ValueError("Script test plan inventory does not match discovery")
+
+    mode = plan.get("mode")
+    selected = plan.get("modules")
+    if (
+        mode not in {"FULL", "DRAFT_SCOPED"}
+        or not isinstance(selected, list)
+        or not selected
+        or any(not isinstance(p, str) for p in selected)
+        or selected != sorted(set(selected))
+        or not set(selected).issubset(discovered)
+    ):
+        raise ValueError("Invalid, missing or duplicate script test plan modules")
+    if mode == "FULL" and selected != discovered:
+        raise ValueError("Full suite plan cannot omit discovered modules")
+    if mode == "DRAFT_SCOPED" and not set(
+        (
+            "scripts/ci/test_agent_contracts.py",
+            "scripts/ci/test_ci_aggregate_contract.py",
+            "scripts/ci/test_final_architecture_contract.py",
+            "scripts/ci/test_script_test_discovery.py",
+        )
+    ).issubset(selected):
+        raise ValueError("Scoped Draft plan cannot omit mandatory guards")
+    reason = plan.get("reason")
+    if not isinstance(reason, str) or not reason:
+        raise ValueError("Script test plan reason is missing")
+    return mode, reason, selected, len(discovered)
+
+
+def run_isolated(relative: str, output: Path) -> dict:
+    """Always execute a discovered module in its own subprocess and output dir."""
+    folder = output / relative.removesuffix(".py")
+    folder.mkdir(parents=True, exist_ok=True)
+    receipt = folder / "result.json"
+    receipt.unlink(missing_ok=True)
+    if native_unreal_entrypoint(ROOT, relative):
+        # Explicitly defer native entrypoints: zero hosted tests, never labelled
+        # as native PASS, never imported on Linux or executed against the world.
+        result = {
+            "tests": 0,
+            "skipped": 0,
+            "passed": True,
+            "deferred_native": True,
+            "kind": "unreal_editor_entrypoint",
+            "path": relative,
+            "exit_code": 0,
+            "seconds": 0.0,
+        }
+        receipt.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        return result
+    started = time.monotonic()
+    code = 125
+    error = None
+    with (folder / "output.log").open("w", encoding="utf-8") as log:
+        try:
+            code = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--module",
+                    relative,
+                    "--output",
+                    str(folder.resolve()),
+                ],
+                cwd=ROOT,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+                check=False,
+            ).returncode
+        except subprocess.TimeoutExpired:
+            code, error = 124, "isolated module timed out after 120 seconds"
+        except OSError as exc:
+            error = f"cannot start isolated module: {type(exc).__name__}"
+
+    try:
+        result = json.loads(receipt.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        result = {"tests": 0, "skipped": 0, "passed": False}
+        error = error or f"test receipt unavailable: {type(exc).__name__}"
+
+    if not isinstance(result, dict):
+        result = {"tests": 0, "skipped": 0, "passed": False}
+        error = "non-object test receipt"
+    if error:
+        result["error"] = error
+    result.update(
+        path=relative,
+        exit_code=code,
+        seconds=round(time.monotonic() - started, 3),
+    )
+    result["passed"] = (
+        result.get("passed") is True
+        and code == 0
+        and type(result.get("tests")) is int
+        and result["tests"] > 0
+    )
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="/tmp/yacs-script-tests")
     parser.add_argument("--module", help=argparse.SUPPRESS)
+    parser.add_argument("--plan", type=Path)
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
+    if not 1 <= args.workers <= MAX_WORKERS:
+        parser.error(f"--workers must be in 1..{MAX_WORKERS}")
+
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     if args.module:
@@ -84,61 +242,48 @@ def main() -> int:
         )
         return 0 if result["passed"] else 1
 
-    paths = discover(ROOT)
-    if len(paths) < MIN_MODULES:
-        raise SystemExit(
-            f"test discovery regression: expected >= {MIN_MODULES} modules, found {len(paths)}"
-        )
+    mode, reason, paths, total = validate_plan(ROOT, args.plan)
+    print(
+        f"Hosted script-test tier: {mode}, selected={len(paths)}/{total}, "
+        f"workers={args.workers}, reason={reason}",
+        flush=True,
+    )
     results = []
-    for relative in paths:
-        folder = output / relative.removesuffix(".py")
-        folder.mkdir(parents=True, exist_ok=True)
-        receipt = folder / "result.json"
-        receipt.unlink(missing_ok=True)
-        started = time.monotonic()
-        with (folder / "output.log").open("w", encoding="utf-8") as log:
-            try:
-                code = subprocess.run(
-                    [
-                        sys.executable,
-                        str(Path(__file__).resolve()),
-                        "--module",
-                        relative,
-                        "--output",
-                        str(folder.resolve()),
-                    ],
-                    cwd=ROOT,
-                    stdout=log,
-                    stderr=subprocess.STDOUT,
-                    timeout=120,
-                    check=False,
-                ).returncode
-            except subprocess.TimeoutExpired:
-                code = 124
-        result = (
-            json.loads(receipt.read_text(encoding="utf-8"))
-            if receipt.exists()
-            else {"tests": 0, "skipped": 0, "passed": False}
-        )
-        result.update(
-            path=relative, exit_code=code, seconds=round(time.monotonic() - started, 3)
-        )
-        result["passed"] = result["passed"] is True and code == 0
-        results.append(result)
-        print(
-            f"{'PASS' if result['passed'] else 'FAIL'} {relative}: {result['tests']} tests ({result['seconds']} s)",
-            flush=True,
-        )
-        if not result["passed"]:
-            print((folder / "output.log").read_text(encoding="utf-8"), flush=True)
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {executor.submit(run_isolated, path, output): path for path in paths}
+        for future in as_completed(futures):
+            result = future.result()
+            results.append(result)
+            print(
+                f"{'DEFERRED_EDITOR_ONLY' if result.get('deferred_native') else ('PASS' if result['passed'] else 'FAIL')} {result['path']}: "
+                f"{result['tests']} tests ({result['seconds']} s)",
+                flush=True,
+            )
+            if not result["passed"]:
+                log = output / result["path"].removesuffix(".py") / "output.log"
+                print(log.read_text(encoding="utf-8"), flush=True)
+
+    results.sort(key=lambda r: r["path"])
+    passed = all(r["passed"] for r in results)
+    native_deferred = sum(1 for r in results if r.get("deferred_native"))
+    hosted_test_modules = sum(1 for r in results if r.get("tests", 0) > 0)
+    if hosted_test_modules == 0:
+        passed = False
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "head": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
         ).strip(),
+        "mode": mode,
+        "full_suite_passed": passed and mode == "FULL" and native_deferred == 0,
+        "hosted_test_modules": hosted_test_modules,
+        "deferred_native_editor_entrypoints": native_deferred,
+        "native_editor_proof_pending": native_deferred > 0,
+        "total_discovered_modules": total,
         "modules": len(results),
         "tests": sum(r["tests"] for r in results),
-        "passed": all(r["passed"] for r in results),
+        "passed": passed,
+        "reason": reason,
         "results": results,
     }
     (output / "summary.json").write_text(
@@ -148,14 +293,25 @@ def main() -> int:
     if step_summary:
         with open(step_summary, "a", encoding="utf-8") as handle:
             handle.write(
-                f"## Hosted script tests\n\n{summary['modules']} modules; {summary['tests']} tests; passed={summary['passed']}.\n\n"
+                f"## Hosted script tests: {mode}\n\n"
+                f"{summary['modules']}/{total} modules; "
+                f"{summary['tests']} tests; passed={passed}; "
+                f"**full_suite_passed={summary['full_suite_passed']}**.\n\n"
             )
+            handle.write(f"Reason: {reason}.\n\n")
             handle.write("| Module | Result | Tests | Seconds |\n|---|---|---:|---:|\n")
-            for r in results:
-                handle.write(
-                    f"| `{r['path']}` | {'PASS' if r['passed'] else 'FAIL'} | {r['tests']} | {r['seconds']} |\n"
+            for result in results:
+                outcome = (
+                    "DEFERRED_EDITOR_ONLY"
+                    if result.get("deferred_native")
+                    else ("PASS" if result["passed"] else "FAIL")
                 )
-    return 0 if summary["passed"] else 1
+                handle.write(
+                    f"| \x60{result['path']}\x60 | "
+                    f"{outcome} | "
+                    f"{result['tests']} | {result['seconds']} |\n"
+                )
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

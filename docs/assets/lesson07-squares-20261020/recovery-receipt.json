@@ -1,0 +1,192 @@
+{
+  "status": "REJECTED_VARIATION_ROLLED_BACK_ON_DISK_NATIVE_RECOVERY_UNVERIFIED",
+  "issue": 365,
+  "roadmap_milestone": "M3",
+  "pr": 474,
+  "rejected_commit": "1441c8556888cfaa4654a89ad1ea8e857acbac5b",
+  "rollback": {
+    "status": "REJECTED_VARIATION_MASTER_AND_INSTANCE_RESTORED_ON_DISK",
+    "baseline": "7e3b0001d1d325553f0fbf09c7aee71b33a57935",
+    "restored": [
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset",
+        "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+        "size": 208956
+      },
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+        "sha256": "b4c2dadf01b2f4a4a805e2379a38c9970021ac92be1065251e436c426027bcd4",
+        "size": 43433
+      }
+    ],
+    "native_reopen_verified": false,
+    "map_written": false,
+    "editor_restarted": false,
+    "tiling_fixed": false
+  },
+  "unchanged_arrays": [
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf"
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1"
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8"
+    }
+  ],
+  "saved_map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+  "placement_restoration_before_crash": {
+    "status": "ACCIDENTAL_TRANSLATION_RESTORED_NATIVE_READBACK",
+    "before": [
+      {
+        "name": "SaCalobra_Unified_0_0",
+        "label": "SaCalobra_Unified_0_0",
+        "location": [
+          -406425.0,
+          -25.01220703125,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "scale": [
+          49.99999701976776,
+          49.99999701976776,
+          561.389892578125
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_1_0",
+        "label": "SaCalobra_Unified_1_0",
+        "location": [
+          -24.98779296875,
+          -25.01220703125,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "scale": [
+          49.99999701976776,
+          49.99999701976776,
+          561.389892578125
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_0_1",
+        "label": "SaCalobra_Unified_0_1",
+        "location": [
+          -406425.0,
+          410245.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "scale": [
+          49.99999701976776,
+          49.99999701976776,
+          561.389892578125
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_1_1",
+        "label": "SaCalobra_Unified_1_1",
+        "location": [
+          -24.98779296875,
+          406375.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "scale": [
+          49.99999701976776,
+          49.99999701976776,
+          561.389892578125
+        ],
+        "components": 1024
+      }
+    ],
+    "after": [
+      {
+        "name": "SaCalobra_Unified_0_0",
+        "location": [
+          -406425.0,
+          -25.01220703125,
+          0.0
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_1_0",
+        "location": [
+          -24.98779296875,
+          -25.01220703125,
+          0.0
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_0_1",
+        "location": [
+          -406425.0,
+          406375.0,
+          0.0
+        ],
+        "components": 1024
+      },
+      {
+        "name": "SaCalobra_Unified_1_1",
+        "location": [
+          -24.98779296875,
+          406375.0,
+          0.0
+        ],
+        "components": 1024
+      }
+    ],
+    "restored_y_cm": -3870.0,
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "editor_closed": false
+  },
+  "crash": {
+    "utc": "2026-10-20T21:12:32Z",
+    "engine": "5.8.2-56702186+++UE5+Release-5.8",
+    "editor_pid": 10872,
+    "operation": "MaterialEditingLibrary.update_material_instance during flat-normal isolation",
+    "preceding_errors": [
+      "Missing function input 'UV_DDX'",
+      "Missing function input 'UV_DDY'",
+      "Missing DDX(UVs) parameter",
+      "Default Material will be used in game"
+    ],
+    "exception": "EXCEPTION_ACCESS_VIOLATION reading address 0x0000000000000010",
+    "symbolized_root_cause_verified": false,
+    "local_log": "Saved/RuntimeProof/Lesson07Squares-20261020-1/crash-211232.log"
+  },
+  "editor_restarted": false,
+  "native_reopen_verified": false,
+  "tiling_fixed": false,
+  "owner_visual_accepted": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "unsaved_owner_edits_preserved_after_crash": "UNVERIFIED",
+  "next_step": "Reopen the same saved map only when the owner chooses; verify the restored material before further bounded tiling diagnostics. Never replay rejected variation or regenerate terrain."
+}

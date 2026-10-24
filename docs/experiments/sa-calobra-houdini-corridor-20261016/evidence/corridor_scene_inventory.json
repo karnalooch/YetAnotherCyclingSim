@@ -1,0 +1,38 @@
+[
+  {
+    "name": "DirectionalLight_0",
+    "class": "DirectionalLight"
+  },
+  {
+    "name": "SkyAtmosphere_0",
+    "class": "SkyAtmosphere"
+  },
+  {
+    "name": "SkyLight_0",
+    "class": "SkyLight"
+  },
+  {
+    "name": "PostProcessVolume_0",
+    "class": "PostProcessVolume"
+  },
+  {
+    "name": "SaCalobra_Detail_0_0",
+    "class": "Landscape"
+  },
+  {
+    "name": "SaCalobra_Detail_1_0",
+    "class": "Landscape"
+  },
+  {
+    "name": "SaCalobra_Detail_0_1",
+    "class": "Landscape"
+  },
+  {
+    "name": "SaCalobra_Detail_1_1",
+    "class": "Landscape"
+  },
+  {
+    "name": "SaCalobra_Context_Valid",
+    "class": "Landscape"
+  }
+]

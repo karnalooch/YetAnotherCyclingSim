@@ -36,39 +36,40 @@ if (-not $ReportPath) {
     $ReportPath = Join-Path $RepoRoot 'Saved/RuntimeProof/CI/M3/EmbarkTerrain/pcgex-bootstrap.json'
 }
 $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
-New-Item -ItemType Directory -Path (Split-Path -Parent $ReportPath) -Force | Out-Null
-
-if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
-    if (Test-Path -LiteralPath $PluginRoot) {
-        $Existing = @(Get-ChildItem -LiteralPath $PluginRoot -Force)
-        if ($Existing.Count -gt 0) {
-            throw "PCGEx destination already exists and is not an exact Git checkout: $PluginRoot"
-        }
-    } else {
-        New-Item -ItemType Directory -Path $PluginRoot -Force | Out-Null
-    }
-
-    & git -C $PluginRoot init
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to initialize PCGEx checkout.' }
-    & git -C $PluginRoot config core.autocrlf false
-    & git -C $PluginRoot remote add origin $ExpectedRepository
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to configure PCGEx origin.' }
-    & git -C $PluginRoot fetch --depth 1 origin $ExpectedCommit
-    if ($LASTEXITCODE -ne 0) { throw "Failed to fetch pinned PCGEx commit $ExpectedCommit." }
-    & git -C $PluginRoot checkout --detach FETCH_HEAD
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to checkout pinned PCGEx revision.' }
+# Reports must never create an untracked file inside the checkout being validated.
+$PluginPrefix = $PluginRoot.TrimEnd([char[]]'\/') + [System.IO.Path]::DirectorySeparatorChar
+if ($ReportPath.Equals($PluginRoot, [StringComparison]::OrdinalIgnoreCase) -or
+    $ReportPath.StartsWith($PluginPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'PCGEx report path must be outside the plugin checkout.'
 }
 
-if ($Mode -eq 'Install' -and (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
-    $InstallOrigin = (& git -C $PluginRoot remote get-url origin).Trim()
-    if ($InstallOrigin -ne $ExpectedRepository) {
-        throw "Existing PCGEx checkout has unexpected origin: $InstallOrigin"
+function Invoke-PluginGit {
+    param([Parameter(Mandatory=$true)] [string[]] $GitArguments)
+    # Git warnings belong to diagnostics, never to machine-readable path output.
+    # diff can refresh stat-only index entries despite --no-optional-locks.
+    # This per-process option keeps validation byte-read-only without changing config.
+    $start = [Diagnostics.ProcessStartInfo]::new('git')
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    foreach ($argument in @('--no-optional-locks', '-c', 'diff.autoRefreshIndex=false', '-C', $PluginRoot) + $GitArguments) {
+        $start.ArgumentList.Add($argument)
     }
-    & git -C $PluginRoot fetch --depth 1 origin $ExpectedCommit
-    if ($LASTEXITCODE -ne 0) { throw "Failed to refresh pinned PCGEx commit $ExpectedCommit." }
-    & git -C $PluginRoot reset --hard $ExpectedCommit
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to normalize PCGEx tracked source to the pinned revision.' }
-    & git -C $PluginRoot config core.autocrlf false
+    $process = [Diagnostics.Process]::Start($start)
+    $stdout = $process.StandardOutput.ReadToEndAsync()
+    $stderr = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+    $outputText = $stdout.GetAwaiter().GetResult()
+    $errorText = $stderr.GetAwaiter().GetResult()
+    if ($process.ExitCode -ne 0) {
+        throw "PCGEx git $($GitArguments -join ' ') failed (exit=$($process.ExitCode)): $errorText$outputText"
+    }
+    if ($errorText) { Write-Verbose $errorText.TrimEnd() }
+    if ($outputText.Length -gt 0) {
+        return $outputText.TrimEnd("`r", "`n") -split "`r?`n"
+    }
+
 }
 
 $CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
@@ -102,30 +103,29 @@ function Test-YacsPcgExCompatibilityPatchApplied {
     return $Hash -eq '68614ae15d6bb03f2e58b0fb1dfa33e8eeebbfd31da08bd94ebfb378aeb63977'
 }
 
+# Only a fresh, empty destination may be initialized/fetched. Existing checkouts
+# are authenticated below before any patch write; never fetch/reset user source.
+if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
+    if (Test-Path -LiteralPath $PluginRoot) {
+        if (@(Get-ChildItem -LiteralPath $PluginRoot -Force).Count -gt 0) {
+            throw "PCGEx destination already exists and is not an exact Git checkout: $PluginRoot"
+        }
+    } else {
+        New-Item -ItemType Directory -Path $PluginRoot -Force | Out-Null
+    }
+    Invoke-PluginGit @('init') | Out-Null
+    Invoke-PluginGit @('config', 'core.autocrlf', 'false') | Out-Null
+    Invoke-PluginGit @('remote', 'add', 'origin', $ExpectedRepository) | Out-Null
+    Invoke-PluginGit @('fetch', '--depth', '1', 'origin', $ExpectedCommit) | Out-Null
+    Invoke-PluginGit @('checkout', '--detach', 'FETCH_HEAD') | Out-Null
+}
+
 $CompatibilityTargetPath = Join-Path $PluginRoot $CompatibilityTargetRelative
 $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
 $PatchApplicable = $false
-
-if ((Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) -and -not $PatchApplied) {
-    & git -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
+if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
+    & git --no-optional-locks -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
     $PatchApplicable = ($LASTEXITCODE -eq 0)
-
-    if ($Mode -eq 'Install') {
-        if (-not $PatchApplicable) {
-            throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
-        }
-
-        & git -C $PluginRoot apply --whitespace=nowarn --ignore-space-change --ignore-whitespace $CompatibilityPatchPath
-        if ($LASTEXITCODE -ne 0) {
-            throw 'Failed to apply the reviewed YACS PCGEx compatibility patch.'
-        }
-
-        $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
-        if (-not $PatchApplied) {
-            throw 'PCGEx compatibility patch applied but exact patched-source verification failed.'
-        }
-        $PatchApplicable = $false
-    }
 }
 
 $Checks = [System.Collections.Generic.List[object]]::new()
@@ -139,8 +139,8 @@ Add-Check 'git_checkout' (Test-Path -LiteralPath $GitDir) $PluginRoot
 $Head = $null
 $Origin = $null
 if (Test-Path -LiteralPath $GitDir) {
-    $Head = (& git -C $PluginRoot rev-parse HEAD).Trim()
-    $Origin = (& git -C $PluginRoot remote get-url origin).Trim()
+    $Head = ((Invoke-PluginGit @('rev-parse', 'HEAD')) -join '').Trim()
+    $Origin = ((Invoke-PluginGit @('remote', 'get-url', 'origin')) -join '').Trim()
 }
 Add-Check 'exact_commit' ($Head -eq $ExpectedCommit) ([string]$Head)
 Add-Check 'origin' ($Origin -eq $ExpectedRepository) ([string]$Origin)
@@ -164,31 +164,49 @@ if (Test-Path -LiteralPath $LicensePath -PathType Leaf) {
 $Dirty = $null
 $ChangedPaths = @()
 $UntrackedPaths = @()
+$StagedPaths = @()
+$HiddenTrackedPaths = @()
 if (Test-Path -LiteralPath $GitDir) {
-    $Dirty = (& git -C $PluginRoot status --porcelain --untracked-files=all) -join [Environment]::NewLine
-    $ChangedPaths = @(& git -C $PluginRoot diff HEAD --name-only)
-    $UntrackedPaths = @(& git -C $PluginRoot ls-files --others --exclude-standard)
+    $Dirty = (Invoke-PluginGit @('status', '--porcelain', '--untracked-files=all')) -join [Environment]::NewLine
+    # --name-only may report stat-only differences when auto-refresh is disabled.
+    # --numstat computes content differences without rewriting the source index.
+    $ChangedPaths = @(Invoke-PluginGit @('diff', 'HEAD', '--numstat', '--no-ext-diff') | ForEach-Object {
+        $fields = $_ -split "`t", 3
+        if ($fields.Count -ne 3) { throw 'Unexpected Git content-diff record.' }
+        $fields[2]
+    })
+    $StagedPaths = @(Invoke-PluginGit @('diff', '--cached', '--name-only'))
+    # These flags suppress ordinary status/diff evidence; never trust that view.
+    $HiddenTrackedPaths = @(Invoke-PluginGit @('ls-files', '-v') | Where-Object { $_ -cmatch '^[a-zS] ' })
+    $UntrackedPaths = @(Invoke-PluginGit @('ls-files', '--others', '--exclude-standard'))
 }
 $UpstreamClean = (
     $ChangedPaths.Count -eq 0 -and
-    $UntrackedPaths.Count -eq 0
+    $UntrackedPaths.Count -eq 0 -and
+    $StagedPaths.Count -eq 0
 )
 $ExpectedPatchOnly = (
     $PatchApplied -and
     $ChangedPaths.Count -eq 1 -and
     $ChangedPaths[0] -eq $CompatibilityTargetRelative -and
-    $UntrackedPaths.Count -eq 0
+    $UntrackedPaths.Count -eq 0 -and
+    $StagedPaths.Count -eq 0
 )
 $CompatibilityReady = $PatchApplied -or $PatchApplicable
-$CheckoutPolicyOk = if ($Mode -eq 'Install') {
-    $ExpectedPatchOnly
-}
-else {
-    $UpstreamClean -and $PatchApplicable
-}
+$CheckoutPolicyOk = ($UpstreamClean -and $PatchApplicable) -or $ExpectedPatchOnly
+Add-Check 'visible_tracked_files' ($HiddenTrackedPaths.Count -eq 0) ($HiddenTrackedPaths -join [Environment]::NewLine)
 Add-Check 'clean_checkout' $CheckoutPolicyOk ([string]$Dirty)
 Add-Check 'compatibility_patch' $CompatibilityReady $CompatibilityPatchId
-Add-Check 'expected_patch_only' ($(if ($Mode -eq 'Install') { $ExpectedPatchOnly } else { $PatchApplicable })) ([string]$Dirty)
+Add-Check 'expected_patch_only' $CheckoutPolicyOk ([string]$Dirty)
+
+# All source identity, license and dirt checks must pass before a write.
+$PreflightFailed = @($Checks | Where-Object { $_.status -ne 'PASS' })
+if ($Mode -eq 'Install' -and $PreflightFailed.Count -eq 0 -and -not $PatchApplied) {
+    Invoke-PluginGit @('apply', '--whitespace=nowarn', '--ignore-space-change', '--ignore-whitespace', $CompatibilityPatchPath) | Out-Null
+    $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
+    $PatchApplicable = $false
+    Add-Check 'installed_patch_exact' $PatchApplied $CompatibilityTargetRelative
+}
 
 $Failed = @($Checks | Where-Object { $_.status -ne 'PASS' })
 $Report = [ordered]@{
@@ -203,10 +221,17 @@ $Report = [ordered]@{
     compatibility_patch_state = $(if ($PatchApplied) {'applied'} elseif ($PatchApplicable) {'applicable'} else {'invalid'})
     compatibility_patch_sha256 = $ActualCompatibilityPatchSha256
     compatibility_target = $CompatibilityTargetRelative
+    upstream_clean_before_install = $UpstreamClean
+    exact_patch_only_before_install = $ExpectedPatchOnly
+    changed_paths_before_install = @($ChangedPaths)
+    staged_paths_before_install = @($StagedPaths)
+    hidden_tracked_paths_before_install = @($HiddenTrackedPaths)
+    untracked_paths_before_install = @($UntrackedPaths)
     plugin_root = $PluginRoot
     status = $(if ($Failed.Count -eq 0) {'PASS'} else {'FAIL'})
     checks = $Checks
 }
+New-Item -ItemType Directory -Path (Split-Path -Parent $ReportPath) -Force | Out-Null
 $Report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ReportPath -Encoding UTF8
 
 if ($Failed.Count -gt 0) {

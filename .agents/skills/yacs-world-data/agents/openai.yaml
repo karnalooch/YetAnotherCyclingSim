@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — dane geograficzne"
+  short_description: "Źródła GIS, NoData, maski i World Authority"
+  default_prompt: "Użyj $yacs-world-data, aby sprawdzić źródła, pokrycie i poprawność danych geograficznych YACS przed authoringiem."

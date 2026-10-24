@@ -1,0 +1,5765 @@
+{
+  "status": "SELECTED_ORIGINAL_NODE_INSPECTION_ONLY; NOT_A_COOK_OR_GEOGRAPHIC_FIDELITY_PROOF",
+  "houdini_version": "22.0.466",
+  "source_part_ids": [
+    "PEG-01-01",
+    "PEG-01-02",
+    "PEG-01-03"
+  ],
+  "source_corpus_file": "P1_01_Landscape_Creation/Materialy/ProjectFiles_LandscapeCreation2/ProjectFiles_LandscapeCreation/ProjectFiles_LandscapeCreation_DigitalAsset.hip",
+  "source_hip_sha256": "35194d7f7c2784c17f9b539cfc46b76df89d01cbb602618aab43dd803283f645",
+  "source_hda_sha256": "23dcea9051f5d4d980b548eec95005d2616dc0093717aa6df0cbdce4a8faee27",
+  "original_audit_sha256": "2aee76ef00ae161babed55e12fe25a4abec06ca57f22cb415a983d3dcdceead9",
+  "geography_boundary": "Original example island values are not the target values for source-faithful Sa Calobra; use Pegasus methods with real DTM and record adaptations.",
+  "selected_nodes": [
+    {
+      "name": "heightfield_noise1",
+      "type": "heightfield_noise",
+      "inputs": [
+        "heightfield_project1",
+        "heightfield_maskblur1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Noise Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "combine": {
+          "value": 1,
+          "label": "Combine Method"
+        },
+        "blend": {
+          "value": 0.5,
+          "label": "Blend"
+        },
+        "centernoise": {
+          "value": 0,
+          "label": "Center Noise"
+        },
+        "amp": {
+          "value": 200.0,
+          "label": "Amplitude"
+        },
+        "elementsize": {
+          "value": 900.0,
+          "label": "Element Size"
+        },
+        "elementscalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "basis": {
+          "value": "worleyFB",
+          "label": "Noise Type"
+        },
+        "fractal": {
+          "value": "hmfT",
+          "label": "Fractal"
+        },
+        "periodx": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periody": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periodz": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "oct": {
+          "value": 8.0,
+          "label": "Max Octaves"
+        },
+        "lac": {
+          "value": 1.841,
+          "label": "Lacunarity"
+        },
+        "rough": {
+          "value": 0.5,
+          "label": "Roughness"
+        },
+        "flowrot": {
+          "value": 0.0,
+          "label": "Flow Rotation"
+        },
+        "fold": {
+          "value": 0,
+          "label": "Fold"
+        },
+        "complement": {
+          "value": 0,
+          "label": "Complement"
+        },
+        "dogain": {
+          "value": 0,
+          "label": "Enable Gain"
+        },
+        "gain": {
+          "value": 0.5,
+          "label": "Gain"
+        },
+        "dobias": {
+          "value": 0,
+          "label": "Enable Bias"
+        },
+        "bias": {
+          "value": 0.5,
+          "label": "Bias"
+        },
+        "clipmin": {
+          "value": 0.0,
+          "label": "Clipping Minimum"
+        },
+        "clipmax": {
+          "value": 1.0,
+          "label": "Clipping Maximum"
+        },
+        "dolwarp": {
+          "value": 0,
+          "label": "Enable Lattice Warp"
+        },
+        "accuml": {
+          "value": 1,
+          "label": "Accumulate Lattice Warp"
+        },
+        "disp": {
+          "value": 0.1405,
+          "label": "Lattice Warp"
+        },
+        "dispfreq": {
+          "value": 1.0,
+          "label": "Freq"
+        },
+        "dogwarp": {
+          "value": 0,
+          "label": "Enable Gradient Warp"
+        },
+        "accumg": {
+          "value": 0,
+          "label": "Accumulate Gradient Warp"
+        },
+        "gflow": {
+          "value": 0.0,
+          "label": "Gradient Warp"
+        }
+      }
+    },
+    {
+      "name": "heightfield_noise2",
+      "type": "heightfield_noise",
+      "inputs": [
+        "heightfield_noise1",
+        "heightfield_maskblur1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Noise Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "combine": {
+          "value": 1,
+          "label": "Combine Method"
+        },
+        "blend": {
+          "value": 0.5,
+          "label": "Blend"
+        },
+        "centernoise": {
+          "value": 1,
+          "label": "Center Noise"
+        },
+        "amp": {
+          "value": 90.0,
+          "label": "Amplitude"
+        },
+        "elementsize": {
+          "value": 280.0,
+          "label": "Element Size"
+        },
+        "elementscalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "basis": {
+          "value": "sparse",
+          "label": "Noise Type"
+        },
+        "fractal": {
+          "value": "hmfT",
+          "label": "Fractal"
+        },
+        "periodx": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periody": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periodz": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "oct": {
+          "value": 8.0,
+          "label": "Max Octaves"
+        },
+        "lac": {
+          "value": 1.841,
+          "label": "Lacunarity"
+        },
+        "rough": {
+          "value": 0.5,
+          "label": "Roughness"
+        },
+        "flowrot": {
+          "value": 0.0,
+          "label": "Flow Rotation"
+        },
+        "fold": {
+          "value": 0,
+          "label": "Fold"
+        },
+        "complement": {
+          "value": 0,
+          "label": "Complement"
+        },
+        "dogain": {
+          "value": 0,
+          "label": "Enable Gain"
+        },
+        "gain": {
+          "value": 0.5,
+          "label": "Gain"
+        },
+        "dobias": {
+          "value": 0,
+          "label": "Enable Bias"
+        },
+        "bias": {
+          "value": 0.5,
+          "label": "Bias"
+        },
+        "clipmin": {
+          "value": 0.0,
+          "label": "Clipping Minimum"
+        },
+        "clipmax": {
+          "value": 1.0,
+          "label": "Clipping Maximum"
+        },
+        "dolwarp": {
+          "value": 0,
+          "label": "Enable Lattice Warp"
+        },
+        "accuml": {
+          "value": 1,
+          "label": "Accumulate Lattice Warp"
+        },
+        "disp": {
+          "value": 0.1405,
+          "label": "Lattice Warp"
+        },
+        "dispfreq": {
+          "value": 1.0,
+          "label": "Freq"
+        },
+        "dogwarp": {
+          "value": 0,
+          "label": "Enable Gradient Warp"
+        },
+        "accumg": {
+          "value": 0,
+          "label": "Accumulate Gradient Warp"
+        },
+        "gflow": {
+          "value": 0.0,
+          "label": "Gradient Warp"
+        }
+      }
+    },
+    {
+      "name": "heightfield_distort1",
+      "type": "heightfield_distort",
+      "inputs": [
+        "heightfield_noise2"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Distort Layers"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "noisetype": {
+          "value": 1,
+          "label": "Noise Type"
+        },
+        "amp": {
+          "value": 140.0,
+          "label": "Amplitude"
+        },
+        "element_size": {
+          "value": 800.0,
+          "label": "Element Size"
+        },
+        "element_scalex": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scaley": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scalez": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "rough": {
+          "value": 0.5,
+          "label": "Roughness"
+        },
+        "maxoctave": {
+          "value": 8,
+          "label": "Max Octaves"
+        },
+        "steps": {
+          "value": 1,
+          "label": "Substeps"
+        }
+      }
+    },
+    {
+      "name": "heightfield_erode1",
+      "type": "heightfield_erode::2.0",
+      "inputs": [
+        "heightfield_remap1"
+      ],
+      "parameters": {
+        "dofreeze": {
+          "value": 1,
+          "label": "Freeze"
+        },
+        "freezeframe": {
+          "value": 5,
+          "label": "Freeze at Frame"
+        },
+        "outfrozen_label": {
+          "value": "Output Frozen",
+          "label": "Frozen"
+        },
+        "globalerosionrate": {
+          "value": 1.0,
+          "label": "Global Erosion Rate"
+        },
+        "hydro_erodability": {
+          "value": 1.1,
+          "label": "Erodability"
+        },
+        "hydro_erodabilitymaskmode": {
+          "value": 0,
+          "label": "hydro_erodabilitymaskmode"
+        },
+        "hydro_erodabilitymasklayer": {
+          "value": "hydroerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "hydro_erosionrate": {
+          "value": 1.0,
+          "label": "Erosion Rate"
+        },
+        "hydro_bankangle": {
+          "value": 20.0,
+          "label": "Bank Angle"
+        },
+        "hydro_bankanglemaskmode": {
+          "value": 0,
+          "label": "hydro_bankanglemaskmode"
+        },
+        "hydro_bankanglemasklayer": {
+          "value": "bankanglemask",
+          "label": "Bank Angle Mask"
+        },
+        "water_spreaditers": {
+          "value": 140,
+          "label": "Spread Iterations"
+        },
+        "thermal_erodability": {
+          "value": 1.0,
+          "label": "Erodability"
+        },
+        "thermal_erodabilitymaskmode": {
+          "value": 0,
+          "label": "thermal_erodabilitymaskmode"
+        },
+        "thermal_erodabilitymasklayer": {
+          "value": "thermalerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "thermal_erosionrate": {
+          "value": 0.03,
+          "label": "Erosion Rate"
+        },
+        "thermal_cutangle": {
+          "value": 50.0,
+          "label": "Cut Angle"
+        },
+        "thermal_cutanglemaskmode": {
+          "value": 0,
+          "label": "thermal_cutanglemaskmode"
+        },
+        "thermal_cutanglemasklayer": {
+          "value": "cutanglemask",
+          "label": "Cut Angle Mask"
+        },
+        "hydro_removalrate": {
+          "value": 0.1,
+          "label": "Removal Rate"
+        },
+        "hydro_removalratemaskmode": {
+          "value": 0,
+          "label": "hydro_removalratemaskmode"
+        },
+        "hydro_removalratemasklayer": {
+          "value": "hydroremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "hydro_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "hydro_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "hydro_gridbiasmaskmode": {
+          "value": 0,
+          "label": "hydro_gridbiasmaskmode"
+        },
+        "hydro_gridbiasmasklayer": {
+          "value": "hydrogridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "hydro_erodability_rampupiters": {
+          "value": 5,
+          "label": "Ramp-up Iterations"
+        },
+        "hydro_erodability_initialfactor": {
+          "value": 0.5,
+          "label": "Initial Factor"
+        },
+        "hydro_erodability_slopefactor": {
+          "value": 0.8,
+          "label": "Slope Factor"
+        },
+        "hydro_bed_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate factor"
+        },
+        "hydro_bed_depositionrate": {
+          "value": 0.01,
+          "label": "Deposition Rate"
+        },
+        "hydro_bed_depositionratemaskmode": {
+          "value": 0,
+          "label": "hydro_bed_depositionratemaskmode"
+        },
+        "hydro_bed_depositionratemasklayer": {
+          "value": "depositionratemask",
+          "label": "Deposition Rate Mask"
+        },
+        "hydro_bed_sedimentcap": {
+          "value": 10.0,
+          "label": "Sediment Capacity"
+        },
+        "hydro_bank_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate Factor"
+        },
+        "hydro_bank_maxbankbedwaterratio": {
+          "value": 0.5,
+          "label": "Max Bank to Bed Water Ratio"
+        },
+        "thermal_removalrate": {
+          "value": 0.7,
+          "label": "Removal Rate"
+        },
+        "thermal_removalratemaskmode": {
+          "value": 0,
+          "label": "thermal_removalratemaskmode"
+        },
+        "thermal_removalratemasklayer": {
+          "value": "thermalremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "thermal_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "thermal_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "thermal_gridbiasmaskmode": {
+          "value": 0,
+          "label": "thermal_gridbiasmaskmode"
+        },
+        "thermal_gridbiasmasklayer": {
+          "value": "thermalgridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "rain_amount": {
+          "value": 0.9,
+          "label": "Amount"
+        },
+        "rain_amountmaskmode": {
+          "value": 0,
+          "label": "rain_amountmaskmode"
+        },
+        "rain_amountmasklayer": {
+          "value": "precipitation",
+          "label": "Amount Mask"
+        },
+        "rain_density": {
+          "value": 0.05,
+          "label": "Density"
+        },
+        "rain_evaporation": {
+          "value": 0.04,
+          "label": "Evaporation Rate"
+        },
+        "rain_expandradius": {
+          "value": 0.0,
+          "label": "Expand Radius"
+        },
+        "rain_blurradius": {
+          "value": 0.0,
+          "label": "Blur Radius"
+        },
+        "water_quant": {
+          "value": 0.05,
+          "label": "Quantization"
+        },
+        "water_postsmooth": {
+          "value": 1,
+          "label": "Post Smooth"
+        },
+        "debris_spreaditers": {
+          "value": 10,
+          "label": "Spread Iterations"
+        },
+        "debris_quant": {
+          "value": 0.25,
+          "label": "Quantization"
+        },
+        "debris_postsmooth": {
+          "value": 0,
+          "label": "Post Smooth"
+        },
+        "debris_waterabsorb": {
+          "value": 1.0,
+          "label": "Water Absorption"
+        },
+        "debris_maxheight": {
+          "value": 3.0,
+          "label": "Max Height"
+        },
+        "debris_reposeangle": {
+          "value": 15.0,
+          "label": "Repose Angle"
+        },
+        "debris_reposeanglemaskmode": {
+          "value": 0,
+          "label": "debris_reposeanglemaskmode"
+        },
+        "debris_reposeanglemasklayer": {
+          "value": "reposeanglemask",
+          "label": "Repose Angle Mask"
+        },
+        "seed": {
+          "value": 4278,
+          "label": "Global Seed"
+        },
+        "bedrockoverridelayer": {
+          "value": "height",
+          "label": "Bedrock Override"
+        },
+        "douplift": {
+          "value": 0,
+          "label": "Adjust Height by Bedrock Change"
+        },
+        "dostrata": {
+          "value": 0,
+          "label": "Adjust Erodability by Strata"
+        },
+        "strata_depth": {
+          "value": 10.0,
+          "label": "Strata Depth"
+        },
+        "strata_clamp": {
+          "value": 1,
+          "label": "Clamp at Strata Bounds"
+        },
+        "strata_ramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 1), (t=1, 1))>",
+          "label": "Strata Erodability"
+        },
+        "debris_removefromheight": {
+          "value": 1,
+          "label": "Remove Debris Layer from Input Height Layer"
+        },
+        "water_removefromheight": {
+          "value": 0,
+          "label": "Remove Water Layer from Input Height Layer"
+        },
+        "clearwater": {
+          "value": 0,
+          "label": "Reset Water Layer"
+        },
+        "cleardebris": {
+          "value": 0,
+          "label": "Reset Debris Layer"
+        },
+        "clearsediment": {
+          "value": 0,
+          "label": "Reset Sediment Layer"
+        },
+        "debris_addtoheight": {
+          "value": 1,
+          "label": "Add Debris Layer to Final Height Layer"
+        },
+        "water_addtoheight": {
+          "value": 0,
+          "label": "Add Water Layer to Final Height Layer"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        },
+        "waterlayer": {
+          "value": "water",
+          "label": "Water Layer"
+        },
+        "materiallayer": {
+          "value": "debris",
+          "label": "Material Layer"
+        },
+        "sedimentlayer": {
+          "value": "sediment",
+          "label": "Sediment Layer"
+        },
+        "bedrocklayer": {
+          "value": "bedrock",
+          "label": "Bedrock Layer"
+        },
+        "startframe": {
+          "value": 1,
+          "label": "Start Frame"
+        },
+        "cacheenabled": {
+          "value": 1,
+          "label": "Cache Simulation"
+        },
+        "cachetodisk": {
+          "value": 0,
+          "label": "Allow Caching To Disk"
+        },
+        "cachemaxsize": {
+          "value": 5000,
+          "label": "Cache Memory (MB)"
+        },
+        "dovisualize": {
+          "value": 1,
+          "label": "Visualize"
+        },
+        "vis_projection": {
+          "value": 0,
+          "label": "Projection"
+        },
+        "vis_minelevation": {
+          "value": 0.0,
+          "label": "Min Elevation"
+        },
+        "vis_maxelevation": {
+          "value": 250.0,
+          "label": "Max Elevation"
+        },
+        "vis_heightramp": {
+          "value": "<hou.Ramp is_color=True num_keys=5 data=((t=0, rgb=(0.5, 0.25, 0)), (t=0.245211, rgb=(0, 0.5, 0)), (t=0.542784, rgb=(0.17388, 0.621, 0.17388)), (t=0.816092, rgb=(0.2, 0.2, 0.2)), (t=1, rgb=(1, 1, 1)))>",
+          "label": "Height Ramp"
+        },
+        "vis_layer9": {
+          "value": "",
+          "label": "Layer 9"
+        },
+        "vis_color9r": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9g": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9b": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9a": {
+          "value": 1.0,
+          "label": "Color 9"
+        },
+        "vis_layer8": {
+          "value": "",
+          "label": "Layer 8"
+        },
+        "vis_color8r": {
+          "value": 0.4,
+          "label": "Color 8"
+        },
+        "vis_color8g": {
+          "value": 0.3,
+          "label": "Color 8"
+        },
+        "vis_color8b": {
+          "value": 0.1,
+          "label": "Color 8"
+        },
+        "vis_color8a": {
+          "value": 1.0,
+          "label": "Color 8"
+        },
+        "vis_layer7": {
+          "value": "",
+          "label": "Layer 7"
+        },
+        "vis_color7r": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7g": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7b": {
+          "value": 0.2,
+          "label": "Color 7"
+        },
+        "vis_color7a": {
+          "value": 1.0,
+          "label": "Color 7"
+        },
+        "vis_layer6": {
+          "value": "",
+          "label": "Layer 6"
+        },
+        "vis_color6r": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6g": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6b": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6a": {
+          "value": 1.0,
+          "label": "Color 6"
+        },
+        "vis_layer5": {
+          "value": "",
+          "label": "Layer 5"
+        },
+        "vis_color5r": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5g": {
+          "value": 0.5,
+          "label": "Color 5"
+        },
+        "vis_color5b": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5a": {
+          "value": 1.0,
+          "label": "Color 5"
+        },
+        "vis_layer4": {
+          "value": "",
+          "label": "Layer 4"
+        },
+        "vis_color4r": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4g": {
+          "value": 0.5,
+          "label": "Color 4"
+        },
+        "vis_color4b": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4a": {
+          "value": 1.0,
+          "label": "Color 4"
+        },
+        "vis_layer3": {
+          "value": "",
+          "label": "Layer 3"
+        },
+        "vis_color3r": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_color3g": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3b": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3a": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_layer2": {
+          "value": "water",
+          "label": "Layer 2"
+        },
+        "vis_color2r": {
+          "value": 0.0,
+          "label": "Color 2"
+        },
+        "vis_color2g": {
+          "value": 0.125,
+          "label": "Color 2"
+        },
+        "vis_color2b": {
+          "value": 0.665,
+          "label": "Color 2"
+        },
+        "vis_color2a": {
+          "value": 1.0,
+          "label": "Color 2"
+        },
+        "vis_layer1": {
+          "value": "debris",
+          "label": "Layer 1"
+        },
+        "vis_color1r": {
+          "value": 0.3,
+          "label": "Color 1"
+        },
+        "vis_color1g": {
+          "value": 0.18,
+          "label": "Color 1"
+        },
+        "vis_color1b": {
+          "value": 0.07,
+          "label": "Color 1"
+        },
+        "vis_color1a": {
+          "value": 1.0,
+          "label": "Color 1"
+        },
+        "strata_ramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "strata_ramp1value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "strata_ramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "strata_ramp2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "vis_heightramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "vis_heightramp1cr": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp1cg": {
+          "value": 0.25,
+          "label": "Color"
+        },
+        "vis_heightramp1cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp1interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp2pos": {
+          "value": 0.24521072208881378,
+          "label": "Position"
+        },
+        "vis_heightramp2cr": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2cg": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp2cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp3pos": {
+          "value": 0.5427841544151306,
+          "label": "Position"
+        },
+        "vis_heightramp3cr": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3cg": {
+          "value": 0.6209999918937683,
+          "label": "Color"
+        },
+        "vis_heightramp3cb": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp4pos": {
+          "value": 0.8160919547080994,
+          "label": "Position"
+        },
+        "vis_heightramp4cr": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cg": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cb": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp5pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "vis_heightramp5cr": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cg": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cb": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5interp": {
+          "value": 3,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield_erode2",
+      "type": "heightfield_erode::2.0",
+      "inputs": [
+        "heightfield_remap2"
+      ],
+      "parameters": {
+        "dofreeze": {
+          "value": 1,
+          "label": "Freeze"
+        },
+        "freezeframe": {
+          "value": 5,
+          "label": "Freeze at Frame"
+        },
+        "outfrozen_label": {
+          "value": "Output Frozen",
+          "label": "Frozen"
+        },
+        "globalerosionrate": {
+          "value": 1.0,
+          "label": "Global Erosion Rate"
+        },
+        "hydro_erodability": {
+          "value": 1.5,
+          "label": "Erodability"
+        },
+        "hydro_erodabilitymaskmode": {
+          "value": 0,
+          "label": "hydro_erodabilitymaskmode"
+        },
+        "hydro_erodabilitymasklayer": {
+          "value": "hydroerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "hydro_erosionrate": {
+          "value": 1.0,
+          "label": "Erosion Rate"
+        },
+        "hydro_bankangle": {
+          "value": 25.0,
+          "label": "Bank Angle"
+        },
+        "hydro_bankanglemaskmode": {
+          "value": 0,
+          "label": "hydro_bankanglemaskmode"
+        },
+        "hydro_bankanglemasklayer": {
+          "value": "bankanglemask",
+          "label": "Bank Angle Mask"
+        },
+        "water_spreaditers": {
+          "value": 40,
+          "label": "Spread Iterations"
+        },
+        "thermal_erodability": {
+          "value": 1.0,
+          "label": "Erodability"
+        },
+        "thermal_erodabilitymaskmode": {
+          "value": 0,
+          "label": "thermal_erodabilitymaskmode"
+        },
+        "thermal_erodabilitymasklayer": {
+          "value": "thermalerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "thermal_erosionrate": {
+          "value": 0.03,
+          "label": "Erosion Rate"
+        },
+        "thermal_cutangle": {
+          "value": 35.0,
+          "label": "Cut Angle"
+        },
+        "thermal_cutanglemaskmode": {
+          "value": 0,
+          "label": "thermal_cutanglemaskmode"
+        },
+        "thermal_cutanglemasklayer": {
+          "value": "cutanglemask",
+          "label": "Cut Angle Mask"
+        },
+        "hydro_removalrate": {
+          "value": 1.0,
+          "label": "Removal Rate"
+        },
+        "hydro_removalratemaskmode": {
+          "value": 0,
+          "label": "hydro_removalratemaskmode"
+        },
+        "hydro_removalratemasklayer": {
+          "value": "hydroremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "hydro_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "hydro_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "hydro_gridbiasmaskmode": {
+          "value": 0,
+          "label": "hydro_gridbiasmaskmode"
+        },
+        "hydro_gridbiasmasklayer": {
+          "value": "hydrogridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "hydro_erodability_rampupiters": {
+          "value": 5,
+          "label": "Ramp-up Iterations"
+        },
+        "hydro_erodability_initialfactor": {
+          "value": 0.5,
+          "label": "Initial Factor"
+        },
+        "hydro_erodability_slopefactor": {
+          "value": 0.8,
+          "label": "Slope Factor"
+        },
+        "hydro_bed_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate factor"
+        },
+        "hydro_bed_depositionrate": {
+          "value": 0.01,
+          "label": "Deposition Rate"
+        },
+        "hydro_bed_depositionratemaskmode": {
+          "value": 0,
+          "label": "hydro_bed_depositionratemaskmode"
+        },
+        "hydro_bed_depositionratemasklayer": {
+          "value": "depositionratemask",
+          "label": "Deposition Rate Mask"
+        },
+        "hydro_bed_sedimentcap": {
+          "value": 10.0,
+          "label": "Sediment Capacity"
+        },
+        "hydro_bank_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate Factor"
+        },
+        "hydro_bank_maxbankbedwaterratio": {
+          "value": 0.5,
+          "label": "Max Bank to Bed Water Ratio"
+        },
+        "thermal_removalrate": {
+          "value": 0.7,
+          "label": "Removal Rate"
+        },
+        "thermal_removalratemaskmode": {
+          "value": 0,
+          "label": "thermal_removalratemaskmode"
+        },
+        "thermal_removalratemasklayer": {
+          "value": "thermalremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "thermal_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "thermal_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "thermal_gridbiasmaskmode": {
+          "value": 0,
+          "label": "thermal_gridbiasmaskmode"
+        },
+        "thermal_gridbiasmasklayer": {
+          "value": "thermalgridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "rain_amount": {
+          "value": 0.2,
+          "label": "Amount"
+        },
+        "rain_amountmaskmode": {
+          "value": 0,
+          "label": "rain_amountmaskmode"
+        },
+        "rain_amountmasklayer": {
+          "value": "precipitation",
+          "label": "Amount Mask"
+        },
+        "rain_density": {
+          "value": 0.05,
+          "label": "Density"
+        },
+        "rain_evaporation": {
+          "value": 0.04,
+          "label": "Evaporation Rate"
+        },
+        "rain_expandradius": {
+          "value": 0.0,
+          "label": "Expand Radius"
+        },
+        "rain_blurradius": {
+          "value": 0.0,
+          "label": "Blur Radius"
+        },
+        "water_quant": {
+          "value": 0.05,
+          "label": "Quantization"
+        },
+        "water_postsmooth": {
+          "value": 1,
+          "label": "Post Smooth"
+        },
+        "debris_spreaditers": {
+          "value": 10,
+          "label": "Spread Iterations"
+        },
+        "debris_quant": {
+          "value": 0.25,
+          "label": "Quantization"
+        },
+        "debris_postsmooth": {
+          "value": 0,
+          "label": "Post Smooth"
+        },
+        "debris_waterabsorb": {
+          "value": 1.0,
+          "label": "Water Absorption"
+        },
+        "debris_maxheight": {
+          "value": 3.0,
+          "label": "Max Height"
+        },
+        "debris_reposeangle": {
+          "value": 15.0,
+          "label": "Repose Angle"
+        },
+        "debris_reposeanglemaskmode": {
+          "value": 0,
+          "label": "debris_reposeanglemaskmode"
+        },
+        "debris_reposeanglemasklayer": {
+          "value": "reposeanglemask",
+          "label": "Repose Angle Mask"
+        },
+        "seed": {
+          "value": 3112,
+          "label": "Global Seed"
+        },
+        "bedrockoverridelayer": {
+          "value": "height",
+          "label": "Bedrock Override"
+        },
+        "douplift": {
+          "value": 0,
+          "label": "Adjust Height by Bedrock Change"
+        },
+        "dostrata": {
+          "value": 0,
+          "label": "Adjust Erodability by Strata"
+        },
+        "strata_depth": {
+          "value": 10.0,
+          "label": "Strata Depth"
+        },
+        "strata_clamp": {
+          "value": 1,
+          "label": "Clamp at Strata Bounds"
+        },
+        "strata_ramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 1), (t=1, 1))>",
+          "label": "Strata Erodability"
+        },
+        "debris_removefromheight": {
+          "value": 1,
+          "label": "Remove Debris Layer from Input Height Layer"
+        },
+        "water_removefromheight": {
+          "value": 0,
+          "label": "Remove Water Layer from Input Height Layer"
+        },
+        "clearwater": {
+          "value": 0,
+          "label": "Reset Water Layer"
+        },
+        "cleardebris": {
+          "value": 0,
+          "label": "Reset Debris Layer"
+        },
+        "clearsediment": {
+          "value": 0,
+          "label": "Reset Sediment Layer"
+        },
+        "debris_addtoheight": {
+          "value": 1,
+          "label": "Add Debris Layer to Final Height Layer"
+        },
+        "water_addtoheight": {
+          "value": 0,
+          "label": "Add Water Layer to Final Height Layer"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        },
+        "waterlayer": {
+          "value": "water",
+          "label": "Water Layer"
+        },
+        "materiallayer": {
+          "value": "debris",
+          "label": "Material Layer"
+        },
+        "sedimentlayer": {
+          "value": "sediment",
+          "label": "Sediment Layer"
+        },
+        "bedrocklayer": {
+          "value": "bedrock",
+          "label": "Bedrock Layer"
+        },
+        "startframe": {
+          "value": 1,
+          "label": "Start Frame"
+        },
+        "cacheenabled": {
+          "value": 1,
+          "label": "Cache Simulation"
+        },
+        "cachetodisk": {
+          "value": 0,
+          "label": "Allow Caching To Disk"
+        },
+        "cachemaxsize": {
+          "value": 5000,
+          "label": "Cache Memory (MB)"
+        },
+        "dovisualize": {
+          "value": 1,
+          "label": "Visualize"
+        },
+        "vis_projection": {
+          "value": 0,
+          "label": "Projection"
+        },
+        "vis_minelevation": {
+          "value": 0.0,
+          "label": "Min Elevation"
+        },
+        "vis_maxelevation": {
+          "value": 250.0,
+          "label": "Max Elevation"
+        },
+        "vis_heightramp": {
+          "value": "<hou.Ramp is_color=True num_keys=5 data=((t=0, rgb=(0.5, 0.25, 0)), (t=0.245211, rgb=(0, 0.5, 0)), (t=0.542784, rgb=(0.17388, 0.621, 0.17388)), (t=0.816092, rgb=(0.2, 0.2, 0.2)), (t=1, rgb=(1, 1, 1)))>",
+          "label": "Height Ramp"
+        },
+        "vis_layer9": {
+          "value": "",
+          "label": "Layer 9"
+        },
+        "vis_color9r": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9g": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9b": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9a": {
+          "value": 1.0,
+          "label": "Color 9"
+        },
+        "vis_layer8": {
+          "value": "",
+          "label": "Layer 8"
+        },
+        "vis_color8r": {
+          "value": 0.4,
+          "label": "Color 8"
+        },
+        "vis_color8g": {
+          "value": 0.3,
+          "label": "Color 8"
+        },
+        "vis_color8b": {
+          "value": 0.1,
+          "label": "Color 8"
+        },
+        "vis_color8a": {
+          "value": 1.0,
+          "label": "Color 8"
+        },
+        "vis_layer7": {
+          "value": "",
+          "label": "Layer 7"
+        },
+        "vis_color7r": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7g": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7b": {
+          "value": 0.2,
+          "label": "Color 7"
+        },
+        "vis_color7a": {
+          "value": 1.0,
+          "label": "Color 7"
+        },
+        "vis_layer6": {
+          "value": "",
+          "label": "Layer 6"
+        },
+        "vis_color6r": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6g": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6b": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6a": {
+          "value": 1.0,
+          "label": "Color 6"
+        },
+        "vis_layer5": {
+          "value": "",
+          "label": "Layer 5"
+        },
+        "vis_color5r": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5g": {
+          "value": 0.5,
+          "label": "Color 5"
+        },
+        "vis_color5b": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5a": {
+          "value": 1.0,
+          "label": "Color 5"
+        },
+        "vis_layer4": {
+          "value": "",
+          "label": "Layer 4"
+        },
+        "vis_color4r": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4g": {
+          "value": 0.5,
+          "label": "Color 4"
+        },
+        "vis_color4b": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4a": {
+          "value": 1.0,
+          "label": "Color 4"
+        },
+        "vis_layer3": {
+          "value": "",
+          "label": "Layer 3"
+        },
+        "vis_color3r": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_color3g": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3b": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3a": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_layer2": {
+          "value": "water",
+          "label": "Layer 2"
+        },
+        "vis_color2r": {
+          "value": 0.0,
+          "label": "Color 2"
+        },
+        "vis_color2g": {
+          "value": 0.125,
+          "label": "Color 2"
+        },
+        "vis_color2b": {
+          "value": 0.665,
+          "label": "Color 2"
+        },
+        "vis_color2a": {
+          "value": 1.0,
+          "label": "Color 2"
+        },
+        "vis_layer1": {
+          "value": "debris",
+          "label": "Layer 1"
+        },
+        "vis_color1r": {
+          "value": 0.3,
+          "label": "Color 1"
+        },
+        "vis_color1g": {
+          "value": 0.18,
+          "label": "Color 1"
+        },
+        "vis_color1b": {
+          "value": 0.07,
+          "label": "Color 1"
+        },
+        "vis_color1a": {
+          "value": 1.0,
+          "label": "Color 1"
+        },
+        "strata_ramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "strata_ramp1value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "strata_ramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "strata_ramp2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "vis_heightramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "vis_heightramp1cr": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp1cg": {
+          "value": 0.25,
+          "label": "Color"
+        },
+        "vis_heightramp1cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp1interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp2pos": {
+          "value": 0.24521072208881378,
+          "label": "Position"
+        },
+        "vis_heightramp2cr": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2cg": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp2cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp3pos": {
+          "value": 0.5427841544151306,
+          "label": "Position"
+        },
+        "vis_heightramp3cr": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3cg": {
+          "value": 0.6209999918937683,
+          "label": "Color"
+        },
+        "vis_heightramp3cb": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp4pos": {
+          "value": 0.8160919547080994,
+          "label": "Position"
+        },
+        "vis_heightramp4cr": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cg": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cb": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp5pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "vis_heightramp5cr": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cg": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cb": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5interp": {
+          "value": 3,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield_distort2",
+      "type": "heightfield_distort",
+      "inputs": [
+        "heightfield_resample1",
+        "heightfield_masknoise1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Distort Layers"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "noisetype": {
+          "value": 1,
+          "label": "Noise Type"
+        },
+        "amp": {
+          "value": 60.0,
+          "label": "Amplitude"
+        },
+        "element_size": {
+          "value": 1000.0,
+          "label": "Element Size"
+        },
+        "element_scalex": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scaley": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scalez": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "rough": {
+          "value": 0.5,
+          "label": "Roughness"
+        },
+        "maxoctave": {
+          "value": 8,
+          "label": "Max Octaves"
+        },
+        "steps": {
+          "value": 1,
+          "label": "Substeps"
+        }
+      }
+    },
+    {
+      "name": "heightfield_masknoise1",
+      "type": "heightfield_noise",
+      "inputs": [
+        "heightfield_resample1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "mask",
+          "label": "Noise Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "combine": {
+          "value": 1,
+          "label": "Combine Method"
+        },
+        "blend": {
+          "value": 0.5,
+          "label": "Blend"
+        },
+        "centernoise": {
+          "value": 0,
+          "label": "Center Noise"
+        },
+        "amp": {
+          "value": 1.5,
+          "label": "Amplitude"
+        },
+        "elementsize": {
+          "value": 500.0,
+          "label": "Element Size"
+        },
+        "elementscalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "basis": {
+          "value": "sparse",
+          "label": "Noise Type"
+        },
+        "fractal": {
+          "value": "hmfT",
+          "label": "Fractal"
+        },
+        "periodx": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periody": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periodz": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "oct": {
+          "value": 8.0,
+          "label": "Max Octaves"
+        },
+        "lac": {
+          "value": 1.841,
+          "label": "Lacunarity"
+        },
+        "rough": {
+          "value": 0.0,
+          "label": "Roughness"
+        },
+        "flowrot": {
+          "value": 0.0,
+          "label": "Flow Rotation"
+        },
+        "fold": {
+          "value": 0,
+          "label": "Fold"
+        },
+        "complement": {
+          "value": 0,
+          "label": "Complement"
+        },
+        "dogain": {
+          "value": 1,
+          "label": "Enable Gain"
+        },
+        "gain": {
+          "value": 0.9,
+          "label": "Gain"
+        },
+        "dobias": {
+          "value": 0,
+          "label": "Enable Bias"
+        },
+        "bias": {
+          "value": 0.5,
+          "label": "Bias"
+        },
+        "clipmin": {
+          "value": 0.0,
+          "label": "Clipping Minimum"
+        },
+        "clipmax": {
+          "value": 1.0,
+          "label": "Clipping Maximum"
+        },
+        "dolwarp": {
+          "value": 0,
+          "label": "Enable Lattice Warp"
+        },
+        "accuml": {
+          "value": 1,
+          "label": "Accumulate Lattice Warp"
+        },
+        "disp": {
+          "value": 0.1405,
+          "label": "Lattice Warp"
+        },
+        "dispfreq": {
+          "value": 1.0,
+          "label": "Freq"
+        },
+        "dogwarp": {
+          "value": 0,
+          "label": "Enable Gradient Warp"
+        },
+        "accumg": {
+          "value": 0,
+          "label": "Accumulate Gradient Warp"
+        },
+        "gflow": {
+          "value": 0.0,
+          "label": "Gradient Warp"
+        }
+      }
+    },
+    {
+      "name": "heightfield_erode3",
+      "type": "heightfield_erode::2.0",
+      "inputs": [
+        "heightfield_remap3"
+      ],
+      "parameters": {
+        "dofreeze": {
+          "value": 1,
+          "label": "Freeze"
+        },
+        "freezeframe": {
+          "value": 5,
+          "label": "Freeze at Frame"
+        },
+        "outfrozen_label": {
+          "value": "Output Frozen",
+          "label": "Frozen"
+        },
+        "globalerosionrate": {
+          "value": 1.0,
+          "label": "Global Erosion Rate"
+        },
+        "hydro_erodability": {
+          "value": 1.0,
+          "label": "Erodability"
+        },
+        "hydro_erodabilitymaskmode": {
+          "value": 0,
+          "label": "hydro_erodabilitymaskmode"
+        },
+        "hydro_erodabilitymasklayer": {
+          "value": "hydroerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "hydro_erosionrate": {
+          "value": 0.4,
+          "label": "Erosion Rate"
+        },
+        "hydro_bankangle": {
+          "value": 70.0,
+          "label": "Bank Angle"
+        },
+        "hydro_bankanglemaskmode": {
+          "value": 0,
+          "label": "hydro_bankanglemaskmode"
+        },
+        "hydro_bankanglemasklayer": {
+          "value": "bankanglemask",
+          "label": "Bank Angle Mask"
+        },
+        "water_spreaditers": {
+          "value": 40,
+          "label": "Spread Iterations"
+        },
+        "thermal_erodability": {
+          "value": 1.0,
+          "label": "Erodability"
+        },
+        "thermal_erodabilitymaskmode": {
+          "value": 0,
+          "label": "thermal_erodabilitymaskmode"
+        },
+        "thermal_erodabilitymasklayer": {
+          "value": "thermalerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "thermal_erosionrate": {
+          "value": 0.03,
+          "label": "Erosion Rate"
+        },
+        "thermal_cutangle": {
+          "value": 35.0,
+          "label": "Cut Angle"
+        },
+        "thermal_cutanglemaskmode": {
+          "value": 0,
+          "label": "thermal_cutanglemaskmode"
+        },
+        "thermal_cutanglemasklayer": {
+          "value": "cutanglemask",
+          "label": "Cut Angle Mask"
+        },
+        "hydro_removalrate": {
+          "value": 0.6,
+          "label": "Removal Rate"
+        },
+        "hydro_removalratemaskmode": {
+          "value": 0,
+          "label": "hydro_removalratemaskmode"
+        },
+        "hydro_removalratemasklayer": {
+          "value": "hydroremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "hydro_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "hydro_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "hydro_gridbiasmaskmode": {
+          "value": 0,
+          "label": "hydro_gridbiasmaskmode"
+        },
+        "hydro_gridbiasmasklayer": {
+          "value": "hydrogridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "hydro_erodability_rampupiters": {
+          "value": 5,
+          "label": "Ramp-up Iterations"
+        },
+        "hydro_erodability_initialfactor": {
+          "value": 0.5,
+          "label": "Initial Factor"
+        },
+        "hydro_erodability_slopefactor": {
+          "value": 0.8,
+          "label": "Slope Factor"
+        },
+        "hydro_bed_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate factor"
+        },
+        "hydro_bed_depositionrate": {
+          "value": 0.01,
+          "label": "Deposition Rate"
+        },
+        "hydro_bed_depositionratemaskmode": {
+          "value": 0,
+          "label": "hydro_bed_depositionratemaskmode"
+        },
+        "hydro_bed_depositionratemasklayer": {
+          "value": "depositionratemask",
+          "label": "Deposition Rate Mask"
+        },
+        "hydro_bed_sedimentcap": {
+          "value": 10.0,
+          "label": "Sediment Capacity"
+        },
+        "hydro_bank_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate Factor"
+        },
+        "hydro_bank_maxbankbedwaterratio": {
+          "value": 0.5,
+          "label": "Max Bank to Bed Water Ratio"
+        },
+        "thermal_removalrate": {
+          "value": 0.7,
+          "label": "Removal Rate"
+        },
+        "thermal_removalratemaskmode": {
+          "value": 0,
+          "label": "thermal_removalratemaskmode"
+        },
+        "thermal_removalratemasklayer": {
+          "value": "thermalremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "thermal_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "thermal_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "thermal_gridbiasmaskmode": {
+          "value": 0,
+          "label": "thermal_gridbiasmaskmode"
+        },
+        "thermal_gridbiasmasklayer": {
+          "value": "thermalgridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "rain_amount": {
+          "value": 0.2,
+          "label": "Amount"
+        },
+        "rain_amountmaskmode": {
+          "value": 0,
+          "label": "rain_amountmaskmode"
+        },
+        "rain_amountmasklayer": {
+          "value": "precipitation",
+          "label": "Amount Mask"
+        },
+        "rain_density": {
+          "value": 0.1,
+          "label": "Density"
+        },
+        "rain_evaporation": {
+          "value": 0.04,
+          "label": "Evaporation Rate"
+        },
+        "rain_expandradius": {
+          "value": 0.0,
+          "label": "Expand Radius"
+        },
+        "rain_blurradius": {
+          "value": 0.0,
+          "label": "Blur Radius"
+        },
+        "water_quant": {
+          "value": 0.05,
+          "label": "Quantization"
+        },
+        "water_postsmooth": {
+          "value": 1,
+          "label": "Post Smooth"
+        },
+        "debris_spreaditers": {
+          "value": 10,
+          "label": "Spread Iterations"
+        },
+        "debris_quant": {
+          "value": 0.25,
+          "label": "Quantization"
+        },
+        "debris_postsmooth": {
+          "value": 0,
+          "label": "Post Smooth"
+        },
+        "debris_waterabsorb": {
+          "value": 1.0,
+          "label": "Water Absorption"
+        },
+        "debris_maxheight": {
+          "value": 3.0,
+          "label": "Max Height"
+        },
+        "debris_reposeangle": {
+          "value": 15.0,
+          "label": "Repose Angle"
+        },
+        "debris_reposeanglemaskmode": {
+          "value": 0,
+          "label": "debris_reposeanglemaskmode"
+        },
+        "debris_reposeanglemasklayer": {
+          "value": "reposeanglemask",
+          "label": "Repose Angle Mask"
+        },
+        "seed": {
+          "value": 2212,
+          "label": "Global Seed"
+        },
+        "bedrockoverridelayer": {
+          "value": "height",
+          "label": "Bedrock Override"
+        },
+        "douplift": {
+          "value": 0,
+          "label": "Adjust Height by Bedrock Change"
+        },
+        "dostrata": {
+          "value": 0,
+          "label": "Adjust Erodability by Strata"
+        },
+        "strata_depth": {
+          "value": 10.0,
+          "label": "Strata Depth"
+        },
+        "strata_clamp": {
+          "value": 1,
+          "label": "Clamp at Strata Bounds"
+        },
+        "strata_ramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 1), (t=1, 1))>",
+          "label": "Strata Erodability"
+        },
+        "debris_removefromheight": {
+          "value": 1,
+          "label": "Remove Debris Layer from Input Height Layer"
+        },
+        "water_removefromheight": {
+          "value": 0,
+          "label": "Remove Water Layer from Input Height Layer"
+        },
+        "clearwater": {
+          "value": 0,
+          "label": "Reset Water Layer"
+        },
+        "cleardebris": {
+          "value": 0,
+          "label": "Reset Debris Layer"
+        },
+        "clearsediment": {
+          "value": 0,
+          "label": "Reset Sediment Layer"
+        },
+        "debris_addtoheight": {
+          "value": 1,
+          "label": "Add Debris Layer to Final Height Layer"
+        },
+        "water_addtoheight": {
+          "value": 0,
+          "label": "Add Water Layer to Final Height Layer"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        },
+        "waterlayer": {
+          "value": "water",
+          "label": "Water Layer"
+        },
+        "materiallayer": {
+          "value": "debris",
+          "label": "Material Layer"
+        },
+        "sedimentlayer": {
+          "value": "sediment",
+          "label": "Sediment Layer"
+        },
+        "bedrocklayer": {
+          "value": "bedrock",
+          "label": "Bedrock Layer"
+        },
+        "startframe": {
+          "value": 1,
+          "label": "Start Frame"
+        },
+        "cacheenabled": {
+          "value": 1,
+          "label": "Cache Simulation"
+        },
+        "cachetodisk": {
+          "value": 0,
+          "label": "Allow Caching To Disk"
+        },
+        "cachemaxsize": {
+          "value": 5000,
+          "label": "Cache Memory (MB)"
+        },
+        "dovisualize": {
+          "value": 1,
+          "label": "Visualize"
+        },
+        "vis_projection": {
+          "value": 0,
+          "label": "Projection"
+        },
+        "vis_minelevation": {
+          "value": 0.0,
+          "label": "Min Elevation"
+        },
+        "vis_maxelevation": {
+          "value": 250.0,
+          "label": "Max Elevation"
+        },
+        "vis_heightramp": {
+          "value": "<hou.Ramp is_color=True num_keys=5 data=((t=0, rgb=(0.5, 0.25, 0)), (t=0.245211, rgb=(0, 0.5, 0)), (t=0.542784, rgb=(0.17388, 0.621, 0.17388)), (t=0.816092, rgb=(0.2, 0.2, 0.2)), (t=1, rgb=(1, 1, 1)))>",
+          "label": "Height Ramp"
+        },
+        "vis_layer9": {
+          "value": "",
+          "label": "Layer 9"
+        },
+        "vis_color9r": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9g": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9b": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9a": {
+          "value": 1.0,
+          "label": "Color 9"
+        },
+        "vis_layer8": {
+          "value": "",
+          "label": "Layer 8"
+        },
+        "vis_color8r": {
+          "value": 0.4,
+          "label": "Color 8"
+        },
+        "vis_color8g": {
+          "value": 0.3,
+          "label": "Color 8"
+        },
+        "vis_color8b": {
+          "value": 0.1,
+          "label": "Color 8"
+        },
+        "vis_color8a": {
+          "value": 1.0,
+          "label": "Color 8"
+        },
+        "vis_layer7": {
+          "value": "",
+          "label": "Layer 7"
+        },
+        "vis_color7r": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7g": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7b": {
+          "value": 0.2,
+          "label": "Color 7"
+        },
+        "vis_color7a": {
+          "value": 1.0,
+          "label": "Color 7"
+        },
+        "vis_layer6": {
+          "value": "",
+          "label": "Layer 6"
+        },
+        "vis_color6r": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6g": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6b": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6a": {
+          "value": 1.0,
+          "label": "Color 6"
+        },
+        "vis_layer5": {
+          "value": "",
+          "label": "Layer 5"
+        },
+        "vis_color5r": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5g": {
+          "value": 0.5,
+          "label": "Color 5"
+        },
+        "vis_color5b": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5a": {
+          "value": 1.0,
+          "label": "Color 5"
+        },
+        "vis_layer4": {
+          "value": "",
+          "label": "Layer 4"
+        },
+        "vis_color4r": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4g": {
+          "value": 0.5,
+          "label": "Color 4"
+        },
+        "vis_color4b": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4a": {
+          "value": 1.0,
+          "label": "Color 4"
+        },
+        "vis_layer3": {
+          "value": "",
+          "label": "Layer 3"
+        },
+        "vis_color3r": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_color3g": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3b": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3a": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_layer2": {
+          "value": "water",
+          "label": "Layer 2"
+        },
+        "vis_color2r": {
+          "value": 0.0,
+          "label": "Color 2"
+        },
+        "vis_color2g": {
+          "value": 0.125,
+          "label": "Color 2"
+        },
+        "vis_color2b": {
+          "value": 0.665,
+          "label": "Color 2"
+        },
+        "vis_color2a": {
+          "value": 1.0,
+          "label": "Color 2"
+        },
+        "vis_layer1": {
+          "value": "debris",
+          "label": "Layer 1"
+        },
+        "vis_color1r": {
+          "value": 0.3,
+          "label": "Color 1"
+        },
+        "vis_color1g": {
+          "value": 0.18,
+          "label": "Color 1"
+        },
+        "vis_color1b": {
+          "value": 0.07,
+          "label": "Color 1"
+        },
+        "vis_color1a": {
+          "value": 1.0,
+          "label": "Color 1"
+        },
+        "strata_ramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "strata_ramp1value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "strata_ramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "strata_ramp2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "vis_heightramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "vis_heightramp1cr": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp1cg": {
+          "value": 0.25,
+          "label": "Color"
+        },
+        "vis_heightramp1cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp1interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp2pos": {
+          "value": 0.24521072208881378,
+          "label": "Position"
+        },
+        "vis_heightramp2cr": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2cg": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp2cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp3pos": {
+          "value": 0.5427841544151306,
+          "label": "Position"
+        },
+        "vis_heightramp3cr": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3cg": {
+          "value": 0.6209999918937683,
+          "label": "Color"
+        },
+        "vis_heightramp3cb": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp4pos": {
+          "value": 0.8160919547080994,
+          "label": "Position"
+        },
+        "vis_heightramp4cr": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cg": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cb": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp5pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "vis_heightramp5cr": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cg": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cb": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5interp": {
+          "value": 3,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield_distort3",
+      "type": "heightfield_distort",
+      "inputs": [
+        "heightfield_resample2",
+        "heightfield_masknoise2"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Distort Layers"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "noisetype": {
+          "value": 1,
+          "label": "Noise Type"
+        },
+        "amp": {
+          "value": 6.0,
+          "label": "Amplitude"
+        },
+        "element_size": {
+          "value": 80.0,
+          "label": "Element Size"
+        },
+        "element_scalex": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scaley": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "element_scalez": {
+          "value": 1.0,
+          "label": "Element Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "rough": {
+          "value": 0.54,
+          "label": "Roughness"
+        },
+        "maxoctave": {
+          "value": 8,
+          "label": "Max Octaves"
+        },
+        "steps": {
+          "value": 1,
+          "label": "Substeps"
+        }
+      }
+    },
+    {
+      "name": "heightfield_masknoise2",
+      "type": "heightfield_noise",
+      "inputs": [
+        "heightfield_resample2"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "mask",
+          "label": "Noise Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "combine": {
+          "value": 1,
+          "label": "Combine Method"
+        },
+        "blend": {
+          "value": 0.5,
+          "label": "Blend"
+        },
+        "centernoise": {
+          "value": 0,
+          "label": "Center Noise"
+        },
+        "amp": {
+          "value": 1.0,
+          "label": "Amplitude"
+        },
+        "elementsize": {
+          "value": 500.0,
+          "label": "Element Size"
+        },
+        "elementscalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "elementscalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "offsetx": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "offsety": {
+          "value": 300.0,
+          "label": "Offset"
+        },
+        "offsetz": {
+          "value": 0.0,
+          "label": "Offset"
+        },
+        "basis": {
+          "value": "flow",
+          "label": "Noise Type"
+        },
+        "fractal": {
+          "value": "hmfT",
+          "label": "Fractal"
+        },
+        "periodx": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periody": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "periodz": {
+          "value": 2.0,
+          "label": "Period"
+        },
+        "oct": {
+          "value": 8.0,
+          "label": "Max Octaves"
+        },
+        "lac": {
+          "value": 1.841,
+          "label": "Lacunarity"
+        },
+        "rough": {
+          "value": 0.0,
+          "label": "Roughness"
+        },
+        "flowrot": {
+          "value": 0.0,
+          "label": "Flow Rotation"
+        },
+        "fold": {
+          "value": 0,
+          "label": "Fold"
+        },
+        "complement": {
+          "value": 0,
+          "label": "Complement"
+        },
+        "dogain": {
+          "value": 1,
+          "label": "Enable Gain"
+        },
+        "gain": {
+          "value": 0.9,
+          "label": "Gain"
+        },
+        "dobias": {
+          "value": 0,
+          "label": "Enable Bias"
+        },
+        "bias": {
+          "value": 0.5,
+          "label": "Bias"
+        },
+        "clipmin": {
+          "value": 0.0,
+          "label": "Clipping Minimum"
+        },
+        "clipmax": {
+          "value": 1.0,
+          "label": "Clipping Maximum"
+        },
+        "dolwarp": {
+          "value": 0,
+          "label": "Enable Lattice Warp"
+        },
+        "accuml": {
+          "value": 1,
+          "label": "Accumulate Lattice Warp"
+        },
+        "disp": {
+          "value": 0.1405,
+          "label": "Lattice Warp"
+        },
+        "dispfreq": {
+          "value": 1.0,
+          "label": "Freq"
+        },
+        "dogwarp": {
+          "value": 0,
+          "label": "Enable Gradient Warp"
+        },
+        "accumg": {
+          "value": 0,
+          "label": "Accumulate Gradient Warp"
+        },
+        "gflow": {
+          "value": 0.0,
+          "label": "Gradient Warp"
+        }
+      }
+    },
+    {
+      "name": "heightfield_erode4",
+      "type": "heightfield_erode::2.0",
+      "inputs": [
+        "heightfield_distort3"
+      ],
+      "parameters": {
+        "dofreeze": {
+          "value": 1,
+          "label": "Freeze"
+        },
+        "freezeframe": {
+          "value": 5,
+          "label": "Freeze at Frame"
+        },
+        "outfrozen_label": {
+          "value": "Output Frozen",
+          "label": "Frozen"
+        },
+        "globalerosionrate": {
+          "value": 1.0,
+          "label": "Global Erosion Rate"
+        },
+        "hydro_erodability": {
+          "value": 1.0,
+          "label": "Erodability"
+        },
+        "hydro_erodabilitymaskmode": {
+          "value": 0,
+          "label": "hydro_erodabilitymaskmode"
+        },
+        "hydro_erodabilitymasklayer": {
+          "value": "hydroerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "hydro_erosionrate": {
+          "value": 0.4,
+          "label": "Erosion Rate"
+        },
+        "hydro_bankangle": {
+          "value": 70.0,
+          "label": "Bank Angle"
+        },
+        "hydro_bankanglemaskmode": {
+          "value": 0,
+          "label": "hydro_bankanglemaskmode"
+        },
+        "hydro_bankanglemasklayer": {
+          "value": "bankanglemask",
+          "label": "Bank Angle Mask"
+        },
+        "water_spreaditers": {
+          "value": 40,
+          "label": "Spread Iterations"
+        },
+        "thermal_erodability": {
+          "value": 0.0,
+          "label": "Erodability"
+        },
+        "thermal_erodabilitymaskmode": {
+          "value": 0,
+          "label": "thermal_erodabilitymaskmode"
+        },
+        "thermal_erodabilitymasklayer": {
+          "value": "thermalerodabilitymask",
+          "label": "Erodability Mask"
+        },
+        "thermal_erosionrate": {
+          "value": 0.03,
+          "label": "Erosion Rate"
+        },
+        "thermal_cutangle": {
+          "value": 35.0,
+          "label": "Cut Angle"
+        },
+        "thermal_cutanglemaskmode": {
+          "value": 0,
+          "label": "thermal_cutanglemaskmode"
+        },
+        "thermal_cutanglemasklayer": {
+          "value": "cutanglemask",
+          "label": "Cut Angle Mask"
+        },
+        "hydro_removalrate": {
+          "value": 0.1,
+          "label": "Removal Rate"
+        },
+        "hydro_removalratemaskmode": {
+          "value": 0,
+          "label": "hydro_removalratemaskmode"
+        },
+        "hydro_removalratemasklayer": {
+          "value": "hydroremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "hydro_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "hydro_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "hydro_gridbiasmaskmode": {
+          "value": 0,
+          "label": "hydro_gridbiasmaskmode"
+        },
+        "hydro_gridbiasmasklayer": {
+          "value": "hydrogridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "hydro_erodability_rampupiters": {
+          "value": 5,
+          "label": "Ramp-up Iterations"
+        },
+        "hydro_erodability_initialfactor": {
+          "value": 0.5,
+          "label": "Initial Factor"
+        },
+        "hydro_erodability_slopefactor": {
+          "value": 0.8,
+          "label": "Slope Factor"
+        },
+        "hydro_bed_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate factor"
+        },
+        "hydro_bed_depositionrate": {
+          "value": 0.01,
+          "label": "Deposition Rate"
+        },
+        "hydro_bed_depositionratemaskmode": {
+          "value": 0,
+          "label": "hydro_bed_depositionratemaskmode"
+        },
+        "hydro_bed_depositionratemasklayer": {
+          "value": "depositionratemask",
+          "label": "Deposition Rate Mask"
+        },
+        "hydro_bed_sedimentcap": {
+          "value": 10.0,
+          "label": "Sediment Capacity"
+        },
+        "hydro_bank_erosionratefactor": {
+          "value": 1.0,
+          "label": "Erosion Rate Factor"
+        },
+        "hydro_bank_maxbankbedwaterratio": {
+          "value": 0.5,
+          "label": "Max Bank to Bed Water Ratio"
+        },
+        "thermal_removalrate": {
+          "value": 0.7,
+          "label": "Removal Rate"
+        },
+        "thermal_removalratemaskmode": {
+          "value": 0,
+          "label": "thermal_removalratemaskmode"
+        },
+        "thermal_removalratemasklayer": {
+          "value": "thermalremovalratemask",
+          "label": "Removal Rate Mask"
+        },
+        "thermal_maxdebrisdepth": {
+          "value": 5.0,
+          "label": "Max Debris Depth"
+        },
+        "thermal_gridbias": {
+          "value": 0.0,
+          "label": "Grid Bias"
+        },
+        "thermal_gridbiasmaskmode": {
+          "value": 0,
+          "label": "thermal_gridbiasmaskmode"
+        },
+        "thermal_gridbiasmasklayer": {
+          "value": "thermalgridbiasmask",
+          "label": "Grid Bias Mask"
+        },
+        "rain_amount": {
+          "value": 0.2,
+          "label": "Amount"
+        },
+        "rain_amountmaskmode": {
+          "value": 0,
+          "label": "rain_amountmaskmode"
+        },
+        "rain_amountmasklayer": {
+          "value": "precipitation",
+          "label": "Amount Mask"
+        },
+        "rain_density": {
+          "value": 0.05,
+          "label": "Density"
+        },
+        "rain_evaporation": {
+          "value": 0.04,
+          "label": "Evaporation Rate"
+        },
+        "rain_expandradius": {
+          "value": 0.0,
+          "label": "Expand Radius"
+        },
+        "rain_blurradius": {
+          "value": 0.0,
+          "label": "Blur Radius"
+        },
+        "water_quant": {
+          "value": 0.05,
+          "label": "Quantization"
+        },
+        "water_postsmooth": {
+          "value": 1,
+          "label": "Post Smooth"
+        },
+        "debris_spreaditers": {
+          "value": 10,
+          "label": "Spread Iterations"
+        },
+        "debris_quant": {
+          "value": 0.25,
+          "label": "Quantization"
+        },
+        "debris_postsmooth": {
+          "value": 0,
+          "label": "Post Smooth"
+        },
+        "debris_waterabsorb": {
+          "value": 1.0,
+          "label": "Water Absorption"
+        },
+        "debris_maxheight": {
+          "value": 3.0,
+          "label": "Max Height"
+        },
+        "debris_reposeangle": {
+          "value": 15.0,
+          "label": "Repose Angle"
+        },
+        "debris_reposeanglemaskmode": {
+          "value": 0,
+          "label": "debris_reposeanglemaskmode"
+        },
+        "debris_reposeanglemasklayer": {
+          "value": "reposeanglemask",
+          "label": "Repose Angle Mask"
+        },
+        "seed": {
+          "value": 2675,
+          "label": "Global Seed"
+        },
+        "bedrockoverridelayer": {
+          "value": "height",
+          "label": "Bedrock Override"
+        },
+        "douplift": {
+          "value": 0,
+          "label": "Adjust Height by Bedrock Change"
+        },
+        "dostrata": {
+          "value": 0,
+          "label": "Adjust Erodability by Strata"
+        },
+        "strata_depth": {
+          "value": 10.0,
+          "label": "Strata Depth"
+        },
+        "strata_clamp": {
+          "value": 1,
+          "label": "Clamp at Strata Bounds"
+        },
+        "strata_ramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 1), (t=1, 1))>",
+          "label": "Strata Erodability"
+        },
+        "debris_removefromheight": {
+          "value": 1,
+          "label": "Remove Debris Layer from Input Height Layer"
+        },
+        "water_removefromheight": {
+          "value": 0,
+          "label": "Remove Water Layer from Input Height Layer"
+        },
+        "clearwater": {
+          "value": 0,
+          "label": "Reset Water Layer"
+        },
+        "cleardebris": {
+          "value": 0,
+          "label": "Reset Debris Layer"
+        },
+        "clearsediment": {
+          "value": 0,
+          "label": "Reset Sediment Layer"
+        },
+        "debris_addtoheight": {
+          "value": 1,
+          "label": "Add Debris Layer to Final Height Layer"
+        },
+        "water_addtoheight": {
+          "value": 1,
+          "label": "Add Water Layer to Final Height Layer"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        },
+        "waterlayer": {
+          "value": "water",
+          "label": "Water Layer"
+        },
+        "materiallayer": {
+          "value": "debris",
+          "label": "Material Layer"
+        },
+        "sedimentlayer": {
+          "value": "sediment",
+          "label": "Sediment Layer"
+        },
+        "bedrocklayer": {
+          "value": "bedrock",
+          "label": "Bedrock Layer"
+        },
+        "startframe": {
+          "value": 1,
+          "label": "Start Frame"
+        },
+        "cacheenabled": {
+          "value": 1,
+          "label": "Cache Simulation"
+        },
+        "cachetodisk": {
+          "value": 0,
+          "label": "Allow Caching To Disk"
+        },
+        "cachemaxsize": {
+          "value": 5000,
+          "label": "Cache Memory (MB)"
+        },
+        "dovisualize": {
+          "value": 1,
+          "label": "Visualize"
+        },
+        "vis_projection": {
+          "value": 0,
+          "label": "Projection"
+        },
+        "vis_minelevation": {
+          "value": 0.0,
+          "label": "Min Elevation"
+        },
+        "vis_maxelevation": {
+          "value": 250.0,
+          "label": "Max Elevation"
+        },
+        "vis_heightramp": {
+          "value": "<hou.Ramp is_color=True num_keys=5 data=((t=0, rgb=(0.5, 0.25, 0)), (t=0.245211, rgb=(0, 0.5, 0)), (t=0.542784, rgb=(0.17388, 0.621, 0.17388)), (t=0.816092, rgb=(0.2, 0.2, 0.2)), (t=1, rgb=(1, 1, 1)))>",
+          "label": "Height Ramp"
+        },
+        "vis_layer9": {
+          "value": "",
+          "label": "Layer 9"
+        },
+        "vis_color9r": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9g": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9b": {
+          "value": 0.7,
+          "label": "Color 9"
+        },
+        "vis_color9a": {
+          "value": 1.0,
+          "label": "Color 9"
+        },
+        "vis_layer8": {
+          "value": "",
+          "label": "Layer 8"
+        },
+        "vis_color8r": {
+          "value": 0.4,
+          "label": "Color 8"
+        },
+        "vis_color8g": {
+          "value": 0.3,
+          "label": "Color 8"
+        },
+        "vis_color8b": {
+          "value": 0.1,
+          "label": "Color 8"
+        },
+        "vis_color8a": {
+          "value": 1.0,
+          "label": "Color 8"
+        },
+        "vis_layer7": {
+          "value": "",
+          "label": "Layer 7"
+        },
+        "vis_color7r": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7g": {
+          "value": 0.4,
+          "label": "Color 7"
+        },
+        "vis_color7b": {
+          "value": 0.2,
+          "label": "Color 7"
+        },
+        "vis_color7a": {
+          "value": 1.0,
+          "label": "Color 7"
+        },
+        "vis_layer6": {
+          "value": "",
+          "label": "Layer 6"
+        },
+        "vis_color6r": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6g": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6b": {
+          "value": 0.3,
+          "label": "Color 6"
+        },
+        "vis_color6a": {
+          "value": 1.0,
+          "label": "Color 6"
+        },
+        "vis_layer5": {
+          "value": "",
+          "label": "Layer 5"
+        },
+        "vis_color5r": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5g": {
+          "value": 0.5,
+          "label": "Color 5"
+        },
+        "vis_color5b": {
+          "value": 0.3,
+          "label": "Color 5"
+        },
+        "vis_color5a": {
+          "value": 1.0,
+          "label": "Color 5"
+        },
+        "vis_layer4": {
+          "value": "",
+          "label": "Layer 4"
+        },
+        "vis_color4r": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4g": {
+          "value": 0.5,
+          "label": "Color 4"
+        },
+        "vis_color4b": {
+          "value": 0.0,
+          "label": "Color 4"
+        },
+        "vis_color4a": {
+          "value": 1.0,
+          "label": "Color 4"
+        },
+        "vis_layer3": {
+          "value": "",
+          "label": "Layer 3"
+        },
+        "vis_color3r": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_color3g": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3b": {
+          "value": 0.0,
+          "label": "Color 3"
+        },
+        "vis_color3a": {
+          "value": 1.0,
+          "label": "Color 3"
+        },
+        "vis_layer2": {
+          "value": "water",
+          "label": "Layer 2"
+        },
+        "vis_color2r": {
+          "value": 0.0,
+          "label": "Color 2"
+        },
+        "vis_color2g": {
+          "value": 0.125,
+          "label": "Color 2"
+        },
+        "vis_color2b": {
+          "value": 0.665,
+          "label": "Color 2"
+        },
+        "vis_color2a": {
+          "value": 1.0,
+          "label": "Color 2"
+        },
+        "vis_layer1": {
+          "value": "debris",
+          "label": "Layer 1"
+        },
+        "vis_color1r": {
+          "value": 0.3,
+          "label": "Color 1"
+        },
+        "vis_color1g": {
+          "value": 0.18,
+          "label": "Color 1"
+        },
+        "vis_color1b": {
+          "value": 0.07,
+          "label": "Color 1"
+        },
+        "vis_color1a": {
+          "value": 1.0,
+          "label": "Color 1"
+        },
+        "strata_ramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "strata_ramp1value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "strata_ramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "strata_ramp2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "strata_ramp2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "vis_heightramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "vis_heightramp1cr": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp1cg": {
+          "value": 0.25,
+          "label": "Color"
+        },
+        "vis_heightramp1cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp1interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp2pos": {
+          "value": 0.24521072208881378,
+          "label": "Position"
+        },
+        "vis_heightramp2cr": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2cg": {
+          "value": 0.5,
+          "label": "Color"
+        },
+        "vis_heightramp2cb": {
+          "value": 0.0,
+          "label": "Color"
+        },
+        "vis_heightramp2interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp3pos": {
+          "value": 0.5427841544151306,
+          "label": "Position"
+        },
+        "vis_heightramp3cr": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3cg": {
+          "value": 0.6209999918937683,
+          "label": "Color"
+        },
+        "vis_heightramp3cb": {
+          "value": 0.1738799810409546,
+          "label": "Color"
+        },
+        "vis_heightramp3interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp4pos": {
+          "value": 0.8160919547080994,
+          "label": "Position"
+        },
+        "vis_heightramp4cr": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cg": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4cb": {
+          "value": 0.20000000298023224,
+          "label": "Color"
+        },
+        "vis_heightramp4interp": {
+          "value": 3,
+          "label": "Interpolation"
+        },
+        "vis_heightramp5pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "vis_heightramp5cr": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cg": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5cb": {
+          "value": 1.0,
+          "label": "Color"
+        },
+        "vis_heightramp5interp": {
+          "value": 3,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield1",
+      "type": "heightfield",
+      "inputs": [],
+      "parameters": {
+        "orient": {
+          "value": 2,
+          "label": "Orientation"
+        },
+        "sampling": {
+          "value": 0,
+          "label": "Sampling"
+        },
+        "initialheight": {
+          "value": 0.0,
+          "label": "Initial Height"
+        },
+        "initialmask": {
+          "value": 0.0,
+          "label": "Initial Mask"
+        },
+        "divisionmode": {
+          "value": 0,
+          "label": "Division Mode"
+        },
+        "gridspacing": {
+          "value": 2.0,
+          "label": "Grid Spacing"
+        },
+        "gridsamples": {
+          "value": 512,
+          "label": "Grid Samples"
+        },
+        "scale": {
+          "value": 1.0,
+          "label": "Uniform Scale"
+        },
+        "sizex": {
+          "value": 4000.0,
+          "label": "Size"
+        },
+        "sizey": {
+          "value": 4000.0,
+          "label": "Size"
+        },
+        "tx": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "ty": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "tz": {
+          "value": 0.0,
+          "label": "Center"
+        }
+      }
+    },
+    {
+      "name": "heightfield_project1",
+      "type": "heightfield_project",
+      "inputs": [
+        "heightfield1",
+        "merge3"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Layer"
+        },
+        "maskmode": {
+          "value": 0,
+          "label": "Mask Mode"
+        },
+        "maskdir": {
+          "value": 0,
+          "label": "Masking by Geometry"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        },
+        "maskdensity": {
+          "value": 1.0,
+          "label": "Density"
+        },
+        "maskinvert": {
+          "value": 0,
+          "label": "Invert"
+        },
+        "hitfarthest": {
+          "value": 1,
+          "label": "Hit Farthest"
+        },
+        "combine": {
+          "value": 3,
+          "label": "Combine Method"
+        },
+        "maxraydist": {
+          "value": 1000.0,
+          "label": "Max Ray Dist"
+        },
+        "dojitter": {
+          "value": 0,
+          "label": "Supersampling"
+        },
+        "sample": {
+          "value": 3,
+          "label": "Samples"
+        },
+        "jitter": {
+          "value": 0.25,
+          "label": "Jitter"
+        },
+        "jittercombine": {
+          "value": 1,
+          "label": "Ray Combiner"
+        },
+        "seed": {
+          "value": 1.0,
+          "label": "Seed"
+        }
+      }
+    },
+    {
+      "name": "polyextrude2",
+      "type": "polyextrude::2.0",
+      "inputs": [
+        "reverse2"
+      ],
+      "parameters": {
+        "group": {
+          "value": "",
+          "label": "Group"
+        },
+        "splittype": {
+          "value": 1,
+          "label": "Divide Into"
+        },
+        "usesplitgroup": {
+          "value": 0,
+          "label": "usesplitgroup"
+        },
+        "splitgroup": {
+          "value": "",
+          "label": "Split Group"
+        },
+        "extrusionmode": {
+          "value": 0,
+          "label": "Extrusion Mode"
+        },
+        "ptnormalsrc": {
+          "value": 0,
+          "label": "ptnormalsrc"
+        },
+        "ptnormalattrib": {
+          "value": "N",
+          "label": "Normal Attribute"
+        },
+        "dist": {
+          "value": 67.7832,
+          "label": "Distance"
+        },
+        "inset": {
+          "value": 500.0,
+          "label": "Inset"
+        },
+        "twist": {
+          "value": 0.0,
+          "label": "Twist"
+        },
+        "divs": {
+          "value": 1,
+          "label": "Divisions"
+        },
+        "spinetype": {
+          "value": 0,
+          "label": "Spine Shape"
+        },
+        "xformfront": {
+          "value": 0,
+          "label": "Transform Extruded Front"
+        },
+        "xformspace": {
+          "value": 0,
+          "label": "Transform Space"
+        },
+        "rst": {
+          "value": 0,
+          "label": "Transform Order"
+        },
+        "xyz": {
+          "value": 0,
+          "label": "Rotate Order"
+        },
+        "translatex": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "translatey": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "translatez": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "rotatex": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rotatey": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rotatez": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "scalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "scaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "scalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "shear1": {
+          "value": 0.0,
+          "label": "Shear"
+        },
+        "shear2": {
+          "value": 0.0,
+          "label": "Shear"
+        },
+        "shear3": {
+          "value": 0.0,
+          "label": "Shear"
+        },
+        "pivotx": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivoty": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivotz": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivotrotatex": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "pivotrotatey": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "pivotrotatez": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "prexform_rst": {
+          "value": 0,
+          "label": "Pre-Transform Order"
+        },
+        "prexform_xyz": {
+          "value": 0,
+          "label": "Pre-Rotate Order"
+        },
+        "prexform_translatex": {
+          "value": 0.0,
+          "label": "Pre-Translate"
+        },
+        "prexform_translatey": {
+          "value": 0.0,
+          "label": "Pre-Translate"
+        },
+        "prexform_translatez": {
+          "value": 0.0,
+          "label": "Pre-Translate"
+        },
+        "prexform_rotatex": {
+          "value": 0.0,
+          "label": "Pre-Rotate"
+        },
+        "prexform_rotatey": {
+          "value": 0.0,
+          "label": "Pre-Rotate"
+        },
+        "prexform_rotatez": {
+          "value": 0.0,
+          "label": "Pre-Rotate"
+        },
+        "prexform_scalex": {
+          "value": 1.0,
+          "label": "Pre-Scale"
+        },
+        "prexform_scaley": {
+          "value": 1.0,
+          "label": "Pre-Scale"
+        },
+        "prexform_scalez": {
+          "value": 1.0,
+          "label": "Pre-Scale"
+        },
+        "prexform_shear1": {
+          "value": 0.0,
+          "label": "Pre-Shear"
+        },
+        "prexform_shear2": {
+          "value": 0.0,
+          "label": "Pre-Shear"
+        },
+        "prexform_shear3": {
+          "value": 0.0,
+          "label": "Pre-Shear"
+        },
+        "outputfront": {
+          "value": 1,
+          "label": "Output Front"
+        },
+        "outputfrontgrp": {
+          "value": 0,
+          "label": "outputfrontgrp"
+        },
+        "frontgrp": {
+          "value": "extrudeFront",
+          "label": "Front Group"
+        },
+        "outputback": {
+          "value": 0,
+          "label": "Output Back"
+        },
+        "outputbackgrp": {
+          "value": 0,
+          "label": "outputbackgrp"
+        },
+        "backgrp": {
+          "value": "extrudeBack",
+          "label": "Back Group"
+        },
+        "outputside": {
+          "value": 1,
+          "label": "Output Side"
+        },
+        "outputsidegrp": {
+          "value": 0,
+          "label": "outputsidegrp"
+        },
+        "sidegrp": {
+          "value": "extrudeSide",
+          "label": "Side Group"
+        },
+        "outputfrontseamgrp": {
+          "value": 0,
+          "label": "outputfrontseamgrp"
+        },
+        "frontseamgrp": {
+          "value": "extrudeFrontSeam",
+          "label": "Front Boundary Group"
+        },
+        "outputbackseamgrp": {
+          "value": 0,
+          "label": "outputbackseamgrp"
+        },
+        "backseamgrp": {
+          "value": "extrudeBackSeam",
+          "label": "Back Boundary Group"
+        },
+        "preservegroups": {
+          "value": 1,
+          "label": "Preserve Groups"
+        },
+        "copyedgegroups": {
+          "value": 0,
+          "label": "Copy Edge Groups"
+        },
+        "copypointgroups": {
+          "value": 0,
+          "label": "Copy Point Groups"
+        },
+        "copyprimitivegroups": {
+          "value": 1,
+          "label": "Copy Primitive Groups"
+        },
+        "limitinset": {
+          "value": 1,
+          "label": "Limit Insetting"
+        },
+        "commonlimit": {
+          "value": 1,
+          "label": "Use Common Limit"
+        },
+        "addvertexnomrals": {
+          "value": 0,
+          "label": "Add Vertex Normals"
+        },
+        "cuspangle": {
+          "value": 60.0,
+          "label": "Cusp Angle"
+        },
+        "cuspfront": {
+          "value": 1,
+          "label": "Cusp All Front Boundary Edges"
+        },
+        "cuspback": {
+          "value": 1,
+          "label": "Cusp All Back Boundary Edges"
+        },
+        "genuvs": {
+          "value": 1,
+          "label": "Generate Unwrapped Texture Coordinates for Sides"
+        },
+        "uvstyle": {
+          "value": 2,
+          "label": "Style"
+        },
+        "uvscaling": {
+          "value": 2,
+          "label": "Scaling"
+        },
+        "frontmagnitude": {
+          "value": 1.0,
+          "label": "Front Magnitude"
+        },
+        "backmagnitude": {
+          "value": 1.0,
+          "label": "Back Magnitude"
+        },
+        "frontstiffness": {
+          "value": 0.0,
+          "label": "Front Stiffness"
+        },
+        "backstiffness": {
+          "value": 0.0,
+          "label": "Back Stiffness"
+        },
+        "interpolation": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "spacing": {
+          "value": 0,
+          "label": "Division Spacing"
+        },
+        "reversespinedirection": {
+          "value": 0,
+          "label": "Reverse Direction"
+        },
+        "axialrotation": {
+          "value": 0.0,
+          "label": "Axial Rotation"
+        },
+        "frontblend": {
+          "value": 0.1,
+          "label": "Front Blend"
+        },
+        "backblend": {
+          "value": 0.1,
+          "label": "Back Blend"
+        },
+        "thicknessscale": {
+          "value": 1.0,
+          "label": "Thickness Scale"
+        },
+        "usethicknessattrib": {
+          "value": 1,
+          "label": "usethicknessattrib"
+        },
+        "thicknessattrib": {
+          "value": "thickness",
+          "label": "Thickness Attribute"
+        },
+        "usethicknessramp": {
+          "value": 1,
+          "label": "usethicknessramp"
+        },
+        "thicknessramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 1), (t=1, 1))>",
+          "label": "Thickness Ramp"
+        },
+        "usetwistattrib": {
+          "value": 1,
+          "label": "usetwistattrib"
+        },
+        "twistattrib": {
+          "value": "twist",
+          "label": "Twist Attribute"
+        },
+        "usetwistramp": {
+          "value": 1,
+          "label": "usetwistramp"
+        },
+        "twistramp": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0.5), (t=1, 0.5))>",
+          "label": "Local Twist Ramp"
+        },
+        "twistscale": {
+          "value": 180.0,
+          "label": "Range Half-Width"
+        },
+        "uselocalzscaleattrib": {
+          "value": 0,
+          "label": "uselocalzscaleattrib"
+        },
+        "localzscaleattrib": {
+          "value": "zscale",
+          "label": "Distance Scale"
+        },
+        "uselocalinsetscaleattrib": {
+          "value": 0,
+          "label": "uselocalinsetscaleattrib"
+        },
+        "localinsetscaleattrib": {
+          "value": "insetscale",
+          "label": "Inset Scale"
+        },
+        "uselocaltwistattrib": {
+          "value": 0,
+          "label": "uselocaltwistattrib"
+        },
+        "localtwistscaleattrib": {
+          "value": "twistscale",
+          "label": "Twist Scale"
+        },
+        "uselocaldivsattrib": {
+          "value": 0,
+          "label": "uselocaldivsattrib"
+        },
+        "locadivscaleattrib": {
+          "value": "divsscale",
+          "label": "Divisions Scale"
+        },
+        "uselocalxattrib": {
+          "value": 0,
+          "label": "uselocalxattrib"
+        },
+        "localxattrib": {
+          "value": "localx",
+          "label": "X Direction"
+        },
+        "uselocalzattirb": {
+          "value": 0,
+          "label": "uselocalzattirb"
+        },
+        "localzattirb": {
+          "value": "localz",
+          "label": "Z Direction"
+        },
+        "uselocalctrattrib": {
+          "value": 0,
+          "label": "uselocalctrattrib"
+        },
+        "localctrattrib": {
+          "value": "localctr",
+          "label": "Center"
+        },
+        "thicknessramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "thicknessramp1value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "thicknessramp1interp": {
+          "value": 2,
+          "label": "Interpolation"
+        },
+        "thicknessramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "thicknessramp2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "thicknessramp2interp": {
+          "value": 2,
+          "label": "Interpolation"
+        },
+        "twistramp1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "twistramp1value": {
+          "value": 0.5,
+          "label": "Value"
+        },
+        "twistramp1interp": {
+          "value": 2,
+          "label": "Interpolation"
+        },
+        "twistramp2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "twistramp2value": {
+          "value": 0.5,
+          "label": "Value"
+        },
+        "twistramp2interp": {
+          "value": 2,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "curve2",
+      "type": "curve::2.0",
+      "inputs": [],
+      "parameters": {
+        "group": {
+          "value": "",
+          "label": "Group"
+        },
+        "outputtype": {
+          "value": 2,
+          "label": "Primitive Type"
+        },
+        "order": {
+          "value": 4,
+          "label": "Order"
+        },
+        "convertcurves": {
+          "value": 1,
+          "label": "Reinterpret Curves as Current Type and Order"
+        },
+        "mode": {
+          "value": 1,
+          "label": "Mode"
+        },
+        "interpmethod": {
+          "value": 0,
+          "label": "Auto-Point Interpolation Method"
+        },
+        "enablebezierops": {
+          "value": 1,
+          "label": "Enable Bezier Operations"
+        },
+        "operations": {
+          "value": "",
+          "label": "Topology Operations"
+        },
+        "pointoperations": {
+          "value": "",
+          "label": "Tangent Operations"
+        },
+        "updatefrominput": {
+          "value": 1,
+          "label": "Update Curves from Input"
+        },
+        "snaponclose": {
+          "value": 1,
+          "label": "Snap Tangents when Fusing Ends in Draw Mode"
+        },
+        "maintainpoint": {
+          "value": 0,
+          "label": "Approximate Shape on Delete"
+        },
+        "approxendtangents": {
+          "value": 0,
+          "label": "Approximate End Tangents"
+        },
+        "stashgeo": {
+          "value": null,
+          "label": "Stashed Geometry"
+        },
+        "savedstashgeo": {
+          "value": "<hou.Geometry frozen at 000000004383CB80 read-only>",
+          "label": "Saved Stashed Geometry"
+        },
+        "parmpoints": {
+          "value": "<hou.Geometry frozen at 000000004383C480 read-only>",
+          "label": "Parm Points"
+        },
+        "stashid": {
+          "value": ";",
+          "label": "Stash Id"
+        },
+        "ninputprimscached": {
+          "value": 0,
+          "label": "Num Input Prims Cached"
+        },
+        "softtransform": {
+          "value": 0,
+          "label": "Enable Soft Transform"
+        },
+        "softtransformrad": {
+          "value": 0.5,
+          "label": "Soft Transform Radius"
+        },
+        "outputcornerpts": {
+          "value": 0,
+          "label": "Output Corner Points"
+        },
+        "cornerptsgroup": {
+          "value": "corner_points",
+          "label": "Corner Points Group"
+        },
+        "outputsmoothpts": {
+          "value": 0,
+          "label": "Output Smooth Points"
+        },
+        "smoothptsgroup": {
+          "value": "smooth_points",
+          "label": "Smooth Points Group"
+        },
+        "outputautopts": {
+          "value": 0,
+          "label": "Output Auto Points"
+        },
+        "autoptsgroup": {
+          "value": "auto_points",
+          "label": "Auto Points Group"
+        },
+        "outputname": {
+          "value": 0,
+          "label": "Output Name"
+        },
+        "name": {
+          "value": "$OS",
+          "label": "Name"
+        },
+        "nameattrib": {
+          "value": "name",
+          "label": "Name Attrib"
+        },
+        "outputxaxis": {
+          "value": 0,
+          "label": "Output X Axis"
+        },
+        "xaxisname": {
+          "value": "out",
+          "label": "X Axis"
+        },
+        "outputyaxis": {
+          "value": 0,
+          "label": "Output Y Axis"
+        },
+        "yaxisname": {
+          "value": "up",
+          "label": "Y Axis"
+        },
+        "outputzaxis": {
+          "value": 0,
+          "label": "Output Z Axis"
+        },
+        "zaxisname": {
+          "value": "tangent",
+          "label": "Z Axis"
+        },
+        "outputorient": {
+          "value": 0,
+          "label": "Output Orient Attribute"
+        },
+        "orientname": {
+          "value": "orient",
+          "label": "Orient"
+        },
+        "tangenttype": {
+          "value": 0,
+          "label": "Tangent Type"
+        },
+        "aligntangent": {
+          "value": 1,
+          "label": "Align with Curve Tangent"
+        },
+        "targetorients": {
+          "value": 0,
+          "label": "Target Orientations"
+        },
+        "optype": {
+          "value": 0,
+          "label": "Operation"
+        },
+        "activepoints": {
+          "value": "",
+          "label": "Active Points"
+        },
+        "translatex": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "translatey": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "translatez": {
+          "value": 0.0,
+          "label": "Translate"
+        },
+        "rotatex": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rotatey": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rotatez": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "scalex": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "scaley": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "scalez": {
+          "value": 1.0,
+          "label": "Scale"
+        },
+        "addpts": {
+          "value": "",
+          "label": "Operation Data"
+        },
+        "activeprim": {
+          "value": 0,
+          "label": "Active Prim"
+        },
+        "cornerpts": {
+          "value": "0 3 6 9 12 15 18 21 24 27 30 33 36",
+          "label": "Corner Points"
+        },
+        "smoothpts": {
+          "value": "",
+          "label": "Smooth Points"
+        },
+        "autopts": {
+          "value": "",
+          "label": "Auto Points"
+        },
+        "pivottranslatex": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivottranslatey": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivottranslatez": {
+          "value": 0.0,
+          "label": "Pivot Translate"
+        },
+        "pivotrotatex": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "pivotrotatey": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "pivotrotatez": {
+          "value": 0.0,
+          "label": "Pivot Rotate"
+        },
+        "pivotfixed": {
+          "value": 0,
+          "label": "Fixed Pivot"
+        },
+        "viewroundcorners": {
+          "value": 1,
+          "label": "View Rounded Corners"
+        },
+        "roundcornerpts": {
+          "value": "",
+          "label": "Round Corner Points"
+        },
+        "roundcornerradius": {
+          "value": 0.0,
+          "label": "Round Corner Radius"
+        },
+        "showroundcornerwidget": {
+          "value": 1,
+          "label": "Show Rounded Corner Widget"
+        },
+        "showroundcornerlabels": {
+          "value": 1,
+          "label": "Show Rounded Corner Labels"
+        },
+        "planeorigx": {
+          "value": 0.0,
+          "label": "Plane Origin"
+        },
+        "planeorigy": {
+          "value": 0.0,
+          "label": "Plane Origin"
+        },
+        "planeorigz": {
+          "value": 0.0,
+          "label": "Plane Origin"
+        },
+        "planenmlx": {
+          "value": 0.0,
+          "label": "Plane Normal"
+        },
+        "planenmly": {
+          "value": 1.0,
+          "label": "Plane Normal"
+        },
+        "planenmlz": {
+          "value": 0.0,
+          "label": "Plane Normal"
+        },
+        "constrainstraighten": {
+          "value": 0,
+          "label": "Constrain Straighten to Plane"
+        },
+        "handleptsx": {
+          "value": -1,
+          "label": "pts"
+        },
+        "handleptsy": {
+          "value": -1,
+          "label": "pts"
+        },
+        "handleptsz": {
+          "value": -1,
+          "label": "pts"
+        },
+        "handlep0posx": {
+          "value": -1.0,
+          "label": "P0 Pos"
+        },
+        "handlep0posy": {
+          "value": 0.0,
+          "label": "P0 Pos"
+        },
+        "handlep0posz": {
+          "value": 0.0,
+          "label": "P0 Pos"
+        },
+        "handlep1posx": {
+          "value": 0.0,
+          "label": "P1 Pos"
+        },
+        "handlep1posy": {
+          "value": 0.0,
+          "label": "P1 Pos"
+        },
+        "handlep1posz": {
+          "value": 0.0,
+          "label": "P1 Pos"
+        },
+        "handlep2posx": {
+          "value": 1.0,
+          "label": "P2 Pos"
+        },
+        "handlep2posy": {
+          "value": 0.0,
+          "label": "P2 Pos"
+        },
+        "handlep2posz": {
+          "value": 0.0,
+          "label": "P2 Pos"
+        }
+      }
+    },
+    {
+      "name": "reverse2",
+      "type": "reverse",
+      "inputs": [
+        "curve2"
+      ],
+      "parameters": {
+        "group": {
+          "value": "",
+          "label": "Source Group"
+        },
+        "vtxsort": {
+          "value": 2,
+          "label": "Vertex"
+        },
+        "vtxuoff": {
+          "value": 0,
+          "label": "U Offset"
+        },
+        "vtxvoff": {
+          "value": 0,
+          "label": "V Offset"
+        }
+      }
+    },
+    {
+      "name": "heightfield_maskbyobject1",
+      "type": "heightfield_maskbyobject",
+      "inputs": [
+        "heightfield_project1",
+        "merge3"
+      ],
+      "parameters": {
+        "combine": {
+          "value": 0,
+          "label": "Combine with Existing"
+        },
+        "blend": {
+          "value": 0.5,
+          "label": "Blend"
+        },
+        "method": {
+          "value": 0,
+          "label": "Method"
+        },
+        "maskdir": {
+          "value": 0,
+          "label": "Masking by Geometry"
+        },
+        "invertmask": {
+          "value": 0,
+          "label": "Invert Mask"
+        },
+        "maxdist": {
+          "value": 1000.0,
+          "label": "Maximum Distance"
+        },
+        "value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "blurmethod": {
+          "value": 0,
+          "label": "Blur Method"
+        },
+        "blurradius": {
+          "value": 0.0,
+          "label": "Blur Radius"
+        },
+        "dojitter": {
+          "value": 0,
+          "label": "Supersampling"
+        },
+        "sample": {
+          "value": 3,
+          "label": "Samples"
+        },
+        "jitter": {
+          "value": 0.25,
+          "label": "Jitter"
+        },
+        "jittercombine": {
+          "value": 1,
+          "label": "Ray Combiner"
+        },
+        "seed": {
+          "value": 1.0,
+          "label": "Seed"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "heightlayer": {
+          "value": "height",
+          "label": "Height Layer"
+        }
+      }
+    },
+    {
+      "name": "heightfield_maskshrink1",
+      "type": "heightfield_blur",
+      "inputs": [
+        "heightfield_maskbyobject1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "mask",
+          "label": "Blur Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "maskaware": {
+          "value": 0,
+          "label": "Mask Aware Blur"
+        },
+        "iterations": {
+          "value": 10,
+          "label": "Iterations"
+        },
+        "method": {
+          "value": 3,
+          "label": "Method"
+        },
+        "radius": {
+          "value": 100.0,
+          "label": "Radius"
+        },
+        "bordertype": {
+          "value": 3,
+          "label": "Override Border"
+        },
+        "borderval": {
+          "value": 0.0,
+          "label": "Border Value"
+        },
+        "sharpenstrength": {
+          "value": 0.0,
+          "label": "Sharpen Strength"
+        }
+      }
+    },
+    {
+      "name": "heightfield_maskblur1",
+      "type": "heightfield_blur",
+      "inputs": [
+        "heightfield_maskshrink1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "mask",
+          "label": "Blur Layer"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "maskaware": {
+          "value": 0,
+          "label": "Mask Aware Blur"
+        },
+        "iterations": {
+          "value": 10,
+          "label": "Iterations"
+        },
+        "method": {
+          "value": 0,
+          "label": "Method"
+        },
+        "radius": {
+          "value": 400.0,
+          "label": "Radius"
+        },
+        "bordertype": {
+          "value": 3,
+          "label": "Override Border"
+        },
+        "borderval": {
+          "value": 0.0,
+          "label": "Border Value"
+        },
+        "sharpenstrength": {
+          "value": 0.0,
+          "label": "Sharpen Strength"
+        }
+      }
+    },
+    {
+      "name": "heightfield_remap1",
+      "type": "heightfield_remap",
+      "inputs": [
+        "heightfield_distort1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": -3.7874999046325684,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 373.84783935546875,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 3.42,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 350.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 0,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 0,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield_remap2",
+      "type": "heightfield_remap",
+      "inputs": [
+        "heightfield_erode1"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 3.6774935722351074,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 400.0,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 3.6774935722351074,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 350.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 0,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 0,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "heightfield_resample1",
+      "type": "heightfield_resample",
+      "inputs": [
+        "heightfield_erode2"
+      ],
+      "parameters": {
+        "fixedresample": {
+          "value": 0,
+          "label": "Specify Exact Resolution"
+        },
+        "resscale": {
+          "value": 2.0,
+          "label": "Resolution Scale"
+        },
+        "divisionmode": {
+          "value": 1,
+          "label": "Division Mode"
+        },
+        "gridspacing": {
+          "value": 4.0,
+          "label": "Grid Spacing"
+        },
+        "gridsamples": {
+          "value": 256,
+          "label": "Grid Samples"
+        },
+        "filter": {
+          "value": "gauss",
+          "label": "Filter"
+        },
+        "filterscale": {
+          "value": 1.5,
+          "label": "Filter Scale"
+        }
+      }
+    },
+    {
+      "name": "heightfield_resample2",
+      "type": "heightfield_resample",
+      "inputs": [
+        "heightfield_erode3"
+      ],
+      "parameters": {
+        "fixedresample": {
+          "value": 0,
+          "label": "Specify Exact Resolution"
+        },
+        "resscale": {
+          "value": 2.0,
+          "label": "Resolution Scale"
+        },
+        "divisionmode": {
+          "value": 1,
+          "label": "Division Mode"
+        },
+        "gridspacing": {
+          "value": 4.0,
+          "label": "Grid Spacing"
+        },
+        "gridsamples": {
+          "value": 256,
+          "label": "Grid Samples"
+        },
+        "filter": {
+          "value": "gauss",
+          "label": "Filter"
+        },
+        "filterscale": {
+          "value": 1.5,
+          "label": "Filter Scale"
+        }
+      }
+    },
+    {
+      "name": "heightfield_remap3",
+      "type": "heightfield_remap",
+      "inputs": [
+        "heightfield_distort2"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "height",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 1.5933723449707031,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 303.69989013671875,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 1.5933723449707031,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 400.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 0,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 0,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=3 data=((t=0, 0), (t=0.826603, 0.59), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 5,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 0.826603353023529,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 0.59,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 5,
+          "label": "Interpolation"
+        },
+        "remap3pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap3value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap3interp": {
+          "value": 5,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "output0",
+      "type": "output",
+      "inputs": [
+        "attrib_unreal_material"
+      ],
+      "parameters": {
+        "outputidx": {
+          "value": 0,
+          "label": "Output Index"
+        }
+      }
+    },
+    {
+      "name": "attrib_unreal_material",
+      "type": "attribcreate::2.0",
+      "inputs": [
+        "blast_mask"
+      ],
+      "parameters": {
+        "group": {
+          "value": "",
+          "label": "Group"
+        },
+        "grouptype": {
+          "value": 0,
+          "label": "Group Type"
+        },
+        "encodenames": {
+          "value": 0,
+          "label": "Encode Invalid Attribute Names"
+        },
+        "numattr": {
+          "value": 1,
+          "label": "Number of Attributes"
+        },
+        "enable1": {
+          "value": 1,
+          "label": "Enable"
+        },
+        "name1": {
+          "value": "unreal_material",
+          "label": "Name"
+        },
+        "existing1": {
+          "value": 3,
+          "label": "Existing Name"
+        },
+        "createvarmap1": {
+          "value": 0,
+          "label": "Create Variable Mapping"
+        },
+        "varname1": {
+          "value": "",
+          "label": "Local Variable"
+        },
+        "class1": {
+          "value": 1,
+          "label": "Class"
+        },
+        "savetoinfo1": {
+          "value": 0,
+          "label": "Save to Info Block"
+        },
+        "type1": {
+          "value": 3,
+          "label": "Type"
+        },
+        "typeinfo1": {
+          "value": 0,
+          "label": "Type Qualifier"
+        },
+        "precision1": {
+          "value": 4,
+          "label": "Precision"
+        },
+        "size1": {
+          "value": 1,
+          "label": "Size"
+        },
+        "default1v1": {
+          "value": 0.0,
+          "label": "Default"
+        },
+        "default1v2": {
+          "value": 0.0,
+          "label": "Default"
+        },
+        "default1v3": {
+          "value": 0.0,
+          "label": "Default"
+        },
+        "default1v4": {
+          "value": 0.0,
+          "label": "Default"
+        },
+        "writevalues1": {
+          "value": 1,
+          "label": "Write Values"
+        },
+        "uselocal1": {
+          "value": 1,
+          "label": "Allow Local Vars"
+        },
+        "value1v1": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "value1v2": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "value1v3": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "value1v4": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "string1": {
+          "value": "/Script/Engine.Material'/Game/Pegasus/MaterialsDemo/M_Landscape.M_Landscape'",
+          "label": "String"
+        }
+      }
+    },
+    {
+      "name": "remap_bedrock",
+      "type": "heightfield_remap",
+      "inputs": [
+        "heightfield_erode4"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "bedrock",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 0.0,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 1.0,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 1.0,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 1.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 1,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 1,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "remap_debris",
+      "type": "heightfield_remap",
+      "inputs": [
+        "remap_bedrock"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "debris",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 0.0,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 1.0,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 0.0,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 1.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 1,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 1,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "remap_water",
+      "type": "heightfield_remap",
+      "inputs": [
+        "remap_debris"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "water",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 0.0,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 1.0,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 0.0,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 1.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 1,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 1,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "remap_sediment",
+      "type": "heightfield_remap",
+      "inputs": [
+        "remap_water"
+      ],
+      "parameters": {
+        "layer": {
+          "value": "sediment",
+          "label": "Layer to Remap"
+        },
+        "masklayer": {
+          "value": "mask",
+          "label": "Mask Layer"
+        },
+        "inputmin": {
+          "value": 0.0,
+          "label": "Input Min"
+        },
+        "inputmax": {
+          "value": 1.0,
+          "label": "Input Max"
+        },
+        "outputmin": {
+          "value": 0.0,
+          "label": "Output Min"
+        },
+        "outputmax": {
+          "value": 1.0,
+          "label": "Output Max"
+        },
+        "clampmin": {
+          "value": 1,
+          "label": "Clamp to Minimum"
+        },
+        "clampmax": {
+          "value": 1,
+          "label": "Clamp to Maximum"
+        },
+        "remap": {
+          "value": "<hou.Ramp is_color=False num_keys=2 data=((t=0, 0), (t=1, 1))>",
+          "label": "Remap"
+        },
+        "remap1pos": {
+          "value": 0.0,
+          "label": "Position"
+        },
+        "remap1value": {
+          "value": 0.0,
+          "label": "Value"
+        },
+        "remap1interp": {
+          "value": 1,
+          "label": "Interpolation"
+        },
+        "remap2pos": {
+          "value": 1.0,
+          "label": "Position"
+        },
+        "remap2value": {
+          "value": 1.0,
+          "label": "Value"
+        },
+        "remap2interp": {
+          "value": 1,
+          "label": "Interpolation"
+        }
+      }
+    },
+    {
+      "name": "blast_mask",
+      "type": "blast",
+      "inputs": [
+        "remap_sediment"
+      ],
+      "parameters": {
+        "group": {
+          "value": "@name=mask",
+          "label": "Group"
+        },
+        "grouptype": {
+          "value": 0,
+          "label": "Group Type"
+        },
+        "computenorms": {
+          "value": 0,
+          "label": "Recompute Normals"
+        },
+        "negate": {
+          "value": 0,
+          "label": "Delete Non Selected"
+        },
+        "fillhole": {
+          "value": 0,
+          "label": "Fill Simple Holes"
+        },
+        "removegrp": {
+          "value": 0,
+          "label": "Delete Unused Groups"
+        }
+      }
+    },
+    {
+      "name": "merge3",
+      "type": "merge",
+      "inputs": [
+        "polyextrude2",
+        "tube9",
+        "tube10",
+        "tube11",
+        "tube12"
+      ],
+      "parameters": {}
+    },
+    {
+      "name": "tube9",
+      "type": "tube",
+      "inputs": [],
+      "parameters": {
+        "type": {
+          "value": 1,
+          "label": "Primitive Type"
+        },
+        "surftype": {
+          "value": 4,
+          "label": "Connectivity"
+        },
+        "orient": {
+          "value": 1,
+          "label": "Orientation"
+        },
+        "cap": {
+          "value": 1,
+          "label": "End Caps"
+        },
+        "consolidatepts": {
+          "value": 1,
+          "label": "Consolidate Corner Points"
+        },
+        "vertexnormals": {
+          "value": 0,
+          "label": "Add Vertex Normals"
+        },
+        "tx": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "ty": {
+          "value": 160.504,
+          "label": "Center"
+        },
+        "tz": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "rx": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "ry": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rz": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rad1": {
+          "value": 42.809,
+          "label": "Radius"
+        },
+        "rad2": {
+          "value": 532.863,
+          "label": "Radius"
+        },
+        "radscale": {
+          "value": 1.0,
+          "label": "Radius Scale"
+        },
+        "height": {
+          "value": 322.008,
+          "label": "Height"
+        },
+        "rows": {
+          "value": 2,
+          "label": "Rows"
+        },
+        "cols": {
+          "value": 100,
+          "label": "Columns"
+        },
+        "orderu": {
+          "value": 4,
+          "label": "U Order"
+        },
+        "orderv": {
+          "value": 2,
+          "label": "V Order"
+        },
+        "imperfect": {
+          "value": 1,
+          "label": "Imperfect"
+        }
+      }
+    },
+    {
+      "name": "tube10",
+      "type": "tube",
+      "inputs": [],
+      "parameters": {
+        "type": {
+          "value": 1,
+          "label": "Primitive Type"
+        },
+        "surftype": {
+          "value": 4,
+          "label": "Connectivity"
+        },
+        "orient": {
+          "value": 1,
+          "label": "Orientation"
+        },
+        "cap": {
+          "value": 1,
+          "label": "End Caps"
+        },
+        "consolidatepts": {
+          "value": 1,
+          "label": "Consolidate Corner Points"
+        },
+        "vertexnormals": {
+          "value": 0,
+          "label": "Add Vertex Normals"
+        },
+        "tx": {
+          "value": 647.0,
+          "label": "Center"
+        },
+        "ty": {
+          "value": 160.504,
+          "label": "Center"
+        },
+        "tz": {
+          "value": 690.0,
+          "label": "Center"
+        },
+        "rx": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "ry": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rz": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rad1": {
+          "value": 42.809,
+          "label": "Radius"
+        },
+        "rad2": {
+          "value": 865.304,
+          "label": "Radius"
+        },
+        "radscale": {
+          "value": 1.0,
+          "label": "Radius Scale"
+        },
+        "height": {
+          "value": 322.008,
+          "label": "Height"
+        },
+        "rows": {
+          "value": 2,
+          "label": "Rows"
+        },
+        "cols": {
+          "value": 100,
+          "label": "Columns"
+        },
+        "orderu": {
+          "value": 4,
+          "label": "U Order"
+        },
+        "orderv": {
+          "value": 2,
+          "label": "V Order"
+        },
+        "imperfect": {
+          "value": 1,
+          "label": "Imperfect"
+        }
+      }
+    },
+    {
+      "name": "tube11",
+      "type": "tube",
+      "inputs": [],
+      "parameters": {
+        "type": {
+          "value": 1,
+          "label": "Primitive Type"
+        },
+        "surftype": {
+          "value": 4,
+          "label": "Connectivity"
+        },
+        "orient": {
+          "value": 1,
+          "label": "Orientation"
+        },
+        "cap": {
+          "value": 1,
+          "label": "End Caps"
+        },
+        "consolidatepts": {
+          "value": 1,
+          "label": "Consolidate Corner Points"
+        },
+        "vertexnormals": {
+          "value": 0,
+          "label": "Add Vertex Normals"
+        },
+        "tx": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "ty": {
+          "value": 144.0,
+          "label": "Center"
+        },
+        "tz": {
+          "value": 0.0,
+          "label": "Center"
+        },
+        "rx": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "ry": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rz": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rad1": {
+          "value": 42.0,
+          "label": "Radius"
+        },
+        "rad2": {
+          "value": 1266.0,
+          "label": "Radius"
+        },
+        "radscale": {
+          "value": 1.0,
+          "label": "Radius Scale"
+        },
+        "height": {
+          "value": 198.0,
+          "label": "Height"
+        },
+        "rows": {
+          "value": 2,
+          "label": "Rows"
+        },
+        "cols": {
+          "value": 100,
+          "label": "Columns"
+        },
+        "orderu": {
+          "value": 4,
+          "label": "U Order"
+        },
+        "orderv": {
+          "value": 2,
+          "label": "V Order"
+        },
+        "imperfect": {
+          "value": 1,
+          "label": "Imperfect"
+        }
+      }
+    },
+    {
+      "name": "tube12",
+      "type": "tube",
+      "inputs": [],
+      "parameters": {
+        "type": {
+          "value": 1,
+          "label": "Primitive Type"
+        },
+        "surftype": {
+          "value": 4,
+          "label": "Connectivity"
+        },
+        "orient": {
+          "value": 1,
+          "label": "Orientation"
+        },
+        "cap": {
+          "value": 1,
+          "label": "End Caps"
+        },
+        "consolidatepts": {
+          "value": 1,
+          "label": "Consolidate Corner Points"
+        },
+        "vertexnormals": {
+          "value": 0,
+          "label": "Add Vertex Normals"
+        },
+        "tx": {
+          "value": -397.848,
+          "label": "Center"
+        },
+        "ty": {
+          "value": 160.504,
+          "label": "Center"
+        },
+        "tz": {
+          "value": 806.918,
+          "label": "Center"
+        },
+        "rx": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "ry": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rz": {
+          "value": 0.0,
+          "label": "Rotate"
+        },
+        "rad1": {
+          "value": 42.809,
+          "label": "Radius"
+        },
+        "rad2": {
+          "value": 865.304,
+          "label": "Radius"
+        },
+        "radscale": {
+          "value": 1.0,
+          "label": "Radius Scale"
+        },
+        "height": {
+          "value": 322.008,
+          "label": "Height"
+        },
+        "rows": {
+          "value": 2,
+          "label": "Rows"
+        },
+        "cols": {
+          "value": 100,
+          "label": "Columns"
+        },
+        "orderu": {
+          "value": 4,
+          "label": "U Order"
+        },
+        "orderv": {
+          "value": 2,
+          "label": "V Order"
+        },
+        "imperfect": {
+          "value": 1,
+          "label": "Imperfect"
+        }
+      }
+    }
+  ]
+}

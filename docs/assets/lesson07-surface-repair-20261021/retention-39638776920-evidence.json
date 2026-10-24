@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "CANONICAL_EXPORT_RETAINED_LFS_FETCH_TIMED_OUT",
+  "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39638776920",
+  "attempt": 2,
+  "first_attempt": {
+    "export_job_id": 119356671197,
+    "conclusion": "cancelled",
+    "steps": [],
+    "canonical_export_ran": false
+  },
+  "export_job": {
+    "id": 119359937092,
+    "conclusion": "success",
+    "reported_status": "CHECKPOINT_EXPORT_VERIFIED_BRANCH_PENDING",
+    "asset_count": 9,
+    "native_calls": 0
+  },
+  "export_artifact": {
+    "id": 12364181709,
+    "name": "lesson07-material-export-39638776920-2",
+    "bytes": 115911097,
+    "github_reported_sha256": "0eb92760bb74917e2349c1066d4cc3efd5229949ad1fcb6f68936faba3266c9e",
+    "expires_at": "2026-11-20T18:00:25Z",
+    "downloaded_and_rehashed_locally": false
+  },
+  "exporter_reported_archive": {
+    "path": "checkpoint.zip",
+    "bytes": 115906481,
+    "sha256": "dc6553db25e07dc1d09236a879ecd75d74d751001435ddf8dd586c3a7b994fee",
+    "manifest_sha256": "b8cf48e11efd47cd270fcd6d5700382380675b356ee84e877af482d64041433d"
+  },
+  "hosted_lfs_job": {
+    "id": 119360473120,
+    "conclusion": "failure",
+    "step_started_utc": "2026-10-21T17:01:00.1624507Z",
+    "failure_utc": "2026-10-21T17:16:04.0048015Z",
+    "failed_operation": "git lfs fetch into independent empty storage for the exact nine included paths",
+    "error": "subprocess.TimeoutExpired",
+    "timeout_seconds": 900,
+    "local_readback_commit": "29864b725dbb94f6194405899acf5067009c2d2f",
+    "prior_explicit_oid_push_returned_success": true,
+    "push_evidence_basis": "Control flow reached publish_lfs line 719 after the preceding explicit-OID push returned successfully; stdout/stderr were buffered. Independent server object verification did not run.",
+    "scope_risk": "The existing full-tree local commit allows git-lfs ls-tree -l to scan unrelated promisor blobs before include filtering. This is a verified implementation risk, not a proven cause of this timeout."
+  },
+  "independent_server_bytes_verified": false,
+  "remote_ref_updated": false,
+  "asset_pointers_published": false,
+  "canonical_editor_started_or_stopped": false,
+  "canonical_assets_changed_by_retention": false,
+  "visual_acceptance": false,
+  "performance_pass": false
+}

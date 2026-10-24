@@ -1,0 +1,24 @@
+{
+  "run_id": 39658443621,
+  "attempt": 1,
+  "artifact_id": 12371989916,
+  "artifact_bytes": 31983,
+  "artifact_sha256": "3c84c75682bc90980849ff247d37113703632bf26753a0cf6b606d9eb25c3151",
+  "files": [
+    {
+      "file": "probe.json",
+      "bytes": 3939,
+      "sha256": "763426432e23c626c5135ac69526f00bcf4cdf8020b61199b45f21c279c52be1"
+    },
+    {
+      "file": "identity.json",
+      "bytes": 616,
+      "sha256": "27b94242abbb7e9d2c344fcb211d6d67013d2257332a39bd73afd35aec1ed892"
+    },
+    {
+      "file": "bridge.json",
+      "bytes": 120838,
+      "sha256": "0be8a7f45e33972f4e68bf9038d5318d105b161dcb27eec22ddde9103149b2c0"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "classification_changed": false,
+  "maps": {
+    "Cliffs_Colour": {
+      "file": "slice_3_cliffs_colour.png",
+      "sha256": "61e1fc0da33d9a5cc879ce863524cc270d089b87bfcf305cadfb98ce0a0ff18f",
+      "size_bytes": 16780612
+    },
+    "Cliffs_Masks": {
+      "file": "slice_3_cliffs_masks.png",
+      "sha256": "8acdb02453ab18126a42c68862d6bbcafc60ab9b6d639a8edf1327c770b527e6",
+      "size_bytes": 16780612
+    },
+    "Cliffs_Normal": {
+      "file": "slice_3_cliffs_normal.png",
+      "sha256": "a9d171b13ab94c50d8aa166940fc3fb8c1f8d3102ecf08926cfbffc3835423d2",
+      "size_bytes": 16780612
+    },
+    "Grass_Masks": {
+      "file": "slice_0_grass_masks.png",
+      "sha256": "bc9131bb40a06e00c14544785b873bce6430797c59eb3c7369b34fbaff318d1c",
+      "size_bytes": 3756633
+    },
+    "Grass_Normal": {
+      "file": "slice_0_grass_normal.png",
+      "sha256": "6cfe99fee469d538d07f6770bcd10714bac5f59db904cb665f26f3fddcdfb239",
+      "size_bytes": 10689967
+    }
+  },
+  "masks_channels": {
+    "B": "Height",
+    "G": "Roughness",
+    "R": "AO"
+  },
+  "normal_convention": "DirectX",
+  "package_id": "lesson07-surface-repair-20261021",
+  "provenance": {
+    "albedo_transform": "sRGB high8bit -> linear Rec709 luminance -> achromatic sRGB; luminance preserved",
+    "asset_id": "dark_rock_02",
+    "author": "Amal Kumar",
+    "class_order": [
+      "Grass",
+      "Grass2",
+      "Sand",
+      "Cliffs",
+      "Scree"
+    ],
+    "geology": "unverified; dark-grey rock appearance proxy, not authenticated limestone",
+    "grass_colour_unchanged": true,
+    "grass_normal_family": "aerial_grass_rock",
+    "grass_roughness_source_channel": "G",
+    "grass_source_run": "39519585751",
+    "license": "CC0-1.0",
+    "license_checked": "2026-10-21",
+    "license_url": "https://polyhaven.com/license",
+    "native_ue_verified": false,
+    "normal_transform": "RGBA16 high8bit; no gamma transform; no green inversion",
+    "package_png_encoding": "RGBA8 filter0 RFC1951 stored blocks65535; deterministic bytes",
+    "packed_masks_alpha": "AO",
+    "physical_dimensions_m": [
+      2.0009167194366455,
+      2.000917911529541
+    ],
+    "provider": "Poly Haven",
+    "runtime_displacement_enabled": false,
+    "scalar_transform": "PNG16 raw /257, round-to-nearest ties-to-even; no gamma transform",
+    "source_files": {
+      "ao": {
+        "file": "dark_rock_02_ao_2k.png",
+        "sha256": "fbb0c970a95edec729c725ce5289169a646498bf3ca0befab78260fb84d091ee",
+        "size_bytes": 4519546,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_ao_2k.png"
+      },
+      "diff": {
+        "file": "dark_rock_02_diff_2k.png",
+        "sha256": "bf440eca64d945962c417a524b07fbc3aaa1591bd76d2d3fb60b0df8a05f1c54",
+        "size_bytes": 24251872,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_diff_2k.png"
+      },
+      "disp": {
+        "file": "dark_rock_02_disp_2k.png",
+        "sha256": "f1f452f2bbc13b2c094f52262b39e0e4e7fd7114bb4eaea33f805f1cd972ae4f",
+        "size_bytes": 5456217,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_disp_2k.png"
+      },
+      "nor_dx": {
+        "file": "dark_rock_02_nor_dx_2k.png",
+        "sha256": "8f446aad3271078e9cdf94c9744363ae26339c392f3727619de3ef104a9976de",
+        "size_bytes": 25556874,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_nor_dx_2k.png"
+      },
+      "rough": {
+        "file": "dark_rock_02_rough_2k.png",
+        "sha256": "0ba3d020f4cbf5a4cd452612476f6ee42ddf22b97d1f6f5221818221e057766e",
+        "size_bytes": 7095869,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_rough_2k.png"
+      }
+    },
+    "source_url": "https://polyhaven.com/a/dark_rock_02",
+    "title": "Dark Rock 02",
+    "unchanged_slots": [
+      1,
+      2,
+      4
+    ]
+  },
+  "schema_version": 1,
+  "size": [
+    2048,
+    2048
+  ],
+  "terrain_changed": false
+}

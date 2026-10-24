@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_ORIGINAL_HDA_IDENTITY_AND_SCOPED_TEXTURE_ABSENCE_OBSERVED",
+  "run_id": 39761109220,
+  "job_id": 119765211655,
+  "source_commit": "7b43d13355de747a85ec5b4e314e15c5c4c69f41",
+  "workflow_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39761109220",
+  "workflow_file": ".github/workflows/yacs-lesson07-native-audit.yml",
+  "workflow_file_sha256": "98e442243849181f29009cc77f47db4856c065730090ed38731916ea6af97291",
+  "artifact": {
+    "id": 12417174580,
+    "name": "lesson07-pegasus-material-resource-audit-39761109220-1",
+    "zip_bytes": 1930,
+    "zip_sha256": "43af7f63c4b774332840c201105603ae1727af1f2c029b3f1249093ff94b4160",
+    "member": "lesson07-pegasus-material-resource-audit.json",
+    "member_bytes": 5876,
+    "member_sha256": "209f8d8b2691e10cabcc0536439a1f6636c8251d981b2a6a8fc7eaf11680119e"
+  },
+  "retention_note": "The complete parsed native report is retained below without field omissions. The exact original UTF-8 member identity is recorded above; formatting in this envelope differs.",
+  "verified": {
+    "material_and_tint_hda_original_pins_match": true,
+    "fixed_texture_scope_enumeration_complete": true,
+    "root_entries_observed": 10,
+    "exact_family_albedo_displacement_matches": 0,
+    "five_named_family_subdirectories": "MISSING_WITHIN_SCOPE",
+    "default_pic_project_and_work_candidates": "MISSING",
+    "stock_default_pic_resource": "STABLE_HASH_OBSERVED",
+    "installed_recipe_differs_from_published_source": true,
+    "published_recipe_sha256_at_run": "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37"
+  },
+  "limits": [
+    "Only the fixed project textures root and five exact immediate family folders were searched. This is not whole-host, Bridge, Fab, Vault or other-library absence evidence.",
+    "Filename matching alone would not establish original source identity or license entitlement. No matching source file was found in this scope.",
+    "The stock default.pic file is present. The original HDA first checks os.path.exists on the evaluated filename; stock-resource presence does not establish the author CWD or branch selection. Numeric roughness remains UNKNOWN.",
+    "The canonical host recipe has SHA256 6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e, not the published source recipe hash. This read-only run neither deploys the new code nor proves native material changes.",
+    "Memory snapshots are observations, not a cook admission or measured peak-memory bound.",
+    "No hou/hython, HIP, cache, geometry, renderer or Editor operation was requested by this audit profile. Existing runner maintenance hooks remain outside the audited file-read step."
+  ],
+  "native_report": {
+    "status": "READ_ONLY_RESOURCE_METADATA_OBSERVED_NOT_MATERIAL_ADMISSION",
+    "commit": "7b43d13355de747a85ec5b4e314e15c5c4c69f41",
+    "profile": "PEGASUS_MATERIAL_RESOURCE_METADATA_ONLY",
+    "memory_before": {
+      "observed_utc": "2026-10-22T10:11:02.0939642Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 17640988672,
+      "available_commit_bytes": 51277512704,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "memory_after": {
+      "observed_utc": "2026-10-22T10:11:03.0824500Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 17614573568,
+      "available_commit_bytes": 51268255744,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "hdas": [
+      {
+        "name": "material",
+        "file": {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\sop_PE_heightfield_material.1.0.hda",
+          "status": "STABLE_HASH_OBSERVED",
+          "bytes": 45649,
+          "modified_utc": "2026-10-16T10:36:05.0819618Z",
+          "sha256": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023"
+        },
+        "original_bytes": 45649,
+        "original_sha256": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023",
+        "original_pin_matches": true
+      },
+      {
+        "name": "tint",
+        "file": {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\otls\\sop_PE_heightfield_tint.1.0.hda",
+          "status": "STABLE_HASH_OBSERVED",
+          "bytes": 28878,
+          "modified_utc": "2026-10-17T15:54:45.9884193Z",
+          "sha256": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed"
+        },
+        "original_bytes": 28878,
+        "original_sha256": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed",
+        "original_pin_matches": true
+      }
+    ],
+    "installed_recipe": {
+      "path": "D:\\yacs\\project\\scripts\\houdini\\lesson06_unified_pipeline.py",
+      "status": "STABLE_HASH_OBSERVED",
+      "bytes": 34868,
+      "modified_utc": "2026-10-19T14:00:32.9661835Z",
+      "sha256": "6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e"
+    },
+    "default_pic_candidates": [
+      {
+        "context": "PROJECT_CWD_CANDIDATE",
+        "file": {
+          "path": "D:\\yacs\\project\\default.pic",
+          "status": "MISSING",
+          "bytes": null,
+          "modified_utc": null,
+          "sha256": null
+        }
+      },
+      {
+        "context": "PIPELINE_WORK_CWD_CANDIDATE",
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\default.pic",
+          "status": "MISSING",
+          "bytes": null,
+          "modified_utc": null,
+          "sha256": null
+        }
+      },
+      {
+        "context": "STOCK_INSTALLATION_RESOURCE_CANDIDATE",
+        "file": {
+          "path": "D:\\yacs\\tools\\houdini-22.0.466\\houdini\\pic\\default.pic",
+          "status": "STABLE_HASH_OBSERVED",
+          "bytes": 302781,
+          "modified_utc": "2026-10-08T05:15:30.0000000Z",
+          "sha256": "071de4ce05f8a6f9b6a134e1add96fd90f7720a1da2dfefe833d559d6638b5e7"
+        }
+      }
+    ],
+    "exact_texture_inventory": {
+      "root": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures",
+      "status": "OBSERVED_WITHIN_FIXED_SCOPE",
+      "scope": "ROOT_AND_FIVE_NAMED_FAMILY_DIRECTORIES_ONE_LEVEL_ONLY",
+      "entry_limit": 1024,
+      "entries_observed": 10,
+      "hit_limit": 20,
+      "hash_file_limit_bytes": 134217728,
+      "hash_total_limit_bytes": 268435456,
+      "hash_budget_reserved_bytes": 0,
+      "enumeration_complete": true,
+      "hashes_complete": true,
+      "complete": true,
+      "directories": [
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures",
+          "family_id": null,
+          "status": "ENUMERATED",
+          "entries_observed": 10
+        },
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\Rock_Lava_tjmledzr",
+          "family_id": "tjmledzr",
+          "status": "MISSING_WITHIN_SCOPE",
+          "entries_observed": 0
+        },
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\ground_other_ulgmbhwn",
+          "family_id": "ulgmbhwn",
+          "status": "MISSING_WITHIN_SCOPE",
+          "entries_observed": 0
+        },
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\sand_fine_td1hcimn",
+          "family_id": "td1hcimn",
+          "status": "MISSING_WITHIN_SCOPE",
+          "entries_observed": 0
+        },
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\Rock_Cliffs_tdwlcc1l",
+          "family_id": "tdwlcc1l",
+          "status": "MISSING_WITHIN_SCOPE",
+          "entries_observed": 0
+        },
+        {
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\rock_forest_vjdqcba",
+          "family_id": "vjdqcba",
+          "status": "MISSING_WITHIN_SCOPE",
+          "entries_observed": 0
+        }
+      ],
+      "matches": [],
+      "incomplete_reasons": [],
+      "absence_scope": "Only the checked root and named immediate family directories."
+    },
+    "missing_file_meaning": "Absent only at the exact checked path; no whole-host absence claim.",
+    "default_pic_limit": "Candidate file identity only; neither author CWD nor the original HDA roughness branch is established.",
+    "author_cwd_verified": false,
+    "roughness_resolved": false,
+    "subprocess_started": false,
+    "hython_started": false,
+    "hou_imported": false,
+    "hip_loaded": false,
+    "full_geometry_load_requested": false,
+    "terrain_cook_requested": false,
+    "cache_written": false,
+    "editor_started_or_stopped": false,
+    "project_files_written": false,
+    "source_profile_admitted": false,
+    "material_source_admitted": false,
+    "performance_pass": false
+  },
+  "lesson07_technical_pass": false,
+  "one_to_one_material_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

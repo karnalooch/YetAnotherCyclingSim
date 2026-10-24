@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "METADATA_DISCOVERY_COMPLETE_GRAPH_CONTRACT_EXCLUDED_BY_SIZE",
+  "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39638776763",
+  "attempt": 1,
+  "job_id": 119356693203,
+  "artifact": {
+    "id": 12363283259,
+    "bytes": 26288,
+    "sha256": "0ffe93cfbeac087af5647a106df84cd889b1edb9376b7c16a403e9732b5ab37a"
+  },
+  "reports": [
+    {
+      "path": "discovery-39638776763-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3810,
+      "sha256": "6f913e559cce78f2b41c399eb81af321fd002ff5f4d6ca7380f6df3d210dbc28"
+    },
+    {
+      "path": "discovery-39638776763-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "0a3a4d4cb9981aa7e04e6bd937f367ff886b880b40401f2b6cd577b2a6e80153"
+    }
+  ],
+  "compressed_bridge": {
+    "artifact_entry": "bridge.json",
+    "original": "discovery-39638776763-bridge.json",
+    "gzip": "discovery-39638776763-bridge.json.gz",
+    "original_bytes": 89892,
+    "original_sha256": "481f82e0aeeebe2371a3cb9d56afdf5f9e902f423713cdcc071a39939e382dfe",
+    "gzip_bytes": 24515,
+    "gzip_sha256": "1fc65bb343569fed8d695d1afd791a89a998e7ff6aecbd47f16f61197bc112b0"
+  },
+  "native_tool_calls": 0,
+  "tool_list_complete": true,
+  "tool_count": 84,
+  "identity_stable": true,
+  "last_identity_verified_utc": "2026-10-21T16:57:53.7363074Z",
+  "editor_started_or_stopped": false,
+  "edit_graph_contract": {
+    "reason": "CONTRACT_SIZE",
+    "status": "EXCLUDED"
+  },
+  "workflow_result": {
+    "conclusion": "failure",
+    "failed_later_step": "Recover the bounded error from the retained observer attempt",
+    "reason": "FAILURE_LOG_OWNER",
+    "interpretation": "The unchanged historical filesystem error reader requires the old 17896 session. It refused the current 34848 session after successful zero-native-call metadata discovery. Its guard was not bypassed; no old observer was retried."
+  },
+  "remaining_gap": "The full edit_graph contract is not retained; no material-function graph-read capability is inferred from the structural schema.",
+  "performance_pass": false
+}

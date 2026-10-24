@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "OFFLINE_SOURCE_CONTRACT_VERIFIED_PRIVATE_NATIVE_CANDIDATE_NOT_EXECUTED",
+  "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+  "reports": [
+    {
+      "path": "normal-contract-evidence.json",
+      "bytes": 46950,
+      "sha256": "1be16149e7fbe87770eae7bdad11444da7d7bd477e4ca12dd9696e7273bd49c7"
+    },
+    {
+      "path": "download-receipt.json",
+      "bytes": 3800,
+      "sha256": "5e958e5d3aef2e2732a0f249bc01dbffc4d6ccc07e00bd96c418bf53fa85015b"
+    },
+    {
+      "path": "normal-dependencies-download.json",
+      "bytes": 2136,
+      "sha256": "7fc89433a6964c4b1234ee671c1efb7ef822f24280faebbe7529bc24bf81caf6"
+    },
+    {
+      "path": "blend-layers-download.json",
+      "bytes": 621,
+      "sha256": "995aba08a4a5aa1ee06777af63200c0d2b0778b0665769401c0d89d111646d30"
+    }
+  ],
+  "compressed_reports": [
+    {
+      "original": "resolved-source-graph.json",
+      "gzip": "resolved-source-graph.json.gz",
+      "original_bytes": 654223,
+      "original_sha256": "a5ff45819b95cf015ca72ad480cf33094fb74ce39e93e42d2e891d6659939a9a",
+      "gzip_bytes": 25869,
+      "gzip_sha256": "31b55a04dcd3e2a2ae2419d48ecc7a408055712b589f99a02ef7308e04b8e172"
+    },
+    {
+      "original": "parser-receipt.json",
+      "gzip": "parser-receipt.json.gz",
+      "original_bytes": 109308,
+      "original_sha256": "dc92134592c49a67e04948fc99718219a3ad86429c3558e3f758b71271e6c161",
+      "gzip_bytes": 7576,
+      "gzip_sha256": "4df9de56cd5b4f2f508eeae8228f5bad29a44fa9ebc3398d334152e811f59ea7"
+    },
+    {
+      "original": "M_Landscape_YACS.uasset.memory-diff.json",
+      "gzip": "M_Landscape_YACS.uasset.memory-diff.json.gz",
+      "original_bytes": 1803661,
+      "original_sha256": "f0fba6cb7bdf56f2b8d25a459f2c3c2d7dc4eb4a4a94e182adb1a006b802f96a",
+      "gzip_bytes": 118482,
+      "gzip_sha256": "d96a3032b618afa3b409f1984fd8fc411ab0cbfc15e6ffc2595ae7e19ca4efc7"
+    }
+  ],
+  "source_uasset_files_rewritten": false,
+  "native_calls": 0,
+  "runtime_verified": false,
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

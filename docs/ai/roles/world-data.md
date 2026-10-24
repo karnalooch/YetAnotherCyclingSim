@@ -5,9 +5,10 @@
 **Owned domain:** `source-geodata`
 
 ## Mission
-world evidence, licensed DTM/LiDAR, source metadata and World Authority.
+World evidence, licensed DTM/LiDAR, source metadata and World Authority. Preserve original Sa Calobra relief/elevations while Houdini executes Pegasus-derived methods. Reject fictional-island deformation as geographic truth; verify source registration, sampling, masks and source-relative deltas. The owner permits delicate reversible detail deformation; distinguish it from source sampling error and preserve real macro relief.
 
 ## Read only the required authority
+- [`docs/tooling/sidefx/README.md`](../../../docs/tooling/sidefx/README.md)
 - [`docs/WORLD_BUILDING_BIBLE.md`](../../../docs/WORLD_BUILDING_BIBLE.md)
 - [`docs/ASSET_PLAN.md`](../../../docs/ASSET_PLAN.md)
 - [`docs/ai/policies/M3_WORLD_OPERATIONS.md`](../../../docs/ai/policies/M3_WORLD_OPERATIONS.md)

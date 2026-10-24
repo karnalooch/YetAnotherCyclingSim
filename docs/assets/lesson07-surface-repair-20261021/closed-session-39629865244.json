@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "status": "READ_ONLY_PRIOR_SESSION_AND_CHECKPOINT_NOT_START_ADMISSION",
+  "source_commit": "d07ef0fc907b1a473a997cb8e05b65c1db68dc31",
+  "observed_utc": "2026-10-21T15:54:44.9512293Z",
+  "expected_prior_source_sha": "de903a85e67540f451ea86743ea981fb7eb79f18",
+  "expected_prior_run_token": "39625318792-1",
+  "expected_prior_editor_pid": 24984,
+  "expected_prior_editor_start_filetime_utc": "134370703459789397",
+  "expected_prior_interactive_session_id": 2,
+  "installation": {
+    "file": {
+      "status": "HASHED",
+      "bytes": 930,
+      "modified_utc": "2026-10-21T15:31:55.6412124Z",
+      "sha256": "48c0a9a2548888a375baf3eda9db6541936900da453d3e052225ab66071e5c44",
+      "stable_across_read": true
+    },
+    "source_sha_matches_expected": true,
+    "run_token_matches_expected": true,
+    "file_count": 4,
+    "start_permitted_until_utc": "2026-10-21T15:35:55.6288295Z",
+    "start_permission_expired": true,
+    "desktop_sid_matches_console": true
+  },
+  "session": {
+    "file": {
+      "status": "HASHED",
+      "bytes": 6732,
+      "modified_utc": "2026-10-21T15:44:07.6696334Z",
+      "sha256": "cc69b0b48a54b5ebeeef6cad95d66b17096a13337a3bbad8cb2b072e735a940e",
+      "stable_across_read": true
+    },
+    "source_sha_matches_expected": true,
+    "status": "EDITOR_EXITED_NO_AUTORESTART",
+    "phase": "SUPERVISING",
+    "host_status": "IDLE",
+    "checked_at_utc": "2026-10-21T15:44:07.6634944Z",
+    "reason_code": null,
+    "editor": {
+      "pid_matches_original": true,
+      "start_filetime_matches_original": true,
+      "executable_matches_expected": true,
+      "interactive_session_matches_original": true,
+      "canonical_project_matches": true
+    },
+    "flags": {
+      "owner_sid_matches": true,
+      "checkpoint_bytes_verified": true,
+      "module_build_ids_verified": true,
+      "autosave_session_override": true,
+      "editor_stop_requested": false,
+      "package_save_requested": false,
+      "project_config_write_requested": false,
+      "native_world_verified": false,
+      "native_module_load_verified": false,
+      "performance_pass": false
+    }
+  },
+  "task": {
+    "exists": true,
+    "state": "Ready",
+    "last_task_result": 0,
+    "last_run_utc": "2026-10-21T15:31:57.0000000Z",
+    "action_count": 1,
+    "action_executable_matches": true,
+    "action_arguments_match": true,
+    "action_working_directory_matches": true,
+    "principal_limited": true,
+    "principal_interactive": true,
+    "principal_sid_matches_console": true,
+    "principal_sid_matches_installation": true,
+    "settings_match_original": true,
+    "settings": {
+      "trigger_count": 0,
+      "execution_limit_seconds": 0.0,
+      "restart_count": 0,
+      "multiple_instances": "IgnoreNew",
+      "AllowHardTerminate": false,
+      "StopIfGoingOnBatteries": false,
+      "DisallowStartIfOnBatteries": false,
+      "idle_stop_on_end": false
+    }
+  },
+  "current_host": {
+    "status": "IDLE",
+    "live_editor_count": 0,
+    "stale_cim_count": 0,
+    "original_process_alive": false,
+    "editor_count_limit": 8
+  },
+  "source_closure": [
+    {
+      "path": "scripts/ue/Install-YacsLesson07RemoteEditor.ps1",
+      "expected_sha256": "1ae41ae62ead55bb24d2119f7b89d926ec3f2dad011d26cade5aeb6f7aa7059a",
+      "file": {
+        "status": "HASHED",
+        "bytes": 31842,
+        "modified_utc": "2026-10-21T15:31:30.5717788Z",
+        "sha256": "1ae41ae62ead55bb24d2119f7b89d926ec3f2dad011d26cade5aeb6f7aa7059a",
+        "stable_across_read": true
+      },
+      "file_matches_expected": true,
+      "manifest_entry_count": 1,
+      "manifest_hash_matches_expected": true
+    },
+    {
+      "path": "scripts/ue/Start-YacsLesson07RemoteEditor.ps1",
+      "expected_sha256": "8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91",
+      "file": {
+        "status": "HASHED",
+        "bytes": 22916,
+        "modified_utc": "2026-10-21T15:31:30.5936510Z",
+        "sha256": "8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91",
+        "stable_across_read": true
+      },
+      "file_matches_expected": true,
+      "manifest_entry_count": 1,
+      "manifest_hash_matches_expected": true
+    },
+    {
+      "path": "scripts/runner/Get-YacsUnrealHostState.ps1",
+      "expected_sha256": "73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346",
+      "file": {
+        "status": "HASHED",
+        "bytes": 3374,
+        "modified_utc": "2026-10-21T15:31:30.5637148Z",
+        "sha256": "73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346",
+        "stable_across_read": true
+      },
+      "file_matches_expected": true,
+      "manifest_entry_count": 1,
+      "manifest_hash_matches_expected": true
+    },
+    {
+      "path": "scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1",
+      "expected_sha256": "2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2",
+      "file": {
+        "status": "HASHED",
+        "bytes": 2304,
+        "modified_utc": "2026-10-21T15:31:30.4338509Z",
+        "sha256": "2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2",
+        "stable_across_read": true
+      },
+      "file_matches_expected": true,
+      "manifest_entry_count": 1,
+      "manifest_hash_matches_expected": true
+    }
+  ],
+  "current_checkpoint": [
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+      "original_size_bytes": 1838638056,
+      "original_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+      "file": {
+        "status": "HASHED",
+        "bytes": 1838638056,
+        "modified_utc": "2026-10-20T15:36:24.0335549Z",
+        "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "original_size_bytes": 40154,
+      "original_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+      "file": {
+        "status": "HASHED",
+        "bytes": 40154,
+        "modified_utc": "2026-10-21T02:35:55.5125695Z",
+        "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset",
+      "original_size_bytes": 208956,
+      "original_sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+      "file": {
+        "status": "HASHED",
+        "bytes": 208956,
+        "modified_utc": "2026-10-20T21:13:45.3085829Z",
+        "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "original_size_bytes": 24178947,
+      "original_sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+      "file": {
+        "status": "HASHED",
+        "bytes": 24178947,
+        "modified_utc": "2026-10-20T20:19:54.2651656Z",
+        "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "original_size_bytes": 40441798,
+      "original_sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+      "file": {
+        "status": "HASHED",
+        "bytes": 40441798,
+        "modified_utc": "2026-10-20T20:19:54.9994090Z",
+        "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    },
+    {
+      "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "original_size_bytes": 12124066,
+      "original_sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+      "file": {
+        "status": "HASHED",
+        "bytes": 12124066,
+        "modified_utc": "2026-10-20T20:19:55.6634155Z",
+        "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+        "stable_across_read": true
+      },
+      "matches_original_checkpoint": true
+    }
+  ],
+  "checkpoint_bytes_hashed": 1915631977,
+  "checkpoint_attempt_bytes": 1915631977,
+  "limits": {
+    "installation_bytes": 65536,
+    "session_bytes": 262144,
+    "source_files": 4,
+    "source_file_bytes": 262144,
+    "checkpoint_files": 6,
+    "checkpoint_total_bytes": 2147483648,
+    "output_bytes": 65536
+  },
+  "diagnostic_failures": [],
+  "native_requests_made": 0,
+  "task_changed_or_started": false,
+  "editor_started_or_stopped": false,
+  "project_files_written": false,
+  "startup_admitted": false,
+  "performance_pass": false
+}

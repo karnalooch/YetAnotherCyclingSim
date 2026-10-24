@@ -1,0 +1,126 @@
+{
+  "status": "LIVE_CONTEXT_BAND_REMOVED_SOURCE_EDGE_LINE_REMAINS",
+  "time_utc": "2026-10-19T00:16:13.923788+00:00",
+  "issue": 365,
+  "milestone_scope": "M3; issue milestone field unassigned",
+  "pr": 474,
+  "head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "pid": 42752,
+  "editor_restarts": 0,
+  "material_variant": "NorthMirrorRGB",
+  "changed_actors": [
+    "SaCalobra_Detail_0_1",
+    "SaCalobra_Detail_1_1"
+  ],
+  "native_rgb": {
+    "pid": 42752,
+    "status": "BIT_EXACT",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "pixels": 19363691
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "pixels": 19363691
+      }
+    ],
+    "pixels": 38727382
+  },
+  "original_working_pixels_in_changed_textures_bitexact": 34415550,
+  "all_other_actors_unchanged": 25,
+  "all_non_north_pixels_unchanged": true,
+  "shared_edge_rgb_delta": 0,
+  "protected_sources_rehashed": 14,
+  "map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "map_saved": false,
+  "heights_masks_cache_unchanged": true,
+  "height_mask_components_and_layers_unchanged": 27,
+  "prior_dtm_native_maximum_m": 0.510986328125,
+  "new_geometry_readback": false,
+  "lesson02_to_05_rebuilt": false,
+  "merged": false,
+  "memory_recovery": {
+    "status": "VP9_LIVE_COMMIT_HEADROOM_RESTORED",
+    "pid": 42752,
+    "editor_restarted": false,
+    "drain": {
+      "ok": true,
+      "remaining_before": 0,
+      "remaining_after": 0,
+      "shader_jobs_before": 0,
+      "shader_jobs_after": 0,
+      "shader_workers_before": 2,
+      "shader_workers_after": 2,
+      "shader_external_physical_before": 0,
+      "shader_external_physical_after": 0,
+      "shader_external_virtual_before": 0,
+      "shader_external_virtual_after": 0,
+      "shader_active_workers_before": 0,
+      "shader_active_workers_after": 0,
+      "shader_max_worker_memory_before": 0,
+      "shader_max_worker_memory_after": 0,
+      "available_physical_before": 9983918080,
+      "available_physical_after": 10043404288,
+      "available_virtual_before": 1960689664,
+      "available_virtual_after": 2363551744
+    },
+    "codec": {
+      "pid": 42752,
+      "old_codec": "H264",
+      "new_codec": "VP9",
+      "reconnect_players": [
+        "104",
+        "107"
+      ],
+      "editor_restarted": false
+    },
+    "pagefile": {
+      "status_hex": "0x0",
+      "before": {
+        "available_commit_bytes": 2175655936,
+        "available_physical_bytes": 10421919744,
+        "total_commit_bytes": 107675762688
+      },
+      "after": {
+        "available_commit_bytes": 19357224960,
+        "available_physical_bytes": 10450821120,
+        "total_commit_bytes": 124855631872
+      },
+      "path": "D:/pagefile.sys",
+      "requested_mib": 76384,
+      "registry_unchanged": true,
+      "reboot": false
+    },
+    "note": "VP9 negotiated in native SDP; private bytes 75229474816 then 75230740480 before imports. Historical H264 commit retained. Temporary pagefile extension only, registry remains 60000 MiB.",
+    "upstream": "https://github.com/EpicGames/PixelStreamingInfrastructure/issues/954"
+  },
+  "memory_final": {
+    "available_commit_bytes": 19757850624,
+    "available_physical_bytes": 8813944832,
+    "total_commit_bytes": 124855631872
+  },
+  "sidefx_adaptation": "Native Transform reflection of RGB only at source north edge, HeightField Mask by Geometry and Layer. 32 m expansion and blur are local presentation values, not tutorial defaults. No geometry or original mask transformation.",
+  "rejected_variant": "NorthBoundaryRGB 32 m constant-edge streak",
+  "sources": [
+    "https://www.sidefx.com/docs/houdini/nodes/sop/xform.html",
+    "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_maskbyobject.html",
+    "https://www.sidefx.com/docs/houdini/heightfields/layers.html"
+  ],
+  "visual_review": {
+    "broad_context_streak_removed": true,
+    "thin_dark_source_edge_line_remains": true,
+    "all_horizontal_artifacts_removed": false,
+    "owner_visual_acceptance": false,
+    "screenshot": "Saved/RuntimeProof/Lesson06NorthMaterial/north_mirror_after.png",
+    "unlit": "Saved/RuntimeProof/Lesson06NorthMaterial/north_mirror_unlit.png"
+  },
+  "streaming": {
+    "warning_absent": true,
+    "pool_mib": 4992,
+    "nonstreaming_mib": 4546.34,
+    "streaming_pool_mib": 440.66,
+    "required_mib": 0.63,
+    "codec": "VP9"
+  }
+}

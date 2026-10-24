@@ -1,0 +1,94 @@
+{
+  "recorded_at_utc": "2026-10-18T10:33:55.765401+00:00",
+  "base_commit": "a76dc0e2b490bf37c75f47481462a6825a2def3c",
+  "engine": "5.8.2-56702186",
+  "process_id": 7704,
+  "profile": {
+    "codec": "H264",
+    "d3d12_uses_cuda": false,
+    "encoder_target_bitrate": 12000000,
+    "webrtc_min_start_max_bitrate": 12000000,
+    "rate_control": "CBR",
+    "engine_max_fps": 30
+  },
+  "incident": {
+    "previous_log": "lesson05-stream-20261018-120646.log",
+    "second_player_join_utc": "2026-10-18T10:16:57.687Z",
+    "first_nvenc20_cuda700_utc": "2026-10-18T10:16:58.563Z",
+    "root_cause_status": "Temporal correlation; underlying driver cause not proven"
+  },
+  "current_log": "lesson05-stream-20261018-122816.log",
+  "cuda700_count": 0,
+  "nvenc20_count": 0,
+  "client_status": "RECEIVED_BROWSER_FRAMES",
+  "frame_samples": [
+    {
+      "elapsed_ms": 9319,
+      "video": {
+        "element_token": 1,
+        "id": "streamingVideo",
+        "video_width": 1912,
+        "video_height": 910,
+        "ready_state": 4,
+        "paused": false,
+        "current_time": 0.931826,
+        "total_video_frames": 16,
+        "dropped_video_frames": 1,
+        "live_media_stream": true,
+        "media_error": null
+      },
+      "observed_at_utc": "2026-10-18T10:29:07.6345731Z"
+    },
+    {
+      "elapsed_ms": 10591,
+      "video": {
+        "element_token": 1,
+        "id": "streamingVideo",
+        "video_width": 1912,
+        "video_height": 910,
+        "ready_state": 4,
+        "paused": false,
+        "current_time": 2.204042,
+        "total_video_frames": 44,
+        "dropped_video_frames": 1,
+        "live_media_stream": true,
+        "media_error": null
+      },
+      "observed_at_utc": "2026-10-18T10:29:08.9067460Z"
+    }
+  ],
+  "client_cleanup_complete": true,
+  "map_sha256_before_and_after": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "reimported": false,
+  "camera_receipt": {
+    "map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05.L_SaCalobra_Lesson05",
+    "import": false,
+    "package_save": false,
+    "target_cm": [
+      172075.0,
+      111625.0,
+      34784.99450683594
+    ],
+    "camera_cm": [
+      172575.0,
+      110825.0,
+      36584.99450683594
+    ],
+    "rotation_degrees": [
+      -62.34051513671875,
+      122.00538635253906,
+      0.0
+    ],
+    "native_scree_mask": 0.3934420943260193
+  },
+  "memory_observations_bytes": [
+    17008431104,
+    17329922048,
+    17722265600,
+    18395607040
+  ],
+  "long_duration_stability": "NOT_PROVEN",
+  "memory_leak_resolved": false,
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3"
+}

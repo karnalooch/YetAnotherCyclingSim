@@ -1,0 +1,113 @@
+name: YACS Lesson07 original HDA Poly Haven bounded canary
+
+# An isolated, explicit rock HDA smoke test. Never opens UE, alters Sa Calobra,
+# or changes any project/cache file. Requires source verification from prior run.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-hda-canary.yml
+      - scripts/houdini/prepare_l07_cc0_hda_canary.py
+      - scripts/assets/test_prepare_l07_cc0_hda_canary.py
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Validate original-HDA canary invariant tests
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-cc0-hda-canary]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/assets
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Validate canary input identity and immutable base/masks
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest discover -s scripts/assets -p test_prepare_l07_cc0_hda_canary.py -v
+          python -B -m py_compile scripts/houdini/prepare_l07_cc0_hda_canary.py
+
+  canary:
+    name: Cook original SideFX material HDA once on tiny synthetic heightfield
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 30
+    concurrency:
+      group: yacs-polyhaven-hda-canary-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout bounded synthetic canary source only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/assets
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source SHA and commit/physical memory headroom
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit on runner.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Memory-guard invocation failed.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Physical memory insufficient for native material test.' }
+          Write-Host "Memory admission: $memJson"
+          if (-not (Test-Path -LiteralPath 'D:\yacs\work\lesson07-polyhaven-cc0-v1\hython-image-inspection.json')) {
+            throw 'Canonical Poly Haven source decode proof is missing.'
+          }
+      - name: Native material cook on synthetic source, compare untouched height/mask
+        id: cook
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw "Pinned Houdini missing: $hython" }
+          $root='D:\yacs\work\lesson07-polyhaven-cc0-v1'
+          $project='D:\yacs\project'
+          $destination='D:\yacs\work\lesson07-polyhaven-hda-proofs'
+          New-Item -Path $destination -ItemType Directory -Force | Out-Null
+          $token='${{ github.run_id }}-${{ github.run_attempt }}'
+          & $hython -B scripts/houdini/prepare_l07_cc0_hda_canary.py --source-root $root --project-root $project --out-root $destination --run-token $token
+          if ($LASTEXITCODE -ne 0) { throw 'Native original Pegasus HDA canary did not pass.' }
+          "output=$destination\l07-cc0-hda-$token" >> $env:GITHUB_OUTPUT
+      - name: Retain only bounded synthetic output and original-HDA proof
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-cc0-original-hda-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-polyhaven-hda-proofs/l07-cc0-hda-${{ github.run_id }}-${{ github.run_attempt }}/canary.json
+            D:/yacs/work/lesson07-polyhaven-hda-proofs/l07-cc0-hda-${{ github.run_id }}-${{ github.run_attempt }}/*.bgeo.sc
+          if-no-files-found: warn
+          retention-days: 14

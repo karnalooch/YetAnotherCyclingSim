@@ -1,0 +1,63 @@
+{
+  "candidate_project": "SaCalobra_Pegasus_Lesson03.hiplc",
+  "base_composition": {
+    "source_node": "SOURCE_CACHE",
+    "manual_node": "MANUAL_EDITS_CACHE",
+    "compose_node": "COMPOSE_SOURCE_AND_MANUAL",
+    "layer_operation": "add",
+    "base_vs_pure_source_delta_m": 0.0
+  },
+  "hda": {
+    "type": "PE_heightfield_material::1.0",
+    "library_file": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda"
+  },
+  "textures": {
+    "colour_map": "$HIP/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+    "roughness_map": "$HIP/inputs/textures/SaCalobra_PaleLimestone_Roughness.png",
+    "height_displacement_map": "$HIP/inputs/textures/wepoeaw_4K_Displacement.exr",
+    "rock_scale_m": 20.0,
+    "height_scale_m": 0.35,
+    "slope_mask_angle_deg": [
+      28.0,
+      90.0
+    ]
+  },
+  "working_landscape_grid": {
+    "resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "spacing_m": 0.5,
+    "total_cells": 70316666,
+    "bounds_x_m": [
+      -1771.25,
+      1805.25
+    ],
+    "bounds_z_m": [
+      -1769.75,
+      3144.25
+    ]
+  },
+  "context_background_grid": {
+    "resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "size_m": [
+      8000.0,
+      8000.0
+    ],
+    "total_cells": 4194304
+  },
+  "measurements": {
+    "max_absolute_displacement_m": 0.340179443359375,
+    "mean_displacement_over_full_landscape_m": 0.037554848939180374,
+    "mean_displacement_in_slope_mask_m": 0.07238064706325531,
+    "p95_displacement_in_slope_mask_m": 0.18865966796875,
+    "max_displacement_outside_slope_mask_m": 0.0001220703125,
+    "modified_cells_count": 35976973,
+    "reversibility_max_delta_when_disabled_m": 0.0
+  }
+}

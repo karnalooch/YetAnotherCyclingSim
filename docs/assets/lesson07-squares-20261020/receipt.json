@@ -1,0 +1,221 @@
+{
+  "status": "SAVED_TEXTURE_VARIATION_NATIVE_READBACK_AND_CLOSE_CAPTURE",
+  "issue": 365,
+  "roadmap_stage": "M3",
+  "base_head": "7e3b0001d1d325553f0fbf09c7aee71b33a57935",
+  "producer": "dirty local working tree on base_head, existing UE PID10872; not protected exact-commit proof",
+  "owner_feedback": "Visible close-up squares invalidate the earlier claim that scale tuning solved tiling",
+  "method": "Installed UE5.8 Epic TextureVariation and bounded copies of three existing Pegasus array sampler functions",
+  "variation": {
+    "scale": 1.0,
+    "levels": 13.0,
+    "random_offset_variation": 7.173,
+    "rotation": false,
+    "dither": true,
+    "aa_method": 4,
+    "compile": {
+      "ok": true,
+      "remaining_before": 0,
+      "remaining_after": 0,
+      "shader_jobs_before": 0,
+      "shader_jobs_after": 0,
+      "shader_workers_before": 2,
+      "shader_workers_after": 2,
+      "shader_external_physical_before": 654155776,
+      "shader_external_physical_after": 654155776,
+      "shader_external_virtual_before": 679247872,
+      "shader_external_virtual_after": 679247872,
+      "shader_active_workers_before": 0,
+      "shader_active_workers_after": 0,
+      "shader_max_worker_memory_before": 0,
+      "shader_max_worker_memory_after": 0,
+      "available_physical_before": 9911369728,
+      "available_physical_after": 9911431168,
+      "available_virtual_before": 63653089280,
+      "available_virtual_after": 63653240832
+    },
+    "errors": []
+  },
+  "native_graph_readback": {
+    "status": "NATIVE_TEXTURE_VARIATION_GRAPH_READBACK_PASS",
+    "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+    "functions": {
+      "Colour": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationColour",
+        "samples": 4,
+        "call_output_names": [
+          [
+            "BL",
+            "BR",
+            "TL",
+            "TR"
+          ],
+          [
+            "BL",
+            "BR",
+            "TL",
+            "TR"
+          ]
+        ]
+      },
+      "Normal": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationNormal",
+        "samples": 4,
+        "call_output_names": [
+          [
+            "BL",
+            "TL",
+            "BR",
+            "TR"
+          ],
+          [
+            "BL",
+            "TL",
+            "BR",
+            "TR"
+          ]
+        ]
+      },
+      "Masks": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationMasks",
+        "samples": 4,
+        "call_output_names": [
+          [
+            "BL",
+            "BR",
+            "TL",
+            "TR"
+          ],
+          [
+            "BL",
+            "BR",
+            "TL",
+            "TR"
+          ]
+        ]
+      }
+    },
+    "variation_scale": 1.0,
+    "variation_levels": 13.0,
+    "random_offset_variation": 7.172999858856201,
+    "anti_aliasing_method": 4,
+    "statistics": "<Struct 'MaterialStatistics' (0x0000017E21F4F760) {num_vertex_shader_instructions: 153, num_pixel_shader_instructions: 610, num_samplers: 9, num_vertex_texture_samples: 3, num_pixel_texture_samples: 41, num_virtual_texture_samples: 0, num_uv_scalars: 2, num_interpolator_scalars: 0}>",
+    "asset_writes": false,
+    "map_saved": false,
+    "render_acceptance": false,
+    "fresh_reopen_verified": false
+  },
+  "asset_files": {
+    "Content/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationColour.uasset": {
+      "sha256": "e76db064e4295c6a43fb86a912f92d305af5a49b324d3db55c98292db23c16bb",
+      "size_bytes": 24661
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationNormal.uasset": {
+      "sha256": "f36600502221c0ab3b89effd6ffaedeeb77d07ea1106b38384628f62171388d0",
+      "size_bytes": 24942
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/Functions/MF_YACS_ArrayVariationMasks.uasset": {
+      "sha256": "24cc3598b343364783672aa5d5ee5ebebc358e48efb86a054388a63d06e7806d",
+      "size_bytes": 25540
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset": {
+      "sha256": "b3caeca3abbdfee1247ede5c29137c1d06730e8624d93be8309015ca271499b5",
+      "size_bytes": 229615
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset": {
+      "sha256": "89e49656ef90fece605de654a4abd0806b0d2640874214545c3c7d0bd3ffc2cf",
+      "size_bytes": 42612
+    }
+  },
+  "four_landscapes_and_4096_components_unchanged": true,
+  "all_other_previously_audited_assets_unchanged": true,
+  "unchanged_map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+  "idmap_and_global_colour_and_array_sources_unchanged": true,
+  "map_saved": false,
+  "terrain_rebuilt": false,
+  "editor_closed": false,
+  "computer_use": false,
+  "fresh_reopen_verified": false,
+  "whole_area_visual_accepted": false,
+  "owner_visual_accepted": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "statistics": "<Struct 'MaterialStatistics' (0x00000177D727E140) {num_vertex_shader_instructions: 153, num_pixel_shader_instructions: 610, num_samplers: 9, num_vertex_texture_samples: 3, num_pixel_texture_samples: 41, num_virtual_texture_samples: 0, num_uv_scalars: 2, num_interpolator_scalars: 0}>",
+  "native_compile_errors": [],
+  "native_compile_drain": {
+    "ok": true,
+    "remaining_before": 0,
+    "remaining_after": 0,
+    "shader_jobs_before": 0,
+    "shader_jobs_after": 0,
+    "shader_workers_before": 2,
+    "shader_workers_after": 2,
+    "shader_external_physical_before": 705306624,
+    "shader_external_physical_after": 705306624,
+    "shader_external_virtual_before": 730382336,
+    "shader_external_virtual_after": 730382336,
+    "shader_active_workers_before": 0,
+    "shader_active_workers_after": 0,
+    "shader_max_worker_memory_before": 0,
+    "shader_max_worker_memory_after": 0,
+    "available_physical_before": 11978178560,
+    "available_physical_after": 11978174464,
+    "available_virtual_before": 63944572928,
+    "available_virtual_after": 63944638464
+  },
+  "normal_contract_fix": "All four Normal corner samplers decode as NORMAL; signed DirectX XYZ is passed without the old encoded 1-G operation. Original shared Pegasus functions were not edited. Instance cache explicitly refreshed.",
+  "rejected_trials": [
+    "Initial float2 gradients rejected by array sampler; restored original master connections before retry",
+    "Initial variation/normal trial exposed stale instance binding glare; not accepted or published",
+    "Static scale tuning alone was rejected by owner close-up"
+  ],
+  "camera_close": {
+    "camera_location": [
+      31161.597582665676,
+      67967.8188949709,
+      57388.41590670585
+    ],
+    "camera_rotation": [
+      -42.45209849471854,
+      2660.4000468999147,
+      0.0
+    ],
+    "fov": 90.0,
+    "return_image": false
+  },
+  "camera_panorama": {
+    "return_image": false,
+    "camera_location": [
+      105778.94955443848,
+      47473.457161979335,
+      93809.76178785607
+    ],
+    "camera_rotation": [
+      -19.65209645623969,
+      1238.4000218212605,
+      0.0
+    ],
+    "fov": 90.0
+  },
+  "images": {
+    "close-before.jpg": {
+      "sha256": "b65385cab385cbd5fdd13c3a9ee8aff092db5b50f5d7371107b44eb7e1eab3a5",
+      "size_bytes": 49326
+    },
+    "close-after.jpg": {
+      "sha256": "662c0387d6edea05870e3ae5dea6f7aab0ec3ca619f3f94754436a3220bfd651",
+      "size_bytes": 42147
+    },
+    "panorama-after.jpg": {
+      "sha256": "f6a2b367c0c361df595f3d397c542317480f8ea2aa7f7f8800529c3b31554e7a",
+      "size_bytes": 56711
+    }
+  },
+  "limitations": [
+    "Native viewport captures are 956x431",
+    "Temporal dither depends on TSR/TAA; current method is TSR (4)",
+    "Two views are not whole-domain acceptance",
+    "No fresh editor restart/reopen, per owner instruction",
+    "Five new/changed material assets only; arbitrary dirty map edits remain local"
+  ]
+}

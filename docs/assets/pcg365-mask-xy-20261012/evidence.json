@@ -1,0 +1,916 @@
+{
+  "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+  "issue": 365,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "records": [
+    {
+      "bytes": 620,
+      "data": {
+        "action": "inspect",
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "issue": 365,
+        "mesh_count": 2,
+        "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+        "owner_visual_status": "PENDING_FINAL_M3",
+        "performance_pass": false,
+        "placement": false,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "qualified_assets": [],
+        "schema_version": 1,
+        "skill_paths": [
+          "/PCGToolset/Skills/Skill_PCGGraphGeneration.Skill_PCGGraphGeneration_C"
+        ],
+        "skill_sha256": "fc1113b6d72c9a629af6bda19293104968d991671d0b9d32e922fcdaa8aa7d50",
+        "status": "NATIVE_INSPECTION_COMPLETED",
+        "terrain_contact": "NOT_RUN"
+      },
+      "path": "proof/inspect/inspect-receipt.json",
+      "sha256": "3c29496ba940e5aca322fcf39fa07f670a390ffb6e70333720a6a0c0d9cb2ca7"
+    },
+    {
+      "bytes": 165,
+      "data": {
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "exit_code": 0,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "staged_bytes_unchanged": true
+      },
+      "path": "proof/inspect/launcher-completed.json",
+      "sha256": "aa510220db5861ef6b55f3d57bb90cafedfd7497c61ff9d1e58b5e8c883a2b5c"
+    },
+    {
+      "bytes": 5371,
+      "data": {
+        "action": "mask-xy-create",
+        "cleanup_output_empty": true,
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "identity_linkage": "request sidecar joined by verified unique native seed; not native metadata propagation",
+        "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+        "performance_pass": false,
+        "placement": false,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "qualified_assets": [],
+        "request_sha256": "3cddcfcf4879895b5c850f4f7cec2111833baccbe28a3dd3f153126a6cf1b28e",
+        "runs": [
+          [
+            {
+              "candidate_id": "1ba5d4792d793399aff28f3ec7db9d0a9496072e74b184ca57ea6b45d2d331c3",
+              "position_cm": [
+                184800.0,
+                180800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 521201792,
+              "source_cell": [
+                3616,
+                3696
+              ]
+            },
+            {
+              "candidate_id": "d9ccbbdc3c1476073e33fcb2815d2df0c36cc9b1979cfb047e09e0516d909040",
+              "position_cm": [
+                16800.0,
+                70400.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 783523346,
+              "source_cell": [
+                1408,
+                336
+              ]
+            },
+            {
+              "candidate_id": "72c8b977e79617c97515ed74783556cc1081dfea178f80c0cbb55cc199844636",
+              "position_cm": [
+                91200.0,
+                200800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1179152894,
+              "source_cell": [
+                4016,
+                1824
+              ]
+            },
+            {
+              "candidate_id": "b4d6d57078e5ef42bb01d36fa2959f767bd4226d7081c30c16647832b8104353",
+              "position_cm": [
+                4800.0,
+                96800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1219899548,
+              "source_cell": [
+                1936,
+                96
+              ]
+            },
+            {
+              "candidate_id": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+              "position_cm": [
+                181600.0,
+                189600.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1417929533,
+              "source_cell": [
+                3792,
+                3632
+              ]
+            }
+          ],
+          [
+            {
+              "candidate_id": "1ba5d4792d793399aff28f3ec7db9d0a9496072e74b184ca57ea6b45d2d331c3",
+              "position_cm": [
+                184800.0,
+                180800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 521201792,
+              "source_cell": [
+                3616,
+                3696
+              ]
+            },
+            {
+              "candidate_id": "d9ccbbdc3c1476073e33fcb2815d2df0c36cc9b1979cfb047e09e0516d909040",
+              "position_cm": [
+                16800.0,
+                70400.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 783523346,
+              "source_cell": [
+                1408,
+                336
+              ]
+            },
+            {
+              "candidate_id": "72c8b977e79617c97515ed74783556cc1081dfea178f80c0cbb55cc199844636",
+              "position_cm": [
+                91200.0,
+                200800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1179152894,
+              "source_cell": [
+                4016,
+                1824
+              ]
+            },
+            {
+              "candidate_id": "b4d6d57078e5ef42bb01d36fa2959f767bd4226d7081c30c16647832b8104353",
+              "position_cm": [
+                4800.0,
+                96800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1219899548,
+              "source_cell": [
+                1936,
+                96
+              ]
+            },
+            {
+              "candidate_id": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+              "position_cm": [
+                181600.0,
+                189600.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1417929533,
+              "source_cell": [
+                3792,
+                3632
+              ]
+            }
+          ]
+        ],
+        "saved_recipe_verified_before_explicit_generation": false,
+        "schema_version": 1,
+        "status": "MASK_XY_GRAPH_SAVED",
+        "terrain_contact": "NOT_RUN",
+        "z_policy": "zero carrier only; not surface placement"
+      },
+      "path": "proof/mask-xy-create/mask-xy-create-receipt.json",
+      "sha256": "f83f3a57c875862161635a8eea984d63f7b2559151847c932a3dc0af182a4389"
+    },
+    {
+      "bytes": 165,
+      "data": {
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "exit_code": 0,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "staged_bytes_unchanged": true
+      },
+      "path": "proof/mask-xy-create/launcher-completed.json",
+      "sha256": "aa510220db5861ef6b55f3d57bb90cafedfd7497c61ff9d1e58b5e8c883a2b5c"
+    },
+    {
+      "bytes": 5389,
+      "data": {
+        "action": "mask-xy-reload",
+        "cleanup_output_empty": true,
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "identity_linkage": "request sidecar joined by verified unique native seed; not native metadata propagation",
+        "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+        "performance_pass": false,
+        "placement": false,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "qualified_assets": [],
+        "request_sha256": "3cddcfcf4879895b5c850f4f7cec2111833baccbe28a3dd3f153126a6cf1b28e",
+        "runs": [
+          [
+            {
+              "candidate_id": "1ba5d4792d793399aff28f3ec7db9d0a9496072e74b184ca57ea6b45d2d331c3",
+              "position_cm": [
+                184800.0,
+                180800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 521201792,
+              "source_cell": [
+                3616,
+                3696
+              ]
+            },
+            {
+              "candidate_id": "d9ccbbdc3c1476073e33fcb2815d2df0c36cc9b1979cfb047e09e0516d909040",
+              "position_cm": [
+                16800.0,
+                70400.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 783523346,
+              "source_cell": [
+                1408,
+                336
+              ]
+            },
+            {
+              "candidate_id": "72c8b977e79617c97515ed74783556cc1081dfea178f80c0cbb55cc199844636",
+              "position_cm": [
+                91200.0,
+                200800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1179152894,
+              "source_cell": [
+                4016,
+                1824
+              ]
+            },
+            {
+              "candidate_id": "b4d6d57078e5ef42bb01d36fa2959f767bd4226d7081c30c16647832b8104353",
+              "position_cm": [
+                4800.0,
+                96800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1219899548,
+              "source_cell": [
+                1936,
+                96
+              ]
+            },
+            {
+              "candidate_id": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+              "position_cm": [
+                181600.0,
+                189600.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1417929533,
+              "source_cell": [
+                3792,
+                3632
+              ]
+            }
+          ],
+          [
+            {
+              "candidate_id": "1ba5d4792d793399aff28f3ec7db9d0a9496072e74b184ca57ea6b45d2d331c3",
+              "position_cm": [
+                184800.0,
+                180800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 521201792,
+              "source_cell": [
+                3616,
+                3696
+              ]
+            },
+            {
+              "candidate_id": "d9ccbbdc3c1476073e33fcb2815d2df0c36cc9b1979cfb047e09e0516d909040",
+              "position_cm": [
+                16800.0,
+                70400.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 783523346,
+              "source_cell": [
+                1408,
+                336
+              ]
+            },
+            {
+              "candidate_id": "72c8b977e79617c97515ed74783556cc1081dfea178f80c0cbb55cc199844636",
+              "position_cm": [
+                91200.0,
+                200800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1179152894,
+              "source_cell": [
+                4016,
+                1824
+              ]
+            },
+            {
+              "candidate_id": "b4d6d57078e5ef42bb01d36fa2959f767bd4226d7081c30c16647832b8104353",
+              "position_cm": [
+                4800.0,
+                96800.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1219899548,
+              "source_cell": [
+                1936,
+                96
+              ]
+            },
+            {
+              "candidate_id": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+              "position_cm": [
+                181600.0,
+                189600.0,
+                0.0
+              ],
+              "rotation_xyzw": [
+                0.0,
+                -0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "seed": 1417929533,
+              "source_cell": [
+                3792,
+                3632
+              ]
+            }
+          ]
+        ],
+        "saved_recipe_verified_before_explicit_generation": true,
+        "schema_version": 1,
+        "status": "MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED",
+        "terrain_contact": "NOT_RUN",
+        "z_policy": "zero carrier only; not surface placement"
+      },
+      "path": "proof/mask-xy-reload/mask-xy-reload-receipt.json",
+      "sha256": "31d45a4d46c0e94b01d7767449800ba9aefb1d37654260efa97fedf898d3deb8"
+    },
+    {
+      "bytes": 165,
+      "data": {
+        "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+        "exit_code": 0,
+        "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+        "staged_bytes_unchanged": true
+      },
+      "path": "proof/mask-xy-reload/launcher-completed.json",
+      "sha256": "aa510220db5861ef6b55f3d57bb90cafedfd7497c61ff9d1e58b5e8c883a2b5c"
+    }
+  ],
+  "request": {
+    "bytes": 7975,
+    "data": {
+      "native_consumption": "CPU_AUTHENTICATED_POINTS_NOT_NATIVE_RASTER_SAMPLING",
+      "placement": false,
+      "points": [
+        {
+          "band": 2,
+          "candidate_id": "1ba5d4792d793399aff28f3ec7db9d0a9496072e74b184ca57ea6b45d2d331c3",
+          "point_seed": 521201792,
+          "source_cell": [
+            3616,
+            3696
+          ],
+          "world_xy_cm": [
+            184800,
+            180800
+          ]
+        },
+        {
+          "band": 2,
+          "candidate_id": "72c8b977e79617c97515ed74783556cc1081dfea178f80c0cbb55cc199844636",
+          "point_seed": 1179152894,
+          "source_cell": [
+            4016,
+            1824
+          ],
+          "world_xy_cm": [
+            91200,
+            200800
+          ]
+        },
+        {
+          "band": 0,
+          "candidate_id": "b4d6d57078e5ef42bb01d36fa2959f767bd4226d7081c30c16647832b8104353",
+          "point_seed": 1219899548,
+          "source_cell": [
+            1936,
+            96
+          ],
+          "world_xy_cm": [
+            4800,
+            96800
+          ]
+        },
+        {
+          "band": 2,
+          "candidate_id": "c86428bfd8e30ac80b7d30c55b861988ecf794ffa2a5399af18b5c6597b00e4d",
+          "point_seed": 1417929533,
+          "source_cell": [
+            3792,
+            3632
+          ],
+          "world_xy_cm": [
+            181600,
+            189600
+          ]
+        },
+        {
+          "band": 1,
+          "candidate_id": "d9ccbbdc3c1476073e33fcb2815d2df0c36cc9b1979cfb047e09e0516d909040",
+          "point_seed": 783523346,
+          "source_cell": [
+            1408,
+            336
+          ],
+          "world_xy_cm": [
+            16800,
+            70400
+          ]
+        }
+      ],
+      "qualified_assets": [],
+      "recipe_seed": 36501,
+      "schema_version": 1,
+      "source_bindings": {
+        "authenticated_inputs": {
+          "band_bindings": {
+            "density_weights": {
+              "authority": "relative source return share and authored fade only; not plant density",
+              "bands_1_based": {
+                "high": 3,
+                "low": 1,
+                "medium": 2
+              },
+              "path": "mask-transitions-v1a-2026-10-04/vegetation-density-weight.tif"
+            },
+            "vegetation_selectors": {
+              "bands_1_based": {
+                "high": 3,
+                "low": 1,
+                "medium": 2
+              },
+              "path": "pcg-masks-v1-2026-10-04/vegetation-selectors.tif"
+            }
+          },
+          "config_identity_sha256": "c7c301923674d746023181679d8ae5f7c8c7cf8580fa9aa764b090fc455c3c5b",
+          "configuration": {
+            "graph_version": "sa-calobra-world-graph-inputs-v1",
+            "grid": {
+              "crs": "EPSG:25831",
+              "height": 4033,
+              "pixel_size_m": 0.5,
+              "transform": [
+                0.5,
+                0.0,
+                483000.0,
+                0.0,
+                -0.5,
+                4409516.5
+              ],
+              "width": 4033
+            },
+            "schema_version": 1,
+            "seed": 36501,
+            "sources": {
+              "pcg": {
+                "fingerprint": "c9191f8dadf21d1820bebc80dd92e91641f4f4b74eb9d90342d7459611473864",
+                "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+                "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+              },
+              "transitions": {
+                "fingerprint": "b18f6fac303a0e83c1f676ab6b0a12ba959bdf0843ff466c15a1d4bde4eb576c",
+                "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+                "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950"
+              }
+            },
+            "world_mapping": {
+              "axis": "X east;Y south",
+              "footprint_world_bounds_cm": [
+                -25,
+                -25,
+                201625,
+                201625
+              ],
+              "origin_epsg_m": [
+                483000.25,
+                4409516.25
+              ],
+              "uv": "(UE_XY_cm/50+0.5)/4033",
+              "world_unit": "centimetres"
+            }
+          },
+          "consumer_contract": {
+            "decision": "Reject unknown/outside AOI. Select requested vegetation band==1. Require exclusion distance lower bound >= radius+clearance. Entire radius must fit inside AOI. Never use interpolation to promote unknown or class boundary",
+            "density": "Original native/5m return fraction is sampling evidence, not plant count or crown cover; downstream selects explicit density/seed within admitted domains",
+            "execution": "Mask readiness only; no PCGEx graph, asset placement, runtime import or gameplay/performance admission claimed",
+            "required_asset_parameters": [
+              "horizontal_footprint_radius_m",
+              "additional_clearance_m"
+            ],
+            "texture": "Data PNG: sRGB=false, nearest, no mipmaps. PNG alone cannot authorize placement; clearance raster and source manifest identity required"
+          },
+          "exclusion_contract": {
+            "bits": {
+              "1": "pavement",
+              "128": "no LiDAR samples",
+              "16": "water decorative holdback",
+              "2": "shoulder conservative 0.51m envelope",
+              "32": "infrastructure decorative holdback",
+              "4": "complete BOB affected domain",
+              "64": "other LiDAR class",
+              "8": "Catastro/LiDAR buildings"
+            },
+            "distance_path": "pcg-masks-v1-2026-10-04/exclusion-distance-lower-bound.tif",
+            "evaluate_reference": "scripts/assets/read_sa_calobra_pcg_masks.py:evaluate",
+            "path": "pcg-masks-v1-2026-10-04/exclusion-reasons.tif",
+            "subpixel_rule": "Subtract point-to-cell-centre offset from distance lower bound before radius+clearance comparison"
+          },
+          "files": [
+            {
+              "logical_sha256": "60d0b1cf322d0358baae8aa01cd5f66b2a13f0fc7d1d5b202592084e05d8ca19",
+              "path": "mask-transitions-v1a-2026-10-04/bob-transition-weight.tif",
+              "sha256": "ebbe3afd7cffd86d05d862f6f5b6a76051f51d3b61bb5636401e407db89b224c",
+              "size_bytes": 199464
+            },
+            {
+              "path": "mask-transitions-v1a-2026-10-04/hydrology-topology-review.json",
+              "sha256": "227bb9be27490b0ed52b295cc183830592aa6825a8c6db8bd25a6c99d86b4162",
+              "size_bytes": 92959
+            },
+            {
+              "path": "mask-transitions-v1a-2026-10-04/placement-point-review.json",
+              "sha256": "d82c05fc051a75ba098768c3bf58751a34d4fe68489c717842be82858252e73c",
+              "size_bytes": 21577
+            },
+            {
+              "path": "mask-transitions-v1a-2026-10-04/placement-point-review.png",
+              "sha256": "fe2df1ea04a449b69354e8151e41ed920a1fef542fae2124810a7dfeec418229",
+              "size_bytes": 504301
+            },
+            {
+              "path": "mask-transitions-v1a-2026-10-04/review-overlay.png",
+              "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a",
+              "size_bytes": 38726480
+            },
+            {
+              "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+              "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950",
+              "size_bytes": 4179
+            },
+            {
+              "logical_sha256": "86640132cacb141f5093c9c1eddf8c0b52b60729a9c9e5ad23592cec272e8b7e",
+              "path": "mask-transitions-v1a-2026-10-04/vegetation-density-weight.tif",
+              "sha256": "9a6e590cfe72dd4cd74f2924d01cd1ce13609aa861cce0f428838941ae6dcc09",
+              "size_bytes": 34940804
+            },
+            {
+              "logical_sha256": "1837a98f73c80709bdc30fcb662594762941eaaeb50e430ea92b8b53c30c7807",
+              "path": "mask-transitions-v1a-2026-10-04/water-centreline-review.tif",
+              "sha256": "d0ba167f087bad2b10b633ee6bc48baf12b9dd1359f9c4dc17ff02399cac8f0e",
+              "size_bytes": 51111
+            },
+            {
+              "logical_sha256": "c18e5e88e05ff76dd9c6f73aa2bd00c2027f50680fda54d236684135d216f1f3",
+              "path": "mask-transitions-v1a-2026-10-04/water-gap-review.tif",
+              "sha256": "bfbdf89b3c89b2d74f6928f4c366c16f79a2a387b8111e88f01ed97ef7fc480d",
+              "size_bytes": 24396
+            },
+            {
+              "bands": 1,
+              "dtype": "float32",
+              "logical_sha256": "db5f51f1e5ac145eda51f2fb7c4919a102af568e9f82221d679a2a10682fcc0c",
+              "nodata": -32767,
+              "path": "pcg-masks-v1-2026-10-04/exclusion-distance-lower-bound.tif",
+              "sha256": "2f7f1ad4248f7d76c22fc8aee010ee7ea575c40e6f102bcdd23704304d0c4919",
+              "size_bytes": 5135714
+            },
+            {
+              "bands": 1,
+              "dtype": "uint16",
+              "logical_sha256": "466af15e3a9459725f077a096fb3fc075370fc734403e46f0e96706cf38befe5",
+              "nodata": 65535,
+              "path": "pcg-masks-v1-2026-10-04/exclusion-reasons.tif",
+              "sha256": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941",
+              "size_bytes": 2994730
+            },
+            {
+              "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+              "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df",
+              "size_bytes": 5881
+            },
+            {
+              "path": "pcg-masks-v1-2026-10-04/vegetation-selectors.png",
+              "sha256": "94ce6440bded7bf11ea7ebf582ea9de48a97245a4f41d631e4e626945f9807f1",
+              "size_bytes": 5848901
+            },
+            {
+              "bands": 3,
+              "dtype": "uint8",
+              "logical_sha256": "c1b19eee4fd03f12ed76bab8a7eb87aee3fb8e87a052ad1da6024a31ea9da9db",
+              "nodata": 255,
+              "path": "pcg-masks-v1-2026-10-04/vegetation-selectors.tif",
+              "sha256": "24f29db741610ea5e750019445f271dd1ad8735eb8cfed1104c1b92a8da5bd37",
+              "size_bytes": 6260754
+            }
+          ],
+          "fingerprint": "9d6841ac7bf81dce015fb0916c907ebe1221978ca5543a689d2e14438e811d82",
+          "geometry_mutation": false,
+          "issue": 365,
+          "limitations": [
+            "complete current-cover/canopy admission",
+            "water/infrastructure completeness and widths",
+            "exact shoulder/CUT/FILL/inner/outer semantics",
+            "native production graph and performance admission"
+          ],
+          "native_execution": "NOT_RUN",
+          "performance_pass": false,
+          "placement": false,
+          "producer_sha256_lf": "4e2643575d7934f2bfc6ea186cb6698a838020f88bb60d35c679fb6e1a5e017c",
+          "qualified_assets": [],
+          "schema_version": 1,
+          "status": "AUTHENTICATED_WORLD_GRAPH_INPUTS_ONLY",
+          "unknown_contract": "Reject selector255, outside AOI and unknown clearance; nearest reads only; transitions may reduce eligibility, never promote unknown or bypass exclusions"
+        },
+        "candidate_fingerprint": "8e8849465bed2d0f72e1f9b6a92e700cbd9a9dce5f51dbfd72136dcadd98b69f",
+        "candidate_sha256": "1dbf757eedb679dcbb01f83c95eebd6d2279d848822a92a460f17b2221633215",
+        "producer_sha256_lf": "62451bc07f661265153c362bbaf8c0d546c88d9ef38357f27e7fb3002eb8c89c"
+      },
+      "status": "MASK_DERIVED_XY_GRAPH_REQUEST_ONLY",
+      "terrain_contact": "REQUIRED_UNSET",
+      "z_carrier_cm": 0,
+      "z_semantics": "DIAGNOSTIC_CARRIER_ONLY_NOT_SOURCE_OR_GROUND_HEIGHT"
+    },
+    "path": "mask-xy-request.json",
+    "sha256": "3cddcfcf4879895b5c850f4f7cec2111833baccbe28a3dd3f153126a6cf1b28e"
+  },
+  "retained_root": "D:\\yacs\\work\\pcg365\\f683beecd3b8e618456136a09a74141a663b26e3\\maskxy01",
+  "saved_packages": {
+    "bytes": 574,
+    "data": {
+      "code_sha": "f683beecd3b8e618456136a09a74141a663b26e3",
+      "files": [
+        {
+          "bytes": 25373,
+          "path": "Content/Generated/YACS/PCG365MaskXYDiagnostic/PCG_MaskXY.uasset",
+          "sha256": "ddc625772207c63b76016203e58411ebd8ab8c58c51681d6ac2af10ac1583557"
+        },
+        {
+          "bytes": 29513,
+          "path": "Content/Generated/YACS/PCG365MaskXYDiagnostic/L_MaskXY.umap",
+          "sha256": "5a90f0474a7795ba4027c0d4604f17f23e9ba275763cfd7cf55dad367a4104d2"
+        }
+      ],
+      "request_sha256": "3cddcfcf4879895b5c850f4f7cec2111833baccbe28a3dd3f153126a6cf1b28e"
+    },
+    "path": "proof/mask-xy-create/saved-packages.json",
+    "sha256": "419a0dc6f76764a8d32882e0b178f5470cd514bdfe727ae76f2a36184df97cd7"
+  },
+  "schema_version": 1,
+  "token": "maskxy01"
+}

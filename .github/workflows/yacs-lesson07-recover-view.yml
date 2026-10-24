@@ -1,0 +1,307 @@
+name: YACS Lesson07 bounded viewport recovery
+
+# Navigation in the current owner session. Never start or stop an Editor.
+# Attach after startup 39744804663 retained one canonical Editor but discovery timed out.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-recover-view.yml
+      - scripts/ue/lesson07_recover_view.py
+      - scripts/ue/test_lesson07_recover_view.py
+
+permissions:
+  contents: read
+
+jobs:
+  cpu:
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      contains(github.event.head_commit.message, '[l07-recover-view]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          lfs: false
+          persist-credentials: false
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+      - name: Install existing pinned test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+      - name: Preserve existing boundaries and test the exact new source
+        run: |
+          python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices scripts.ue.test_apply_lesson07_surface_repair scripts.assets.test_prepare_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair scripts.ue.test_lesson07_recover_view
+          git diff --exit-code
+      - name: Cancel only unstarted incidental Blender jobs from this camera change
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          repo = 'karnalooch/YetAnotherCyclingSim'
+          heads = {'78e178503a05ae6088de4dfd5246bd076d0b99fb',
+                   '52777531f0adb3f4631c38350454e6233b29182e',
+                   'c3bcd74767b4e48c3afbc8632de1cb17be6f85bf',
+                   'ebfed6fe71d292f534a423ec6ff19be9fd3aa90c', os.environ['GITHUB_SHA']}
+          def api(path, method='GET'):
+              result = subprocess.run(['gh', 'api', '--method', method, 'repos/' + repo + path],
+                                      text=True, capture_output=True, timeout=20, check=False)
+              if result.returncode:
+                  raise RuntimeError('GitHub API refused bounded queue operation; no fallback')
+              return json.loads(result.stdout) if result.stdout.strip() else None
+          def eligible(run):
+              return (run.get('path') == '.github/workflows/blender-material-forge-reference.yml'
+                      and run.get('head_branch') == 'codex/365-world-graph'
+                      and run.get('head_sha') in heads and run.get('event') == 'pull_request'
+                      and run.get('actor', {}).get('login') == 'karnalooch'
+                      and run.get('status') in ('queued', 'pending')
+                      and run.get('head_repository', {}).get('full_name') == repo)
+          runs = api('/actions/runs?branch=codex%2F365-world-graph&event=pull_request&per_page=100')
+          targets = [run['id'] for run in runs['workflow_runs'] if eligible(run)]
+          if len(targets) > 5:
+              raise RuntimeError('Unexpected number of incidental Blender runs')
+          cancelled = []
+          for run_id in targets:
+              run = api('/actions/runs/' + str(run_id))
+              if not eligible(run):
+                  continue
+              jobs = api('/actions/runs/' + str(run_id) + '/jobs?per_page=100')
+              if jobs['total_count'] != len(jobs['jobs']):
+                  raise RuntimeError('Incomplete job inventory')
+              if any(job.get('status') not in ('queued', 'pending') or job.get('runner_id', 0)
+                     or job.get('steps') for job in jobs['jobs']):
+                  continue
+              api('/actions/runs/' + str(run_id) + '/cancel', 'POST')
+              cancelled.append(run_id)
+          print(json.dumps({'cancel_requested_unstarted_blender_runs': cancelled,
+                            'proof_pass_claimed': False, 'host_changed': False}))
+          PY
+
+  recover:
+    needs: cpu
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-view-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Isolate source checkout settings without editing the owner workspace
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $isolated=Join-Path $env:RUNNER_TEMP 'l07-view-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if(Test-Path -LiteralPath $isolated){throw 'Owned Git settings already exist.'}
+          [IO.File]::WriteAllText($isolated,'')
+          $env:GIT_CONFIG_GLOBAL=$isolated
+          $env:GIT_CONFIG_NOSYSTEM='1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if($LASTEXITCODE -ne 0){throw 'Git long paths failed.'}
+          git config --global core.autocrlf false
+          if($LASTEXITCODE -ne 0){throw 'Git byte preservation failed.'}
+          git config --global core.eol lf
+          if($LASTEXITCODE -ne 0){throw 'Git LF preservation failed.'}
+      - name: Stage code only at exact SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-view-${{ github.run_id }}-${{ github.run_attempt }}
+          lfs: false
+          persist-credentials: false
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+      - name: Validate code-only checkout and unchanged host safety checks
+        run: |
+          $ErrorActionPreference='Stop'
+          $prior=$env:GIT_NO_LAZY_FETCH
+          try {
+            $env:GIT_NO_LAZY_FETCH='1'
+            & ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1 6>&1 | Select-Object -Last 1
+          } finally {$env:GIT_NO_LAZY_FETCH=$prior}
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
+          & ./scripts/ue/Test-YacsLesson07ObserverFailure.ps1
+          & ./scripts/ue/Test-YacsLesson07Viewport.ps1
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_lesson07_recover_view
+          if($LASTEXITCODE -ne 0){throw 'Native-host source tests failed.'}
+      - name: Identify competing sessions without exposing credentials
+        run: |
+          $ErrorActionPreference='Stop'
+          $state=& ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $rows=@($state.local_or_unknown_processes)+@($state.remote_ci_processes)
+          $consoleUser=[string](Get-CimInstance Win32_ComputerSystem).UserName
+          $consoleSid=([Security.Principal.NTAccount]::new($consoleUser)).Translate([Security.Principal.SecurityIdentifier]).Value
+          $safeRows=@($rows | ForEach-Object {
+            $p=Get-Process -Id $_.process_id -ErrorAction Stop
+            $c=Get-CimInstance Win32_Process -Filter "ProcessId=$($_.process_id)"
+            $owner=Invoke-CimMethod -InputObject $c -MethodName GetOwnerSid
+            $tokens=@([regex]::Matches([string]$_.command_line,'"([^"]*)"|(\S+)') | ForEach-Object {if($_.Groups[1].Success){$_.Groups[1].Value}else{$_.Groups[2].Value}})
+            $projectTokens=@($tokens | Where-Object {$_ -match '\.uproject$'})
+            $safeProjects=@($projectTokens | ForEach-Object {
+              $normal=$_.Replace('\','/')
+              if($normal -match '^D:/yacs/[a-zA-Z0-9_./ -]+\.uproject$'){$normal}else{'OUTSIDE_CANONICAL_ROOT_OR_RELATIVE'}
+            })
+            $title=[string]$p.MainWindowTitle
+            if($title -notmatch '^[\p{L}\p{N}\s._*()\[\]:/\\-]{0,200}$'){$title='REDACTED_WINDOW_TITLE'}
+            [ordered]@{name=$_.name;pid=$_.process_id;parent_pid=$_.parent_process_id;exe=$_.executable_path;created=$_.creation_date;session=$_.session_id;owner_class=$_.owner;console_sid_matches=($owner.ReturnValue -eq 0 -and $owner.Sid -ceq $consoleSid);canonical_project_mentioned=([string]$_.command_line).Replace('\','/').Contains('D:/yacs/project/YetAnotherCyclingSim.uproject');project_arguments=$safeProjects;argument_count=$tokens.Count;project_browser_flag=('-projectbrowser' -in $tokens);window_title=$title;window_present=($p.MainWindowHandle -ne 0);working_set_bytes=$p.WorkingSet64;private_bytes=$p.PrivateMemorySize64}
+          })
+          $discovery='D:\yacs\project\Saved\LocoAI\external-mcp-config.json'
+          $bridge=[ordered]@{exists=(Test-Path -LiteralPath $discovery);listeners=@()}
+          if($bridge.exists){
+            $item=Get-Item -LiteralPath $discovery
+            if($item.Length -le 16384 -and -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)){
+              $cfg=Get-Content -LiteralPath $discovery -Raw | ConvertFrom-Json
+              $endpoint=[uri]$cfg.url
+              $bridge.file_updated=$item.LastWriteTimeUtc.ToString('o')
+              if($endpoint.Scheme -ceq 'http' -and $endpoint.Host -ceq '127.0.0.1'){
+                $bridge.listeners=@(Get-NetTCPConnection -LocalPort $endpoint.Port -State Listen -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess)
+              }
+            }
+          }
+          $os=Get-CimInstance Win32_OperatingSystem
+          Write-Host ('L07_HOST_INVENTORY='+([ordered]@{status=$state.status;local_count=$state.local_or_unknown_count;remote_count=$state.remote_ci_count;stale_count=$state.stale_cim_record_count;processes=$safeRows;bridge=$bridge;free_ram_kib=$os.FreePhysicalMemory} | ConvertTo-Json -Depth 8 -Compress))
+          # Read-only metadata: hidden offscreen windows and receipt flags do not prove clean unsaved state.
+          function Get-L07PlainFile([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while($cursor){
+              if(Test-Path -LiteralPath $cursor){
+                if((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Redirected diagnostic path.'}
+              }
+              $cursor=Split-Path -Path $cursor -Parent
+            }
+            $item=Get-Item -LiteralPath $Path -Force
+            if($item.PSIsContainer){throw 'Diagnostic file required.'};return $item
+          }
+          function Read-L07LiveJson([string]$Path,[int]$Limit) {
+            $item=Get-L07PlainFile $Path
+            if($item.Length -lt 1 -or $item.Length -gt $Limit){throw 'Diagnostic JSON exceeds bound.'}
+            $stream=[IO.File]::Open($item.FullName,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+            try {
+              $bytes=[byte[]]::new($Limit+1);$count=0
+              while($count -lt $bytes.Length){$read=$stream.Read($bytes,$count,$bytes.Length-$count);if($read -eq 0){break};$count+=$read}
+              if($count -lt 1 -or $count -gt $Limit){throw 'Diagnostic JSON exceeds bound.'}
+              $json=[Text.UTF8Encoding]::new($false,$true).GetString($bytes,0,$count).TrimStart([char]0xfeff) | ConvertFrom-Json -AsHashtable -Depth 16
+              if($json -isnot [Collections.IDictionary]){throw 'Diagnostic JSON object required.'};return $json
+            } finally {$stream.Dispose()}
+          }
+          $live=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED';active=$null;parent=$null;existing_status=$null;
+            native_heartbeat=$null;unsaved_state='NOT_MEASURED';editor_started_or_stopped=$false}
+          try {
+            $liveRoot='D:\yacs\live-host'
+            $install=Read-L07LiveJson (Join-Path $liveRoot 'state/installation.json') 2097152
+            $active=Read-L07LiveJson (Join-Path $liveRoot 'state/current-session.json') 16384
+            if($install.source_sha -isnot [string] -or $install.source_sha -cnotmatch '^[a-f0-9]{40}$' -or
+              $active.source_sha -isnot [string] -or $active.source_sha -cnotmatch '^[a-f0-9]{40}$' -or
+              $active.session -isnot [string] -or $active.session -cnotmatch '^[0-9]{8}T[0-9]{6}Z-[a-f0-9]{12}$'){throw 'Invalid Live Host identity.'}
+            foreach($key in @('editor_pid','live_host_pid')){
+              if(($active[$key] -isnot [long] -and $active[$key] -isnot [int]) -or $active[$key] -le 0 -or $active[$key] -gt [int]::MaxValue){throw 'Invalid recorded process ID.'}
+            }
+            . ./scripts/live_host/Convert-YacsLiveUtc.ps1
+            $started=ConvertTo-YacsLiveUtc -Value $active.editor_started_utc
+            $candidate=@($rows | Where-Object process_id -eq $active.editor_pid)
+            $live.active=[ordered]@{session=$active.session;source_sha=$active.source_sha;editor_pid=$active.editor_pid;
+              editor_started_utc=$started.ToString('o');live_host_pid=$active.live_host_pid;
+              source_matches_install=($active.source_sha -ceq $install.source_sha);
+              console_sid_matches=($active.desktop_sid -ceq $consoleSid -and $install.desktop_sid -ceq $consoleSid);
+              recorded_parent_matches=($candidate.Count -eq 1 -and $candidate[0].parent_process_id -eq $active.live_host_pid)}
+            try {
+              $parent=Get-Process -Id $active.live_host_pid -ErrorAction Stop
+              $parentCim=Get-CimInstance Win32_Process -Filter "ProcessId=$($active.live_host_pid)" -ErrorAction Stop
+              $parentOwner=Invoke-CimMethod -InputObject $parentCim -MethodName GetOwnerSid -ErrorAction Stop
+              $live.parent=[ordered]@{pid=$parent.Id;created=$parent.StartTime.ToUniversalTime().ToString('o');session=$parent.SessionId;
+                pinned_powershell_matches=($parent.Path -ieq 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe');
+                console_sid_matches=($parentOwner.ReturnValue -eq 0 -and $parentOwner.Sid -ceq $consoleSid);started_before_editor=($parent.StartTime.ToUniversalTime() -le $started)}
+            } catch {$live.parent=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            $sessionRoot=Join-Path $liveRoot "runtime/sessions/$($active.session)"
+            try {
+              $native=Read-L07LiveJson (Join-Path $sessionRoot 'live-heartbeat.json') 16384
+              $time=ConvertTo-YacsLiveUtc -Value $native.updated_utc
+              $live.native_heartbeat=[ordered]@{tick_status_matches=($native.status -ceq 'EDITOR_TICK_ALIVE');
+                session_matches=($native.session -ceq $active.session);source_matches=($native.source_sha -ceq $active.source_sha);
+                updated_utc=$time.ToString('o');age_seconds=[Math]::Round(([DateTime]::UtcNow-$time).TotalSeconds,3)}
+              if(($native.sequence -is [long] -or $native.sequence -is [int]) -and $native.sequence -ge 0 -and $native.sequence -le 999999){$live.native_heartbeat.sequence=$native.sequence}
+            } catch {$live.native_heartbeat=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            try {
+              $null=Read-L07LiveJson (Join-Path $sessionRoot 'host-status.json') 131072
+              $observed=& ./scripts/live_host/Get-YacsLiveHostStatus.ps1 2>$null 3>$null 4>$null 5>$null 6>$null | ConvertFrom-Json -AsHashtable -Depth 16
+              $live.existing_status=[ordered]@{observed_status=if($observed.status -cin @('INSTALLED_UNVERIFIED','STALE_OR_DEAD_NOT_LIVE','LIVE_RECEIVER_PROVEN_CURRENT_PROCESS','EDITOR_ALIVE_VIDEO_UNVERIFIED')){$observed.status}else{'UNRECOGNIZED'};
+                task_state=if($observed.task_state -cin @('Unknown','Disabled','Queued','Ready','Running')){$observed.task_state}else{'UNRECOGNIZED'}}
+              foreach($key in @('editor_process_identity_verified','heartbeat_fresh','live_editor','world_native_verified','browser_frames_received')){
+                if($observed[$key] -is [bool]){$live.existing_status[$key]=$observed[$key]}
+              }
+            } catch {$live.existing_status=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            $live.read_state='OBSERVED_METADATA_ONLY'
+          } catch {}
+          Write-Host ('L07_LIVE_HOST_INVENTORY='+($live | ConvertTo-Json -Depth 6 -Compress))
+          $preview='D:\yacs\work\lesson07-unified-20261019\preview_cache\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775'
+          $cacheRows=@(foreach($name in @('SCREE_SITE_GLOBAL_COLOR.bgeo.sc','SCREE_FULLRES_PREVIEW.bgeo.sc','PREVIEW_GLOBAL_COLOR.bgeo.sc')){
+            $entry=[ordered]@{file=$name;read_state='ABSENT'}
+            if(Test-Path -LiteralPath (Join-Path $preview $name)){
+              try {$item=Get-L07PlainFile (Join-Path $preview $name);$entry.read_state='METADATA_ONLY';$entry.bytes=$item.Length;$entry.modified_utc=$item.LastWriteTimeUtc.ToString('o')}
+              catch {$entry.read_state='UNAVAILABLE_OR_REJECTED'}
+            };$entry
+          })
+          Write-Host ('L07_PEGASUS_CACHE_INVENTORY='+([ordered]@{files=$cacheRows;contents_read=$false;producer_run=$false} | ConvertTo-Json -Depth 4 -Compress))
+      - name: Existing-session Wingman preflight without startup or shutdown
+        run: |
+          $ownerProof=& ./scripts/ue/Start-YacsLesson07RemoteEditor.ps1 -ExpectedHead $env:GITHUB_SHA -PreflightOnly
+          $ownerSummary=$ownerProof | Select-Object status,phase,reason_code,host_status,owner_sid_matches,editor
+          Write-Host ('L07_OWNER_PREFLIGHT='+($ownerSummary | ConvertTo-Json -Compress -Depth 6))
+          & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -ExistingEditorOnly
+      - name: Recover the camera once and retain the real viewport
+        run: |
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B scripts/ue/lesson07_recover_view.py --expected-head $env:GITHUB_SHA --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if($LASTEXITCODE -ne 0){throw 'View recovery stopped; no automatic retry or fallback.'}
+      - name: Retain only bounded recovery evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-view-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/result.json
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/landscape.jpg
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/probe.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Retain the exact scoped source for independent offline checks
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-repair-source-${{ github.run_id }}
+          path: |
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/lesson07_recover_view.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/test_lesson07_recover_view.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/lesson07_wingman_client.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/Start-YacsLesson07RemoteEditor.ps1
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/houdini/lesson06_unified_pipeline.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/houdini/cook_and_verify_lesson07_exports.py
+          if-no-files-found: error
+          retention-days: 7

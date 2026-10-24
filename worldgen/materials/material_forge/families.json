@@ -303,6 +303,50 @@
             "macro_tile_metres": 16,
             "macro_strength": 0.22
           }
+        },
+        {
+          "id": "limestone_scree_v1",
+          "label": "Lesson05 limestone scree candidate v1",
+          "seed": 547,
+          "brightness": 0.42,
+          "surface_a": 1.0,
+          "surface_b": 0.85,
+          "roughness": 0.85,
+          "normal_strength": 0.65,
+          "refinement": {
+            "variation_scale": 1.3,
+            "crack_color_scale": 1.6,
+            "pore_color_scale": 0.5,
+            "color_gain": [
+              0.96,
+              1.01,
+              1.1
+            ],
+            "roughness_variation_scale": 1.0,
+            "roughness_pore_scale": 0.8,
+            "ao_crack_scale": 0.0,
+            "ao_pore_scale": 0.0
+          },
+          "local_masks": {
+            "R": "coarse_fragment_coverage",
+            "G": "fine_fragment_coverage",
+            "B": "mineral_variation"
+          }
+        },
+        {
+          "id": "limestone_grass2_v1",
+          "label": "Lesson07 muted olive ground with grey limestone",
+          "seed": 571,
+          "brightness": 0.36,
+          "surface_a": 0.75,
+          "surface_b": 0.4,
+          "roughness": 0.88,
+          "normal_strength": 0.3,
+          "local_masks": {
+            "R": "coarse_fragment_coverage",
+            "G": "fine_fragment_coverage",
+            "B": "mineral_variation"
+          }
         }
       ]
     }
