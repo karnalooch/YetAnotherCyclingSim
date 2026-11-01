@@ -183,7 +183,7 @@ jobs:
 
       - name: Retain the read-only installed road API outcome
         if: ${{ always() && contains(github.event.head_commit.message, '[road-api-read]') }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-api-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/road-api-evidence/**
@@ -351,7 +351,7 @@ jobs:
 
       - name: Retain source hairpin observations and actual reader outcome
         if: ${{ always() && (contains(github.event.head_commit.message, '[hairpin-lidar]') || contains(github.event.head_commit.message, '[hairpin-wall-lidar]')) }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: hairpin-lidar-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/hairpin-lidar-evidence/**
@@ -360,7 +360,7 @@ jobs:
 
       - name: Retain asphalt determinism receipt and render logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-asphalt-receipt-${{ github.sha }}-${{ github.run_attempt }}
           path: |
@@ -371,7 +371,7 @@ jobs:
 
       - name: Retain first complete asphalt source bundle
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-asphalt-run-a-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-a/**
@@ -380,7 +380,7 @@ jobs:
 
       - name: Retain second complete asphalt source bundle
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-asphalt-run-b-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-b/**
@@ -389,7 +389,7 @@ jobs:
 
       - name: Retain local crack determinism and owned-exit receipt
         if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-decals-receipt-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_DECAL_PROOF }}/source-proof.json
@@ -398,7 +398,7 @@ jobs:
 
       - name: Retain first complete local crack source bundle
         if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-decals-run-a-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-a/**
@@ -407,7 +407,7 @@ jobs:
 
       - name: Retain second complete local crack source bundle
         if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: road-decals-run-b-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-b/**

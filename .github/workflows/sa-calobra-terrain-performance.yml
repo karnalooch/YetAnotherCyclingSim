@@ -94,7 +94,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra performance failed.' }
       - name: Publish successful exact-SHA terrain proof
         if: ${{ success() && !inputs.material_consumer }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: proof-sa-calobra-terrain-performance-${{ inputs.exact_sha }}
           path: |
@@ -104,7 +104,7 @@ jobs:
           retention-days: 14
       - name: Publish successful exact-SHA saved-material proof
         if: ${{ success() && inputs.material_consumer }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: proof-sa-calobra-material-performance-${{ inputs.exact_sha }}
           path: |
@@ -114,7 +114,7 @@ jobs:
           retention-days: 14
       - name: Retain failed terrain run diagnostics
         if: ${{ (failure() || cancelled()) && !inputs.material_consumer }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: diagnostic-sa-calobra-terrain-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -126,7 +126,7 @@ jobs:
           retention-days: 14
       - name: Retain failed saved-material run diagnostics
         if: ${{ (failure() || cancelled()) && inputs.material_consumer }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: diagnostic-sa-calobra-material-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
