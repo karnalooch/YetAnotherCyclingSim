@@ -415,7 +415,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Embark/PCGEx contract failed on the authoring runner.' }
 
       - name: Download prepared SP638 input
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: passo-giau-m3-pcgex-input-${{ github.run_id }}
           path: ${{ runner.temp }}/yacs-pcgex-prepared-road-${{ github.run_id }}-${{ github.run_attempt }}
@@ -827,13 +827,13 @@ jobs:
             shapely==2.1.1
 
       - name: Download prepared SP638 input
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: passo-giau-m3-pcgex-input-${{ github.run_id }}
           path: ${{ runner.temp }}/yacs-pcgex-source
 
       - name: Download executed PCGEx evidence
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/yacs-pcgex-execution
