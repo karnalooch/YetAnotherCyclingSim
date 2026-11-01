@@ -640,7 +640,7 @@ jobs:
 
       - name: Upload compact whole-map renders and independently verified receipts
         if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-whole-map-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -662,7 +662,7 @@ jobs:
 
       - name: Upload original saved-material frames for owner review
         if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-material-review-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -681,7 +681,7 @@ jobs:
 
       - name: Upload original middle saved-material frames for owner review
         if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-material-review-middle-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -694,7 +694,7 @@ jobs:
 
       - name: Upload original remaining saved-material frames for owner review
         if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-material-review-remaining-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -706,7 +706,7 @@ jobs:
 
       - name: Upload original shoulder-contact review frames and restoration evidence
         if: ${{ always() && contains(github.event.head_commit.message, '[shoulder-contact]') && env.YACS_SHOULDER_CONTACT_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-shoulder-contact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -757,7 +757,7 @@ jobs:
           --annotations docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json
           --output ${{ runner.temp }}/component230-detail-pilot
       - name: Retain masks, unchanged geometry and original-image vector previews
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: component230-detail-pilot-${{ github.sha }}
           path: ${{ runner.temp }}/component230-detail-pilot/
@@ -1311,7 +1311,7 @@ jobs:
 
       - name: Upload compact native detail frames and proof receipts
         if: ${{ always() && env.YACS_DETAIL_PROOF_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: component230-detail-native-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -1926,7 +1926,7 @@ jobs:
 
       - name: Upload Phase 2C evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-component230-pcgex-cliff
           path: |
@@ -2459,7 +2459,7 @@ jobs:
 
       - name: Upload immutable survey frames, review bundle and diagnostics
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-bidirectional-tpp-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -2556,7 +2556,7 @@ jobs:
 
       - name: Upload the separate durable-retention receipt
         if: ${{ always() && env.YACS_TPP_RETENTION_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-tpp-retention-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ env.YACS_TPP_RETENTION_ROOT }}/retention-receipt.json
@@ -2771,7 +2771,7 @@ jobs:
 
       - name: Upload publication receipt and documentation guard evidence
         if: ${{ always() && env.YACS_TPP_DOCS_ROOT != '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.2
         with:
           name: sa-calobra-tpp-docs-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
